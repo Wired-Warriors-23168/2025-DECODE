@@ -68,10 +68,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE")
+//TODO ********** Make sure the displayed names match the java class name and correct TELEOP is specified!  **************
+@Autonomous(name="AUTO_2024_EXAMPLE", group="AUTO", preselectTeleOp = "TELEOP-BLUE")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
-public class AUTO_BLUE_1 extends LinearOpMode {
+public class AUTO_2024_EXAMPLE extends LinearOpMode {
 
     // Declare OpMode members.
     private Limelight3A limelight;
@@ -166,8 +167,8 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         // TODO: Set initial limelight pipeline for alliance color: 0=red, 1=blue, 2=yellow
         limelight.pipelineSwitch(2);
 
-        //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
-        SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
+        //Instantiate the roadrunner Mecanum drive
+        MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
 
         //Set all actuator target positions
         HangerUp = 350;
@@ -217,7 +218,6 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                                 new setWristPositionAction(Wrist, WristEject)
                         ))
                         // Drive forward to the basket and eject sample
-                        //.splineTo(new Vector2d(-49.125,-63.44), Math.toRadians(-180))
                         .splineTo(waypointBasketInit, Math.toRadians(-180))
                         .stopAndAdd(new SequentialAction(
                                 new ejectSampleAction(Intake,0.5),
@@ -302,8 +302,6 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                         ))
                         // Drive to the basket
                         .setTangent(0)
-                        // It might be necessary to adjust for accumulated position errors with the OTOS by manually setting the basket stop position further away than the first time.  Use the code in the next line to do that.
-                        //.splineToLinearHeading(new Pose2d(-53.0,-53.0,Math.toRadians(-135)), Math.toRadians(-135))
                         .splineToLinearHeading(waypointBasket, Math.toRadians(-135))
 
                         // Raise to top basket and eject sample
@@ -330,7 +328,6 @@ public class AUTO_BLUE_1 extends LinearOpMode {
 
                         // Drive in reverse around the last sample (closest to the wall) and position to push it into the net zone
                         .setReversed(true)
-                        //.splineToLinearHeading(new Pose2d(-62.5,-15.5,Math.toRadians(-90)),Math.toRadians(-90))
                         .splineToLinearHeading(waypointSample3,Math.toRadians(-90))
                         .setReversed(false)
 
@@ -597,87 +594,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         }
     }
 
-    // Strafe to limelight target action
-    // Based on Drive To Target function from Blocks AUTO modes
-    public class strafeToTargetAction implements Action {
-        double maxTime;
-        ElapsedTime timer;
-        double kPStrafe;
-        double speedMax;
-        double errorMin;
-        double strafe;
-        double tX;
-        double powerLF;
-        double powerLR;
-        double powerRF;
-        double powerRR;
-        double powerMax;
 
-
-        public strafeToTargetAction(double maxTime,double kPStrafe,double speedMax,double errorMin) {
-            this.maxTime = maxTime;
-            this.kPStrafe = kPStrafe;
-            this.speedMax = speedMax;
-            this.errorMin = errorMin;
-        }
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            if (timer == null) {  //Initialize timer
-                timer = new ElapsedTime();
-                // TODO: make sure your config has motors with these names (or change them)
-                //   see https://ftc-docs.firstinspires.org/en/latest/hardware_and_software_configuration/configuring/index.html
-                leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-                leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
-                rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
-                rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-
-                leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-                rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-                // TODO: reverse motor directions if needed
-                //   leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-                leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-                leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-                rightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-                rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
-            }
-            // Get LimeLight results (pipeline was set in the initializations)
-            LLResult result = limelight.getLatestResult();
-            if (result != null && result.isValid()) {
-                tX = result.getTx(); // How far left or right the target is (degrees)
-            }
-
-            strafe = Math.min(Math.max(tX*kPStrafe,-speedMax),speedMax);
-
-            powerLF = strafe;
-            powerRF = -strafe;
-            powerLR = -strafe;
-            powerRR = strafe;
-
-            powerMax = JavaUtil.maxOfList(JavaUtil.createListWith(Math.abs(powerLF), Math.abs(powerRF), Math.abs(powerLR), Math.abs(powerRR)));
-            if (powerMax > 1) {
-                powerLF = powerLF / powerMax;
-                powerRF = powerRF / powerMax;
-                powerLR = powerLR / powerMax;
-                powerRR = powerRR / powerMax;
-            }
-
-            leftFront.setPower(powerLF);
-            leftBack.setPower(powerLR);
-            rightFront.setPower(powerRF);
-            rightBack.setPower(powerRR);
-
-            if (tX < errorMin) {
-                return true;
-            } else {
-                return false;
-            }
-            //return false;
-        }
-    }
 
 
     //////////////////////////////////////////////////
