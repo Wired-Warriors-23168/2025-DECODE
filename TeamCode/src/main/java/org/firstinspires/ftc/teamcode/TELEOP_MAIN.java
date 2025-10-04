@@ -23,6 +23,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private static final int bankVelocity = 1300;
     private static final int farVelocity = 1900;
     private static final int maxVelocity = 2200;
+    public static final String ALLIANCE_KEY = "Alliance";
 
     @Override
     public void runOpMode() {
@@ -44,8 +45,9 @@ public class TELEOP_MAIN extends LinearOpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        //Ensures the agitator is active and ready
+        //Initialize actuators, sensors, and variables
         agitator.setPower(0);
+        blackboard.get(ALLIANCE_KEY); //Get the Alliance from the blackboard (it was stored in the AUTO mode), either BLUE or RED
 
         waitForStart();
         if (opModeIsActive()) {
@@ -54,6 +56,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
                 manualFeederAndagitatorControl();
+                telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
                 telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
                 telemetry.update();

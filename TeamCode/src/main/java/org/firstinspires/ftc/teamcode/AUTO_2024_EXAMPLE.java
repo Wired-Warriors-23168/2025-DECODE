@@ -92,7 +92,7 @@ public class AUTO_2024_EXAMPLE extends LinearOpMode {
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
     //TODO ********** Set the Alliance Color  **************
-    public String colorAlliance = "BLUE"; //Enter either BLUE or RED alliance, this will chance all further color-related settings
+    public static final String ALLIANCE_KEY = "BLUE"; //Enter either BLUE or RED alliance, this will chance all further color-related settings
     public double txLimelight;
     public double tyLimelight;
     int currentPos;
@@ -357,6 +357,7 @@ public class AUTO_2024_EXAMPLE extends LinearOpMode {
         telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
         telemetry.update();
 
+        blackboard.put(ALLIANCE_KEY, "BLUE");
         // run until the end of the match (driver presses STOP)
     }
 
