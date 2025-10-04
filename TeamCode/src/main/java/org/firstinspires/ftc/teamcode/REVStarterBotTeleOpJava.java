@@ -23,6 +23,8 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private static final int bankVelocity = 1300;
     private static final int farVelocity = 1900;
     private static final int maxVelocity = 2200;
+    private static final double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
+
 
     @Override
     public void runOpMode() {
@@ -79,10 +81,10 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
         double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double frontLeftPower = (y + x + rx) / denominator;
-        double backLeftPower = (y - x + rx) / denominator;
-        double frontRightPower = (y - x - rx) / denominator;
-        double backRightPower = (y + x - rx) / denominator;
+        double frontLeftPower = limitDrivePower * (y + x + rx) / denominator;
+        double backLeftPower = limitDrivePower * (y - x + rx) / denominator;
+        double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
+        double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
         leftFrontDrive.setPower(frontLeftPower);
         leftBackDrive.setPower(backLeftPower);
