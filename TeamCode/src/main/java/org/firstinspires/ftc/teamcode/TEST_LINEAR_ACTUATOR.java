@@ -2,16 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.PwmControl;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+
 
 @TeleOp
 public class TEST_LINEAR_ACTUATOR extends LinearOpMode {
@@ -52,13 +47,13 @@ public class TEST_LINEAR_ACTUATOR extends LinearOpMode {
     }private void manualLinearActuator() {
         // Manual control for the linear actuator
 
-        if (gamepad1.dpad_left) {
-            setPos=0;
+        if (gamepad1.dpadLeftWasPressed()) {
+            setPos=setPos-0.05;
             setPos=max(setPos,0);
             myServo.setPosition(setPos);
-        } else if (gamepad1.dpad_right) {
-            setPos=1;
-            setPos=min(setPos,1.0);
+        } else if (gamepad1.dpadRightWasPressed()) {
+            setPos=setPos+0.05;
+            setPos=min(setPos,1);
             myServo.setPosition(setPos);
         }
     }
