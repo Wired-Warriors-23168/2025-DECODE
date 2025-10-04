@@ -23,6 +23,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private static final int bankVelocity = 1300;
     private static final int farVelocity = 1900;
     private static final int maxVelocity = 2200;
+    private static final double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
     public static final String ALLIANCE_KEY = "Alliance";
 
     @Override
@@ -67,7 +68,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     /**
      * Controls for the drivetrain. The robot uses a mecanum drivetrain.
      * Forward and back is on the left stick. Strafing is on the left stick.  Turning is on the right stick.
-     *Code and explanation are at: https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html
+     * Code and explanation are at: https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html
      */
     private void splitStickArcadeDrive() {
         double x;
@@ -82,10 +83,10 @@ public class TELEOP_MAIN extends LinearOpMode {
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
         double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double frontLeftPower = (y + x + rx) / denominator;
-        double backLeftPower = (y - x + rx) / denominator;
-        double frontRightPower = (y - x - rx) / denominator;
-        double backRightPower = (y + x - rx) / denominator;
+        double frontLeftPower = limitDrivePower * (y + x + rx) / denominator;
+        double backLeftPower = limitDrivePower * (y - x + rx) / denominator;
+        double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
+        double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
         leftFrontDrive.setPower(frontLeftPower);
         leftBackDrive.setPower(backLeftPower);
