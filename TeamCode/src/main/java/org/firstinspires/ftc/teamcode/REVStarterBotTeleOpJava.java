@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -7,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 
+@Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
 public class REVStarterBotTeleOpJava extends LinearOpMode {
 
@@ -19,11 +23,13 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private DcMotor rightBackDrive;
     private RevBlinkinLedDriver lightsLED;
 
+    // Declare variables
+    // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    private static final int bankVelocity = 1300;
-    private static final int farVelocity = 1900;
-    private static final int maxVelocity = 2200;
-    private static final double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
+    private static int bankVelocity = 1300;
+    private static int farVelocity = 1900;
+    private static int maxVelocity = 2200;
+    private static double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
 
 
     @Override
@@ -59,6 +65,21 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
                 telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
                 telemetry.update();
+
+                // Set up channels for display in FTCDashboard
+                FtcDashboard dashboard = FtcDashboard.getInstance();
+                TelemetryPacket packet = new TelemetryPacket();
+
+                // Send a value to the dashboard for graphing
+                dashboard.sendTelemetryPacket(packet); // Always send the packet
+                packet.put("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity()); // Robot-specific data
+                packet.put("Bank Velocity", bankVelocity); // Robot-specific data
+                packet.put("Far Velocity", farVelocity); // Robot-specific data
+
+                //Set up the Field overlay
+                packet.fieldOverlay()
+                        .setFill("blue")
+                        .fillRect(-20, -20, 40, 40);
             }
         }
     }
