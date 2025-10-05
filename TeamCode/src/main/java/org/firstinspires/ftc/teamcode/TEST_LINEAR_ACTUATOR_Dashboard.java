@@ -3,17 +3,17 @@ package org.firstinspires.ftc.teamcode;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.PwmControl;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.qualcomm.robotcore.hardware.Servo;
 
-//@Config //Required to be able to tune parameters in FTCDashboard
+@Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
-public class TEST_LINEAR_ACTUATOR extends LinearOpMode {
+public class TEST_LINEAR_ACTUATOR_Dashboard extends LinearOpMode {
 //TODO ************* THIS IS THE TELEOP FROM THE 6TH GRADE BOT, UPDATE IT FOR THE 23168 BOT!!!!
     public Servo myServo;
     //public double setPos;
@@ -43,25 +43,25 @@ public class TEST_LINEAR_ACTUATOR extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 // Calling our methods while the OpMode is running
-                manualLinearActuator();
-//                myServo.setPosition(setPos);
+                //manualLinearActuator();
+                myServo.setPosition(setPos);
 
                 //Set up the telemetry to the driver hub
                 telemetry.addData("Set Position", setPos);
                 telemetry.update();
 
-//                // Set up channels for display in FTCDashboard
-//                FtcDashboard dashboard = FtcDashboard.getInstance();
-//                TelemetryPacket packet = new TelemetryPacket();
-//
-//                // Send a value to the dashboard for graphing
-//                dashboard.sendTelemetryPacket(packet); // Always send the packet
-//                packet.put("Set Position", setPos); // Robot-specific data
-//
-//                //Set up the Field overlay
-//                packet.fieldOverlay()
-//                        .setFill("blue")
-//                        .fillRect(-20, -20, 40, 40);
+                // Set up channels for display in FTCDashboard
+                FtcDashboard dashboard = FtcDashboard.getInstance();
+                TelemetryPacket packet = new TelemetryPacket();
+
+                // Send a value to the dashboard for graphing
+                dashboard.sendTelemetryPacket(packet); // Always send the packet
+                packet.put("Set Position", setPos); // Robot-specific data
+
+                //Set up the Field overlay
+                packet.fieldOverlay()
+                        .setFill("blue")
+                        .fillRect(-20, -20, 40, 40);
 
             }
         }
