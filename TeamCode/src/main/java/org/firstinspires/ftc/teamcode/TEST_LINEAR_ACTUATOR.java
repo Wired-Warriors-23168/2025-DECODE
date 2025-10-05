@@ -2,20 +2,25 @@ package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.PwmControl;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
-
+@Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
 public class TEST_LINEAR_ACTUATOR extends LinearOpMode {
 //TODO ************* THIS IS THE TELEOP FROM THE 6TH GRADE BOT, UPDATE IT FOR THE 23168 BOT!!!!
     public Servo myServo;
-    public double setPos;
+    //public double setPos;
 
-    // Setting our velocity targets. These values are in ticks per second!
-
+    // Declare variables
+    // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
+    public static double setPos=0.5;
 
     @Override
     public void runOpMode() {
@@ -38,9 +43,25 @@ public class TEST_LINEAR_ACTUATOR extends LinearOpMode {
         if (opModeIsActive()) {
             while (opModeIsActive()) {
                 // Calling our methods while the OpMode is running
-                manualLinearActuator();
+                //manualLinearActuator();
+                myServo.setPosition(setPos);
+
+                //Set up the telemetry to the driver hub
                 telemetry.addData("Set Position", setPos);
                 telemetry.update();
+
+                // Set up channels for display in FTCDashboard
+                FtcDashboard dashboard = FtcDashboard.getInstance();
+                TelemetryPacket packet = new TelemetryPacket();
+
+                // Send a value to the dashboard for graphing
+                dashboard.sendTelemetryPacket(packet); // Always send the packet
+                packet.put("Set Position", setPos); // Robot-specific data
+
+                //Set up the Field overlay
+                packet.fieldOverlay()
+                        .setFill("blue")
+                        .fillRect(-20, -20, 40, 40);
 
             }
         }
