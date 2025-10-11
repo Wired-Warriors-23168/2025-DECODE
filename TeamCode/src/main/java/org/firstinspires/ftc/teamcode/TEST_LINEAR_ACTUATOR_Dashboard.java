@@ -22,6 +22,11 @@ public class TEST_LINEAR_ACTUATOR_Dashboard extends LinearOpMode {
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     public static double setPos=0.5;
 
+    // Setting our velocity targets. These values are in ticks per second!
+    private static final int bankVelocity = 1300;
+    private static final int farVelocity = 1900;
+    private static final int maxVelocity = 2200;
+
     @Override
     public void runOpMode() {
         myServo = hardwareMap.get(Servo.class, "myServo");
