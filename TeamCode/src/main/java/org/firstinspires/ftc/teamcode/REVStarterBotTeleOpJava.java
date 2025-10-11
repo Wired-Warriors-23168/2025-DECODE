@@ -7,7 +7,13 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
+
+
+@Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
 public class REVStarterBotTeleOpJava extends LinearOpMode {
 
@@ -20,10 +26,12 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private DcMotor rightBackDrive;
     private RevBlinkinLedDriver lightsLED;
 
+    // Declare variables
+    // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    private static final double bankVelocity = 0.6;
-    private static final double farVelocity = 0.9;
-    private static final float maxVelocity = 1;
+    private static double bankVelocity = 0.6;
+    private static double farVelocity = 0.9;
+    private static float maxVelocity = 1;
 
     @Override
     public void runOpMode() {
@@ -55,9 +63,28 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
                 manualFeederAndagitatorControl();
+
+                /////////////////////////////////////////////////////////////////////////////////
+                //Set up the telemetry to the driver hub
                 //telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
                 telemetry.update();
+
+                /////////////////////////////////////////////////////////////////////////////////
+                // Set up channels for display in FTCDashboard
+                FtcDashboard dashboard = FtcDashboard.getInstance();
+                TelemetryPacket packet = new TelemetryPacket();
+
+                // Send a value to the dashboard for graphing
+                dashboard.sendTelemetryPacket(packet); // Always send the packet
+                packet.put("Flywheel Power", flywheel.getPower()); // Robot-specific data
+                packet.put("Feeder Power", feeder.getPower()); // Robot-specific data
+                packet.put("Agitator Power", agitator.getPower()); // Robot-specific data
+
+                //Set up the Field overlay
+                packet.fieldOverlay()
+                        .setFill("blue")
+                        .fillRect(-20, -20, 40, 40);
             }
         }
     }
