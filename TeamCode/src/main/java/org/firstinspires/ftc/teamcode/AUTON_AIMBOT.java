@@ -5,12 +5,10 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.List;
 
@@ -29,12 +27,18 @@ public class AUTON_AIMBOT extends LinearOpMode {
 
     private double shootposition = 10;
 
+    private boolean seenobelisk = false;
+
+    private int teamPipeline = 0; // blue auton
+    private int patternID = 0;
+
 
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
     public double txLimelight;
     public double tyLimelight;
     double tx = 0;
+    double ty = 0;
     int tagID;
 
     @Override
@@ -51,9 +55,9 @@ public class AUTON_AIMBOT extends LinearOpMode {
 
         telemetry.setMsTransmissionInterval(11);
 
-        limelight.pipelineSwitch(2 );
-
         limelight.start();
+
+        limelight.pipelineSwitch(2);
 
         waitForStart();
         if (opModeIsActive()) {
@@ -65,14 +69,24 @@ public class AUTON_AIMBOT extends LinearOpMode {
         }
     }
 
-
-
+    private void Pattern22() {
+        purpleServo.setPower(1);
+        sleep(1000);
+        purpleServo.setPower(0);
+        greenServo.setPower(1);
+        sleep(1000);
+        greenServo.setPower(0);
+        purpleServo.setPower(1);
+        sleep(1000);
+        purpleServo.setPower(0);
+    }
 
     private void aimBot() {
     //run if a button is held
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
             tx = result.getTx();
+            ty = result.getTy();
         }
         List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
         for (LLResultTypes.FiducialResult fiducial : fiducials) {
@@ -81,38 +95,27 @@ public class AUTON_AIMBOT extends LinearOpMode {
             }
         }
 
-        if (tagID == 22) {
-            purpleServo.setPower(1);
-            sleep(500);
-            purpleServo.setPower(0);
-            greenServo.setPower(1);
-            sleep(500);
-            greenServo.setPower(0);
-            purpleServo.setPower(1);
-            sleep(500);
-            purpleServo.setPower(0);
-
-        } else if (tagID == 23) {
-            purpleServo.setPower(1);
+        if (tagID != 0  && !seenobelisk) {
+            seenobelisk = true;
+            patternID = tagID; // save pattern
             sleep(1000);
-            purpleServo.setPower(0);
-            greenServo.setPower(1);
-            sleep(500);
-            greenServo.setPower(0);
-        } else if (tagID == 21) {
-            greenServo.setPower(1);
-            sleep(500);
-            greenServo.setPower(0);
-            purpleServo.setPower(1);
-            sleep(10000);
-            purpleServo.setPower(0);
+            tagID = 0;
+            limelight.pipelineSwitch(teamPipeline);
         }
 
+        if (patternID == 22 && tagID == 20) {
+            if (tx < 5 && ty < 5) {
+                Pattern22(); // Purple green purple
+            }
+        }
 
+        telemetry.addData("Pattern ID", patternID);
+        telemetry.addData("Seen obelisk", seenobelisk);
         telemetry.addData("Tag ID", tagID);
         telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
         telemetry.addData("Flywheel Power", flywheel.getPower());
         telemetry.addData("Target X", tx);
+        telemetry.addData("Target Y", ty);
         telemetry.update();
     }
 
