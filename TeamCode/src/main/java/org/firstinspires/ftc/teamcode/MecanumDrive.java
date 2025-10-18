@@ -110,8 +110,6 @@ public final class MecanumDrive {
 
     public final DcMotorEx leftFront, leftBack, rightBack, rightFront;
 
-    public final OTOSLocalizer otossensor;
-
     public final VoltageSensor voltageSensor;
 
     public final LazyImu lazyImu;
@@ -233,7 +231,6 @@ public final class MecanumDrive {
         leftBack = hardwareMap.get(DcMotorEx.class, "leftBack");
         rightBack = hardwareMap.get(DcMotorEx.class, "rightBack");
         rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
-        otossensor = hardwareMap.get(OTOSLocalizer.class, "sensor_otos");
 
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
