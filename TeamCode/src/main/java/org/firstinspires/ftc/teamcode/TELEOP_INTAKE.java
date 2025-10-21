@@ -12,19 +12,14 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 
 @TeleOp
 public class TELEOP_INTAKE extends LinearOpMode {
-//TODO ************* THIS IS BASED ON THE TELEOP FROM THE 6TH GRADE BOT, UPDATE IT FOR THE 23168 BOT!!!!
 
     // Declare OpMode members.
     private DcMotor intake;
     private Servo selector;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
-
-    /////////////////////////////////////////////////////////////////////////
-    // Declare variables
-    public double colorA;
-    public double colorB;
-
+    private CRServo conveyorG;
+    private CRServo conveyorP;
 
     @Override
     public void runOpMode() {
@@ -32,53 +27,68 @@ public class TELEOP_INTAKE extends LinearOpMode {
         selector = hardwareMap.get(Servo.class, "servo-selector");
         colorSensorA = hardwareMap.get(ColorSensor.class, "sensor-color-A");
         colorSensorB = hardwareMap.get(ColorSensor.class, "sensor-color-B");
+        conveyorG = hardwareMap.get(CRServo.class, "green-conveyor");
+        conveyorP = hardwareMap.get(CRServo.class, "purple-conveyor");
+
 
         // Establishing the direction and mode for the motors
         intake.setDirection(DcMotor.Direction.REVERSE);
-
+        selector.setDirection(Servo.Direction.FORWARD);
+        conveyorG.setDirection(CRServo.Direction.FORWARD);
+        conveyorP.setDirection(CRServo.Direction.FORWARD);
+        selector.setDirection(Servo.Direction.FORWARD);
 
         waitForStart();
+
         if (opModeIsActive()) {
+            conveyorG.setPower(1);
+            conveyorP.setPower(1);
             while (opModeIsActive()) {
-                // Calling our methods while the OpMode is running
-                manualIntakeSort();
-                //telemetry.addData("ARTIFACT Color", ();
+
+                intakeSort(false);
                 telemetry.update();
             }
         }
     }
 
+    public void intakeSort(boolean auto) {
 
-    /**
-     * Manual control to run the intake and sort
-     */
-    private void manualIntakeSort() {
-        // Manual control for the intake functions
-        if (gamepad1.square) {
-            runIntake();
-            sortArtifact();
-          }
+        sortArtifact();
+
+        if(gamepad2.right_bumper){
+            intake.setPower(-1);
+            selector.setPosition(0.75);
+        }
+        if(gamepad2.right_trigger > 0.2 || auto){
+            intake.setPower(1);
+        } else {
+            intake.setPower(0);
+        }
     }
 
-
-    /**
-     * The runIntake function is designed to run the intake until an ARTIFACT is ready to sort.
-     * When running this function, the intake will run until the distance sensors indicate there is an ARTIFACT in the intake, ready to sort
-     */
-    private void runIntake() {
-
+    public void sortArtifact() {
+        float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
+        telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
+        if(sumGreenPurpleness > 120){
+            selector.setPosition(1);
+        }
+        else if (sumGreenPurpleness < -70 ) {
+            selector.setPosition(0.5);
+        }
+        else {
+            selector.setPosition(0.75);
+        }
+        telemetry.addData("selector_pos",selector.getPosition());
     }
 
-    /**
-     * The sortArtifact function will utilize the selector to sort the green and purple ARTIFACTS into the correct launcher.
-     * When running this function, the color sensors will determine the color of the ARTIFACT.  There are two sensors because the holes in the
-     * ARTIFACT may cause the sensor to not read the color.  If one of the two sensors reads a color, the function should use that information to
-     * move the selector to the correct side of the launcher.
-     */
-    private void sortArtifact() {
-
+    public float greenPurplenessA(){
+        int  greenA = colorSensorA.green();
+        int purpleA = (colorSensorA.red() + colorSensorA.blue())/2;
+        return greenA - purpleA;
     }
-
-
-
+    private float greenPurplenessB(){
+        int  greenB = colorSensorB.green();
+        int purpleB = (colorSensorB.red() + colorSensorB.blue())/2;
+        return greenB - purpleB;
+    }
 }
