@@ -10,6 +10,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -25,6 +26,13 @@ public class TELEOP_MAIN extends LinearOpMode {
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
     private CRServo conveyorP;
+
+    private DcMotor lift;
+
+    private ElapsedTime runtime = new ElapsedTime();
+    final int extensionposition = 0;
+    final int packagedposition = 0;
+
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
     private DcMotor rightFrontDrive;
@@ -36,6 +44,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
         leftFrontDrive = hardwareMap.get(DcMotor.class, "left-front-drive");
         leftBackDrive = hardwareMap.get(DcMotor.class, "left-back-drive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "right-front-drive");
@@ -62,6 +71,12 @@ public class TELEOP_MAIN extends LinearOpMode {
         conveyorP.setDirection(CRServo.Direction.FORWARD);
         selector.setDirection(Servo.Direction.FORWARD);
 
+        lift = hardwareMap.get(DcMotor.class, "motor-lift");
+
+        lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift.setDirection(DcMotor.Direction.REVERSE);
+        lift.setTargetPosition(packagedposition);
+        lift.setPower(0.5);
 
         configureOtos();
 
@@ -69,10 +84,13 @@ public class TELEOP_MAIN extends LinearOpMode {
         if (opModeIsActive()) {
             conveyorG.setPower(1);
             conveyorP.setPower(1);
+
+            runtime.reset();
             while (opModeIsActive()) {
 
                 intakeSort(false);
                 drivetrain();
+                lift();
 
                 FtcDashboard dashboard = FtcDashboard.getInstance();
                 TelemetryPacket packet = new TelemetryPacket();
@@ -82,6 +100,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                         .fillRect(-20, -20, 40, 40);
 
                 telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
+                telemetry.addData("time", runtime.time());
                 telemetry.update();
             }
         }
@@ -114,7 +133,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         else {
             selector.setPosition(0.75);
         }
-        telemetry.addData("selector_pos",selector.getPosition());
+        telemetry.addData("selector pos",selector.getPosition());
     }
 
     public float greenPurplenessA(){
@@ -126,6 +145,20 @@ public class TELEOP_MAIN extends LinearOpMode {
         int  greenB = colorSensorB.green();
         int purpleB = (colorSensorB.red() + colorSensorB.blue())/2;
         return greenB - purpleB;
+    }
+
+    private void lift() {
+        if (runtime.time() > 100) {
+
+            telemetry.addData("expected lift position", lift.getTargetPosition());
+            telemetry.addData("lift position", lift.getCurrentPosition());
+
+            if (gamepad1.start) {
+                lift.setTargetPosition(extensionposition);
+            } else if (gamepad1.back) {
+                lift.setTargetPosition(packagedposition);
+            }
+        }
     }
     private void drivetrain() {
         double x;
