@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.tuning;
 import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.config.reflection.ReflectionConfig;
 import com.acmerobotics.roadrunner.MotorFeedforward;
 import com.acmerobotics.roadrunner.Pose2d;
@@ -33,9 +34,12 @@ import com.acmerobotics.roadrunner.ftc.PinpointIMU;
 import com.acmerobotics.roadrunner.ftc.PinpointView;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
 import com.qualcomm.hardware.lynx.LynxModule;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeRegistrar;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
@@ -50,10 +54,12 @@ import org.firstinspires.ftc.teamcode.TwoDeadWheelLocalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
+@Config
+//@Disabled
 public final class TuningOpModes {
     // TODO: change this to TankDrive.class if you're using tank
-    public static final Class<?> DRIVE_CLASS = MecanumDrive.class;
+    public static final Class<?> DRIVE_CLASS = SparkFunOTOS.class;
+   // public static final Class<?>  = SparkFunOTOS.class;
 
     public static final String GROUP = "quickstart";
     public static final boolean DISABLED = false;
