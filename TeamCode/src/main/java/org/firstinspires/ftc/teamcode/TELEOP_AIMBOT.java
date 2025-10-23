@@ -51,9 +51,6 @@ public class TELEOP_AIMBOT extends LinearOpMode {
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
 
-        greenServo.setPosition(0);
-        purpleServo.setPosition(0);
-
         telemetry.setMsTransmissionInterval(11);
 
         limelight.start();
@@ -63,6 +60,8 @@ public class TELEOP_AIMBOT extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             flywheel.setVelocity(farVelocity);
+            greenServo.setPosition(0);
+            purpleServo.setPosition(0);
             while (opModeIsActive()) {
 
                 aimBot();
