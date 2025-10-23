@@ -1,26 +1,23 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.hardware.limelightvision.LLStatus;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.List;
 
-@TeleOp
-public class TELEOP_AIMBOT extends LinearOpMode {
+@Autonomous
+public class AUTON_AIMBOT extends LinearOpMode {
 
     // Declare OpMode members.
-    private DcMotorEx flywheel;
+    private DcMotor flywheel;
     private Limelight3A limelight;
 
     private Servo purpleServo;
@@ -31,8 +28,6 @@ public class TELEOP_AIMBOT extends LinearOpMode {
     private int teamPipeline = 0; // blue auton
     private int patternID = 0;
 
-    private double farVelocity = 1360;
-    private double closeVelocity = 1200;
     public double txLimelight;
     public double tyLimelight;
     double tx = 0;
@@ -41,15 +36,18 @@ public class TELEOP_AIMBOT extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        flywheel = hardwareMap.get(DcMotorEx.class, "motor-flywheel");
+        flywheel = hardwareMap.get(DcMotor.class, "motor-flywheel");
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
 
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheel.setDirection(DcMotorEx.Direction.REVERSE);
+        flywheel.setDirection(DcMotor.Direction.REVERSE);
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
+
+        greenServo.setPosition(0);
+        purpleServo.setPosition(0);
 
         telemetry.setMsTransmissionInterval(11);
 
@@ -59,9 +57,6 @@ public class TELEOP_AIMBOT extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-            flywheel.setVelocity(farVelocity);
-            greenServo.setPosition(0);
-            purpleServo.setPosition(0);
             while (opModeIsActive()) {
 
                 aimBot();
@@ -73,7 +68,7 @@ public class TELEOP_AIMBOT extends LinearOpMode {
 
 
     private void aimBot() {
-
+    //run if a button is held
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
             tx = result.getTx();
@@ -82,7 +77,7 @@ public class TELEOP_AIMBOT extends LinearOpMode {
         List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
         for (LLResultTypes.FiducialResult fiducial : fiducials) {
             if (fiducial != null) {
-                tagID = fiducial.getFiducialId();
+               tagID = fiducial.getFiducialId();
             }
         }
 
@@ -93,8 +88,7 @@ public class TELEOP_AIMBOT extends LinearOpMode {
             tagID = 0;
             limelight.pipelineSwitch(teamPipeline);
         }
-        if (gamepad2.left_trigger > 0.5) {  //&& result.isValid()+
-
+        if (gamepad2.left_trigger > 0.5 ) {  //&& result.isValid()+
             if (patternID == 22 && tagID == 20) {
                 rotate();
                 if (Math.abs(tx) < 5) {
