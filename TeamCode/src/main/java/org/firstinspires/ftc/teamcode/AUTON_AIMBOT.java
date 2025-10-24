@@ -114,6 +114,11 @@ public class AUTON_AIMBOT extends LinearOpMode {
             sleep(250);
             greenServo.setPosition(0);
         }
+        if (gamepad2.x) {
+            flywheel.setPower(2);
+        } else {
+            flywheel.setPower(0);
+        }
 
         telemetry.addData("Pattern ID", patternID);
         telemetry.addData("Seen obelisk", seenobelisk);
