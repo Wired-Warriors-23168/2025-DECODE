@@ -96,10 +96,10 @@ public class TELEOP_MAIN extends LinearOpMode {
 
         intake = hardwareMap.get(DcMotor.class, "motor-intake");
         selector = hardwareMap.get(Servo.class, "servo-selector");
-        colorSensorA = hardwareMap.get(ColorSensor.class, "sensor-color-A");
-        colorSensorB = hardwareMap.get(ColorSensor.class, "sensor-color-B");
-        conveyorG = hardwareMap.get(CRServo.class, "green-conveyor");
-        conveyorP = hardwareMap.get(CRServo.class, "purple-conveyor");
+        colorSensorA = hardwareMap.get(ColorSensor.class, "sensor-color-a");
+        colorSensorB = hardwareMap.get(ColorSensor.class, "sensor-color-b");
+        conveyorG = hardwareMap.get(CRServo.class, "servo-conveyor-green");
+        conveyorP = hardwareMap.get(CRServo.class, "servo-conveyor-purple");
 
 
         // Establishing the direction and mode for the motors
