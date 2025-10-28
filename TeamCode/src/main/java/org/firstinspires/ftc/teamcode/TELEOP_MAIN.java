@@ -28,6 +28,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     private DcMotorEx flywheel;
     private Limelight3A limelight;
+    double previousError = 0;
 
     private Servo purpleServo;
     private Servo greenServo;
@@ -44,6 +45,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     double tx = 0;
     double ty = 0;
     int tagID;
+    double deltaTime;
 
     private DcMotor intake;
     private Servo selector;
@@ -54,9 +56,15 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     private DcMotor lift;
 
+
+
     private ElapsedTime runtime = new ElapsedTime();
     final int extensionposition = 0;
     final int packagedposition = 0;
+    public ElapsedTime deltaTimer = new ElapsedTime();
+
+    // Create a variable to hold the last recorded time
+    public double lastTime = 0.0;
 
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
@@ -119,9 +127,15 @@ public class TELEOP_MAIN extends LinearOpMode {
         telemetry.setMsTransmissionInterval(11);
 
         configureOtos();
+        deltaTimer.reset();
+        lastTime = deltaTimer.seconds();
 
         waitForStart();
         if (opModeIsActive()) {
+            double currentTime = deltaTimer.seconds();
+            deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+
             flywheel.setVelocity(farVelocity);
             greenServo.setPosition(0);
             purpleServo.setPosition(0);
@@ -242,9 +256,18 @@ public class TELEOP_MAIN extends LinearOpMode {
         greenServo.setPosition(0);
     }
     private void rotate() {
+        double kP = (1/24);
+        double kD = 0;
         // spin drive with p controller
-        double wheelpower = (tx/Math.abs(tx)) * 0.5; // TODO make p controller
-        //leftFrontDrive.setPower(wheelpower);
+         double error = -tx;
+         double derivativeError = (error - previousError) / deltaTime;
+        double wheelpower = (error * kP + kD * derivativeError);
+        previousError = error;
+//        leftFrontDrive.setPower(wheelpower);
+//        leftBackDrive.setPower(wheelpower);
+//        rightFrontDrive.setPower(wheelpower);
+//        rightBackDrive.setPower(wheelpower);
+
     }
     public void intakeSort(boolean auto) {
 
