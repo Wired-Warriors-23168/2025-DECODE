@@ -4,6 +4,7 @@ import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -26,12 +27,18 @@ public class TELEOP_AIMBOT extends LinearOpMode {
     private Servo purpleServo;
     private Servo greenServo;
 
+    private PIDFCoefficients shooterpid = new PIDFCoefficients(5, 0, 0, 0);
+
     private boolean seenobelisk = false;
 
     private int teamPipeline = 0; // blue auton
     private int patternID = 0;
 
-    private int ballnumber = 1;
+    private int ballnumber = 0;
+    private double servoShootPosGreen = 0.2467;
+    private double servoShootPosPurple = 0.0933;
+    private double servoShootPosGreenDown = 0.32;
+    private double servoShootPosPurpleDown = 0.02;
     private double farVelocity = 1360;
     private double closeVelocity = 1200;
     private double targetVelocity;
@@ -49,6 +56,9 @@ public class TELEOP_AIMBOT extends LinearOpMode {
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
 
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, shooterpid);
+
+        flywheel.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
@@ -62,8 +72,8 @@ public class TELEOP_AIMBOT extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             targetVelocity = 2500;
-            greenServo.setPosition(0);
-            purpleServo.setPosition(0);
+            greenServo.setPosition(servoShootPosGreen);  // 0.3 down 0.2267 up
+            purpleServo.setPosition(servoShootPosPurple);      //0.02 down 0.0933 up
             while (opModeIsActive()) {
 
                 aimBot();
@@ -75,8 +85,13 @@ public class TELEOP_AIMBOT extends LinearOpMode {
 
 
     private void aimBot() {
-
-        flywheel.setVelocity(targetVelocity);
+        if (gamepad2.aWasPressed()) {
+            if (flywheel.getVelocity() < 2000) {
+                flywheel.setVelocity(targetVelocity);
+            } else {
+                flywheel.setVelocity(0);
+            }
+        }
 
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
@@ -117,19 +132,19 @@ public class TELEOP_AIMBOT extends LinearOpMode {
                 }
             }
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
-            purpleServo.setPosition(0.2);
+            purpleServo.setPosition(servoShootPosPurple);
             sleep(250);
-            purpleServo.setPosition(0);
+            purpleServo.setPosition(servoShootPosPurpleDown);
         } else if (gamepad2.dpadLeftWasPressed()) {      // Forced shooting: Green
-            greenServo.setPosition(0.2);
+            greenServo.setPosition(servoShootPosGreen);
             sleep(250);
-            greenServo.setPosition(0);
+            greenServo.setPosition(servoShootPosGreenDown);
         }
         if (gamepad2.x) {
-            flywheel.setPower(1);
-        } else {
-           // flywheel.setPower(0);
+            ballnumber = 1;
+           // flywheel.setVelocity(2500);
         }
+
 
         telemetry.addData("Pattern ID", patternID);
         telemetry.addData("Ball Number", ballnumber);
@@ -142,58 +157,58 @@ public class TELEOP_AIMBOT extends LinearOpMode {
     }
     private void Pattern22() {
         if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 20) {
-            purpleServo.setPosition(0.2);
+            purpleServo.setPosition(servoShootPosPurple);
             sleep(250);
-            purpleServo.setPosition(0);
+            purpleServo.setPosition(servoShootPosPurpleDown);
             ++ballnumber;
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 20) {
-            greenServo.setPosition(0.2);
+            greenServo.setPosition(servoShootPosGreen);
             sleep(250);
-            greenServo.setPosition(0);
+            greenServo.setPosition(servoShootPosGreenDown);
             ++ballnumber;
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 20) {
-            purpleServo.setPosition(0.2);
+            purpleServo.setPosition(servoShootPosPurple);
             sleep(250);
-            purpleServo.setPosition(0);
-            ballnumber = 1;
+            purpleServo.setPosition(servoShootPosPurpleDown);
+            ballnumber = 0;
         }
     }
     private void Pattern21() {
         if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 20) {
-            greenServo.setPosition(0.2);
+            greenServo.setPosition(servoShootPosGreen);
             sleep(250);
-            greenServo.setPosition(0);
+            greenServo.setPosition(servoShootPosGreenDown);
             ++ballnumber;
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 20) {
-            purpleServo.setPosition(0.2);
+            purpleServo.setPosition(servoShootPosPurple);
             sleep(250);
-            purpleServo.setPosition(0);
+            purpleServo.setPosition(servoShootPosPurpleDown);
             ++ballnumber;
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 20) {
             sleep(500);
-            purpleServo.setPosition(0.2);
+            purpleServo.setPosition(servoShootPosGreen);
             sleep(250);
-            purpleServo.setPosition(0);
-            ballnumber = 1;
+            purpleServo.setPosition(servoShootPosPurpleDown);
+            ballnumber = 0;
         }
     }
     private void Pattern23() {
         if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 20) {
-            purpleServo.setPosition(0.2);
+            purpleServo.setPosition(servoShootPosPurple);
             sleep(250);
-            purpleServo.setPosition(0);
+            purpleServo.setPosition(servoShootPosPurpleDown);
             ++ballnumber;
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 20) {
             sleep(250);
-            purpleServo.setPosition(0.2);
+            purpleServo.setPosition(servoShootPosPurple);
             sleep(250);
-            purpleServo.setPosition(0);
+            purpleServo.setPosition(servoShootPosPurpleDown);
             ++ballnumber;
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 20) {
-            greenServo.setPosition(0.2);
+            greenServo.setPosition(servoShootPosGreen);
             sleep(250);
-            greenServo.setPosition(0);
-            ballnumber = 1;
+            greenServo.setPosition(servoShootPosGreenDown);
+            ballnumber = 0;
         }
     }
     private void rotate() {
