@@ -279,7 +279,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             ++ballnumber;
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 20) {
             sleep(500);
-            purpleServo.setPosition(servoShootPosGreen);
+            purpleServo.setPosition(servoShootPosPurple);
             sleep(250);
             purpleServo.setPosition(servoShootPosPurpleDown);
             ballnumber = 0;
