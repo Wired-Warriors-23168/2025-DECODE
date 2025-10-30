@@ -72,8 +72,8 @@ public class TELEOP_AIMBOT extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             targetVelocity = 2500;
-            greenServo.setPosition(servoShootPosGreen);  // 0.3 down 0.2267 up
-            purpleServo.setPosition(servoShootPosPurple);      //0.02 down 0.0933 up
+            greenServo.setPosition(servoShootPosGreenDown);  // 0.3 down 0.2267 up
+            purpleServo.setPosition(servoShootPosPurpleDown);      //0.02 down 0.0933 up
             while (opModeIsActive()) {
 
                 aimBot();
