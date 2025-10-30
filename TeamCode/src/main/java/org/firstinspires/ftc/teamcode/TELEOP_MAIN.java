@@ -54,6 +54,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private CRServo conveyorG;
     private CRServo conveyorP;
 
+    private double sortOffset = 55/300;
     private DcMotor lift;
 
 
@@ -259,7 +260,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         double kP = (1/24);
         double kD = 0;
         // spin drive with p controller
-         double error = -tx;
+         double error = -ty;
          double derivativeError = (error - previousError) / deltaTime;
         double wheelpower = (error * kP + kD * derivativeError);
         previousError = error;
@@ -275,7 +276,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
         if(gamepad2.right_bumper){
             intake.setPower(-1);
-            selector.setPosition(0.75);
+            selector.setPosition(0.4);
         }
         if(gamepad2.right_trigger > 0.2 || auto){
             intake.setPower(1);
@@ -288,13 +289,13 @@ public class TELEOP_MAIN extends LinearOpMode {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if(sumGreenPurpleness > 120){
-            selector.setPosition(1);
+            selector.setPosition(0.4 + sortOffset);
         }
         else if (sumGreenPurpleness < -70 ) {
-            selector.setPosition(0.5);
+            selector.setPosition(0.4 - sortOffset);
         }
         else {
-            selector.setPosition(0.75);
+            selector.setPosition(0.4);
         }
         telemetry.addData("selector pos",selector.getPosition());
     }
