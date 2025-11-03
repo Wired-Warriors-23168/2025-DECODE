@@ -77,39 +77,67 @@ public class AUTO_Placeholder extends LinearOpMode {
     private Limelight3A limelight;
     private SparkFunOTOS otos;
 
-    private DcMotor leftFront;
-    private DcMotor leftBack;
-    private DcMotor rightFront;
-    private DcMotor rightBack;
+    private DcMotorSimple flywheel;
+    private DcMotorSimple feeder;
+    private DcMotor leftFrontDrive;
+    private DcMotor leftBackDrive;
+    private CRServo agitator;
+    private DcMotor rightFrontDrive;
+    private DcMotor rightBackDrive;
 
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
     //TODO ********** Set the Alliance Color  **************
-
+    double flywheelPowerBank;
+    double flywheelPowerMid;
+    double flywheelPowerFar;
+    double feederPower;
+    int feederRotations;
+    double feederLaunchTime;
+    double launchWaitTime;
 
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
     Pose2d beginPose = new Pose2d(0, 0, Math.toRadians(0));
+
     @Override
     public void runOpMode() {
 
         //Set Hardware Map
-
+        flywheel = hardwareMap.get(DcMotorSimple.class, "motor-flywheel");
+        feeder = hardwareMap.get(DcMotorSimple.class, "motor-feeder");
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
 
         //initDevices(); // Initialize all motors, servos, sensors
 
-
+        // Establishing the direction and mode for the motors
+        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        feeder.setDirection(DcMotorSimple.Direction.REVERSE);
+        ((DcMotorEx) flywheel).setMotorEnable();
+        ((DcMotorEx) feeder).setMotorEnable();
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
+        //drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
 
         //Set all actuator target positions
-
+        flywheelPowerBank = 0.5;    //the bankshot shooting power
+        flywheelPowerMid = 0.9;     //the middle shooting power
+        flywheelPowerFar = 1.0;     //the far shooting power
+        feederPower = 1.0;          //the feeder power when activating
+        feederLaunchTime = 1.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
+        feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)
+        launchWaitTime = 2.0;       //the wait time between launches so the flywheel can spin up
 
         //Set all field positions
+        //Pose2d waypointBank = new Pose2d(-30,-30,Math.toRadians(-135));  //Waypoint for spline, bankshot launch position
+        //Pose2d waypointMid = new Pose2d(-30,-30,Math.toRadians(-135));    //Waypoint for spline, middle launch position
+        //Pose2d waypointFar = new Pose2d(-30,-30,Math.toRadians(-135));    //Waypoint for spline, far launch position
+        //Pose2d waypointPushStart = new Pose2d(-30,-30,Math.toRadians(-135));   //Waypoint to start pushing artifacts
+        //Pose2d waypointPushEndSpline = new Pose2d(-30,-30,Math.toRadians(-135));       //Waypoint to end pushing artifacts with a spline
+        //Vector2d waypointPushEndLine = new Vector2d(-51,-39);                 //Waypoint to end pushing artifacts with a LineTo
 
 
 
@@ -122,6 +150,8 @@ public class AUTO_Placeholder extends LinearOpMode {
         waitForStart();
 
         if(isStopRequested()) return;
+
+        flywheel.setPower(1);       //Set the flywheel to max power to start it up
 
         //Build the actions for our AUTO mode
         Actions.runBlocking(
@@ -136,6 +166,14 @@ public class AUTO_Placeholder extends LinearOpMode {
                         .turn(Math.toRadians(90))
                         .lineToY(0)
                         .turn(Math.toRadians(90))
+
+//                        //launch an artifact with the feeder
+//                        .stopAndAdd(new SequentialAction(
+//                                new launchArtifactAction(feeder, feederLaunchTime, feederPower),    //rotate the feeder for time feederLaunchTime
+//                                new setFeederPowerOffAction(feeder),                                //turn off the feeder
+//                                new launchWait(launchWaitTime)                                      //wait for launchWaitTime seconds
+//                        ))
+
 
                         .build());
 
@@ -155,8 +193,66 @@ public class AUTO_Placeholder extends LinearOpMode {
     //PUBLIC CLASSES FOR ROADRUNNER ACTION DEFINITIONS
     //////////////////////////////////////////////////
 
+    // Set the feeder power to zero
+    public class setFeederPowerOffAction implements Action {
+        DcMotorSimple feeder;
 
+        public setFeederPowerOffAction(DcMotorSimple feeder) {
+            this.feeder = feeder;
+        }
 
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            feeder.setPower(0);
+            return false;
+        }
+    }
+
+    // Set the feeder power to one
+    public class launchArtifactAction implements Action {
+        DcMotorSimple feeder;
+        double launchTime;
+        double feederPower;
+        ElapsedTime timer;
+
+        public launchArtifactAction(DcMotorSimple feeder, double launchTime, double feederPower) {
+            this.feeder = feeder;
+            this.launchTime = launchTime;
+            this.feederPower = feederPower;
+            timer = new ElapsedTime();
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            feeder.setPower(feederPower);
+
+            if (timer.seconds() < launchTime) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    // Wait a set time after a launch without using wait() or sleep()
+    public class launchWait implements Action {
+        double waitTime;
+        ElapsedTime timer;
+
+        public launchWait(double waitTime) {
+            this.waitTime = waitTime;
+            timer = new ElapsedTime();
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            if (timer.seconds() < waitTime) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
 
 
 
