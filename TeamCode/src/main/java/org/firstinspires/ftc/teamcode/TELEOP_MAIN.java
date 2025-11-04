@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.hardware.Sensor;
+
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -40,15 +42,15 @@ public class TELEOP_MAIN extends LinearOpMode {
     private int teamPipeline = 0; // blue auton
     private int patternID = 0;
     private int ballnumber = 0;
-    private double servoShootPosGreen = 0.2467;
-    private double servoShootPosPurple = 0.0933;
+    private double servoShootPosGreen = 0.1667;  //was 0.2467
+    private double servoShootPosPurple = 0.17;  //was 0.0933
     private double servoShootPosGreenDown = 0.32;
     private double servoShootPosPurpleDown = 0.02;
 
     private double farVelocity = 1360;
     private double closeVelocity = 1200;
     private double idleVelocity = 600;
-    private double targetVelocity = 0;
+    private double targetVelocity = 600;
     private boolean shooterOn = false;
     public double txLimelight;
     public double tyLimelight;
@@ -93,10 +95,10 @@ public class TELEOP_MAIN extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
+        poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
 
-        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+ //       flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, shooterpid);
-
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         greenServo.setDirection(Servo.Direction.FORWARD);
@@ -132,7 +134,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         selector.setDirection(Servo.Direction.FORWARD);
 
         lift = hardwareMap.get(DcMotor.class, "motor-lift");
-
+        lift.setTargetPosition(0);
         lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift.setDirection(DcMotor.Direction.REVERSE);
         lift.setTargetPosition(packagedposition);
@@ -149,7 +151,6 @@ public class TELEOP_MAIN extends LinearOpMode {
             double currentTime = deltaTimer.seconds();
             deltaTime = currentTime - lastTime;
             lastTime = currentTime;
-
             flywheel.setVelocity(targetVelocity);
             greenServo.setPosition(servoShootPosGreenDown);
             purpleServo.setPosition(servoShootPosPurpleDown);
@@ -188,16 +189,19 @@ public class TELEOP_MAIN extends LinearOpMode {
                 break;
             case WAITING_FOR_SERVO:
                 if (servoTime.milliseconds() - startServoTime > 250) {
+                  //  startServoTime = 0;
                     shooterState = shooterState.IDLE_WITH_FLYWHEEL;
                 }
             case IDLE_WITH_FLYWHEEL:
+
                 break;
         }
-        if (shooterOn) {
-            flywheel.setVelocity(targetVelocity);
-        } else {
-            flywheel.setVelocity(0);
-        }
+//        if (shooterOn) {
+//            flywheel.setVelocity(targetVelocity);
+//        } else {
+//            flywheel.setVelocity(0);
+//        }
+
 
         LLResult result = limelight.getLatestResult();
         if (result != null && result.isValid()) {
@@ -219,7 +223,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             limelight.pipelineSwitch(teamPipeline);
         }
 
-        if (gamepad2.right_bumper) {  //&& result.isValid()+
+        if (gamepad2.yWasPressed()) {  //&& result.isValid()+
 
             if (patternID == 22 && tagID == 20) {
                 rotate();
@@ -248,13 +252,13 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
         if (gamepad2.x) {
             ballnumber = 1;
-            // flywheel.setVelocity(2500);
         }
         if (gamepad1.aWasPressed()) {
             shooterOn = !shooterOn;
         }
 
-
+        telemetry.addData("timer start", startServoTime);
+        telemetry.addData("Shooter On", shooterOn);
         telemetry.addData("Pattern ID", patternID);
         telemetry.addData("Ball Number", ballnumber);
         telemetry.addData("Seen obelisk", seenobelisk);
@@ -265,32 +269,32 @@ public class TELEOP_MAIN extends LinearOpMode {
         telemetry.addData("Target Y", ty);
     }
     private void Pattern22() {
-        if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 20) {
+        if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
                 purpleServo.setPosition(servoShootPosPurple);
-            }
+        }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(servoShootPosPurpleDown);
                 ++ballnumber;
             }
-        } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 20) {
-            if(!(startServoTime > 1)) {
+        } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
+            if((startServoTime > 1)) {  //REMOVED THE ! TO TEST
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
                 greenServo.setPosition(servoShootPosGreen);
-            }
+           }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 greenServo.setPosition(servoShootPosGreenDown);
                 ++ballnumber;
             }
-        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 20) {
-            if(!(startServoTime > 1)) {
+        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
+           if((startServoTime > 1)) {  //REMOVED THE ! TO TEST
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
                 purpleServo.setPosition(servoShootPosPurple);
-            }
+           }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(servoShootPosPurpleDown);
                 ballnumber = 0;
@@ -299,7 +303,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     }
 
     private void Pattern21() {
-        if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 20) {
+        if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
@@ -309,7 +313,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 greenServo.setPosition(servoShootPosGreenDown);
                 ++ballnumber;
             }
-        } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 20) {
+        } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 purpleServo.setPosition(servoShootPosPurple);
                 startServoTime = servoTime.milliseconds();
@@ -319,17 +323,17 @@ public class TELEOP_MAIN extends LinearOpMode {
                 purpleServo.setPosition(servoShootPosPurpleDown);
                 ++ballnumber;
             }
-        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 20) {
+        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(servoShootPosPurple);
-                ++ballnumber;
+                ballnumber = 0;
             }
         }
-        else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 20) {
+        else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 60) {
             if (!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
@@ -341,7 +345,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
     }
     private void Pattern23() {
-        if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 20) {
+        if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 purpleServo.setPosition(servoShootPosPurple);
                 startServoTime = servoTime.milliseconds();
@@ -351,7 +355,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 purpleServo.setPosition(servoShootPosPurpleDown);
                 ++ballnumber;
             }
-        } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 20) {
+        } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
@@ -360,17 +364,17 @@ public class TELEOP_MAIN extends LinearOpMode {
                 purpleServo.setPosition(servoShootPosPurple);
                 ++ballnumber;
             }
-            else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 20) {
+            else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
                 if(!(startServoTime > 1)) {
                     startServoTime = servoTime.milliseconds();
                     shooterState = shooterState.WAITING_FOR_SERVO;
                 }
                 if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                     purpleServo.setPosition(servoShootPosPurpleDown);
-                    ++ballnumber;
+                    ballnumber = 0;
                 }
             }
-        } else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 20) {
+        } else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 greenServo.setPosition(servoShootPosGreen);
                 startServoTime = servoTime.milliseconds();
@@ -413,10 +417,12 @@ public class TELEOP_MAIN extends LinearOpMode {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if(sumGreenPurpleness > 120){
-            selector.setPosition(0.4 + sortOffset);
+            //selector.setPosition(0.4 + sortOffset); //calculating the offset here isn't working - data type?
+            selector.setPosition(0.22);
         }
         else if (sumGreenPurpleness < -70 ) {
-            selector.setPosition(0.4 - sortOffset);
+           //selector.setPosition(0.4 - sortOffset);  //calculating the offset here isn't working - data type?
+            selector.setPosition(0.58);
         }
         else {
             selector.setPosition(0.4);
