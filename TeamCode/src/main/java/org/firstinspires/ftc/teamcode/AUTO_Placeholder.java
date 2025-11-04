@@ -158,6 +158,7 @@ public class AUTO_Placeholder extends LinearOpMode {
                 drive.actionBuilder(beginPose)
 
                         // First Move
+                        //Drive in a 30-in square straight, 90deg counterclockwise, straight, 90deg counterclockwise, straight, 90deg counterclockwise, straight, 90deg counterclockwise
                         .lineToX(30)
                         .turn(Math.toRadians(90))
                         .lineToY(30)
