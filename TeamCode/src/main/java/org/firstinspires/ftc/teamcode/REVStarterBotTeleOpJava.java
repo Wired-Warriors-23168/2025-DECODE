@@ -28,7 +28,7 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private CRServo agitator;
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
-    private RevBlinkinLedDriver lightsLED;
+    private RevBlinkinLedDriver lightsLED; //NOT the gobilda light...
 
     private Servo servo;
     SparkFunOTOS poseOTOS;
