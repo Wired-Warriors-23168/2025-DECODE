@@ -47,7 +47,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * put, get, containsKey, remove, etc.
  */
 @TeleOp(name = "Concept: Blackboard", group = "Concept")
-//@Disabled
+@Disabled
 public class ConceptBlackboard extends OpMode {
     // We use constants here so we won't have the problem of typos in different places when we
     // meant to refer to the same thing.
