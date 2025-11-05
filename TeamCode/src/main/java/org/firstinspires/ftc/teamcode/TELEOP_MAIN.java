@@ -66,7 +66,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private CRServo conveyorG;
     private CRServo conveyorP;
 
-    private double sortOffset = 55/300;
+    private double sortOffset = 55.0/300.0;
     private DcMotor lift;
 
 
@@ -189,7 +189,6 @@ public class TELEOP_MAIN extends LinearOpMode {
                 break;
             case WAITING_FOR_SERVO:
                 if (servoTime.milliseconds() - startServoTime > 250) {
-                  //  startServoTime = 0;
                     shooterState = shooterState.IDLE_WITH_FLYWHEEL;
                 }
             case IDLE_WITH_FLYWHEEL:
@@ -280,7 +279,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
-            if((startServoTime > 1)) {  //REMOVED THE ! TO TEST
+            if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
                 greenServo.setPosition(servoShootPosGreen);
@@ -290,7 +289,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 ++ballnumber;
             }
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
-           if((startServoTime > 1)) {  //REMOVED THE ! TO TEST
+           if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
                 purpleServo.setPosition(servoShootPosPurple);
@@ -417,12 +416,13 @@ public class TELEOP_MAIN extends LinearOpMode {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if(sumGreenPurpleness > 120){
-            //selector.setPosition(0.4 + sortOffset); //calculating the offset here isn't working - data type?
-            selector.setPosition(0.22);
+            selector.setPosition(0.4 + sortOffset); //calculating the offset here isn't working - data type?
+            //selector.setPosition(0.22);
         }
         else if (sumGreenPurpleness < -70 ) {
-           //selector.setPosition(0.4 - sortOffset);  //calculating the offset here isn't working - data type?
-            selector.setPosition(0.58);
+           selector.setPosition(0.4 - sortOffset);  //calculating the offset here isn't working - data type?
+           //Should work now
+            //selector.setPosition(0.58);
         }
         else {
             selector.setPosition(0.4);
