@@ -44,10 +44,10 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     public void runOpMode() {
         flywheel = hardwareMap.get(DcMotorSimple.class, "motor-flywheel");
         feeder = hardwareMap.get(DcMotorSimple.class, "motor-feeder");
-        leftFrontDrive = hardwareMap.get(DcMotor.class, "leftFront");
-        leftBackDrive = hardwareMap.get(DcMotor.class, "leftBack");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFront");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "rightBack");
+        leftFrontDrive = hardwareMap.get(DcMotor.class, "left-front-drive");
+        leftBackDrive = hardwareMap.get(DcMotor.class, "left-back-drive");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "right-front-drive");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "right-back-drive");
         agitator = hardwareMap.get(CRServo.class, "servo-agitator");
         lightsLED = hardwareMap.get(RevBlinkinLedDriver.class,"pwm-LED");
         poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
