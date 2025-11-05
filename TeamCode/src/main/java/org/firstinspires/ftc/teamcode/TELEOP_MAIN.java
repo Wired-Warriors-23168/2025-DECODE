@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.hardware.Sensor;
-
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -42,10 +40,13 @@ public class TELEOP_MAIN extends LinearOpMode {
     private int teamPipeline = 0; // blue auton
     private int patternID = 0;
     private int ballnumber = 0;
-    private double servoShootPosGreen = 0.1667;  //was 0.2467
-    private double servoShootPosPurple = 0.17;  //was 0.0933
-    private double servoShootPosGreenDown = 0.32;
-    private double servoShootPosPurpleDown = 0.02;
+    private double greenShootPos = 0.1667;  //was 0.2467
+    private double purpleShootPos = 0.17;  //was 0.0933
+    private double greenDownPos = 0.32;
+    private double purpleDownPos = 0.02;
+    private double greenHoldPos = 0.27;
+    private double purpleHoldPos = 0.07;
+
 
     private double farVelocity = 1360;
     private double closeVelocity = 1200;
@@ -152,8 +153,8 @@ public class TELEOP_MAIN extends LinearOpMode {
             deltaTime = currentTime - lastTime;
             lastTime = currentTime;
             flywheel.setVelocity(targetVelocity);
-            greenServo.setPosition(servoShootPosGreenDown);
-            purpleServo.setPosition(servoShootPosPurpleDown);
+            greenServo.setPosition(greenDownPos);
+            purpleServo.setPosition(purpleDownPos);
 
             conveyorG.setPower(1);
             conveyorP.setPower(1);
@@ -241,13 +242,20 @@ public class TELEOP_MAIN extends LinearOpMode {
                 }
             }
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
-            purpleServo.setPosition(servoShootPosPurple);
+            purpleServo.setPosition(purpleShootPos);
             sleep(250);
-            purpleServo.setPosition(servoShootPosPurpleDown);
+            purpleServo.setPosition(purpleDownPos);
         } else if (gamepad2.dpadLeftWasPressed()) {      // Forced shooting: Green
-            greenServo.setPosition(servoShootPosGreen);
+            greenServo.setPosition(greenShootPos);
             sleep(250);
-            greenServo.setPosition(servoShootPosGreenDown);
+            greenServo.setPosition(greenDownPos);
+        } else if (true) { // needs distance sensor!!!!!!!!!!!
+            greenServo.setPosition(greenDownPos);
+            purpleServo.setPosition(purpleDownPos);
+        }
+        else{
+                greenServo.setPosition(greenHoldPos);
+                purpleServo.setPosition(purpleHoldPos);
         }
         if (gamepad2.x) {
             ballnumber = 1;
@@ -255,7 +263,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         if (gamepad1.aWasPressed()) {
             shooterOn = !shooterOn;
         }
-
         telemetry.addData("timer start", startServoTime);
         telemetry.addData("Shooter On", shooterOn);
         telemetry.addData("Pattern ID", patternID);
@@ -272,30 +279,30 @@ public class TELEOP_MAIN extends LinearOpMode {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
         }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                greenServo.setPosition(servoShootPosGreen);
+                greenServo.setPosition(greenShootPos);
            }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                greenServo.setPosition(servoShootPosGreenDown);
+                greenServo.setPosition(greenDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
            if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
            }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
                 ballnumber = 0;
             }
         }
@@ -306,20 +313,20 @@ public class TELEOP_MAIN extends LinearOpMode {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                greenServo.setPosition(servoShootPosGreen);
+                greenServo.setPosition(greenShootPos);
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                greenServo.setPosition(servoShootPosGreenDown);
+                greenServo.setPosition(greenDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -328,7 +335,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
                 ballnumber = 0;
             }
         }
@@ -338,7 +345,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
                 ballnumber = 0;
             }
         }
@@ -346,12 +353,12 @@ public class TELEOP_MAIN extends LinearOpMode {
     private void Pattern23() {
         if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -360,7 +367,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
                 ++ballnumber;
             }
             else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -369,16 +376,16 @@ public class TELEOP_MAIN extends LinearOpMode {
                     shooterState = shooterState.WAITING_FOR_SERVO;
                 }
                 if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                    purpleServo.setPosition(servoShootPosPurpleDown);
+                    purpleServo.setPosition(purpleDownPos);
                     ballnumber = 0;
                 }
             }
         } else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
-                greenServo.setPosition(servoShootPosGreen);
+                greenServo.setPosition(greenShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                greenServo.setPosition(servoShootPosGreenDown);
+                greenServo.setPosition(greenDownPos);
                 ballnumber = 0;
             }
         }
