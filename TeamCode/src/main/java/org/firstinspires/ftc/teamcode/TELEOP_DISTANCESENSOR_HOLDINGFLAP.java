@@ -182,13 +182,13 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
         }
     }
 
-    private boolean purpleBallDetected() {
-        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
-        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
-            telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
-            telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
-        }
-    }
+//    private boolean purpleBallDetected() {
+//        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
+//        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
+//            telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
+//            telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
+//        }
+//    }
     private void aimBot() {
         switch (shooterState) {
             case IDLE:

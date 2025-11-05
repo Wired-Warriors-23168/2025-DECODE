@@ -193,11 +193,11 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     }
     private boolean greenBallDetected() {
-        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
+        if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
             telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
             telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         }
-        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
+        return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
 
     }
     private void aimBot() {
@@ -256,21 +256,21 @@ public class TELEOP_MAIN extends LinearOpMode {
             limelight.pipelineSwitch(teamPipeline);
         }
 
-        if (gamepad2.yWasPressed()) {  //&& result.isValid()+
+        if (gamepad2.y) {  //&& result.isValid()+
 
             if (patternID == 22 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern22(); // Purple green purple
                 }
             } else if (patternID == 21 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern21(); // Green purple purple
                 }
             } else if (patternID == 23 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern23(); // Purple purple green
                 }
             }
