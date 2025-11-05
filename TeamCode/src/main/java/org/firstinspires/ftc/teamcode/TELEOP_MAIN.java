@@ -201,6 +201,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     }
     private void aimBot() {
+        //State machine important!!!
         switch (shooterState) {
             case IDLE:
                 flywheel.setVelocity(idleVelocity);
@@ -353,19 +354,14 @@ public class TELEOP_MAIN extends LinearOpMode {
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(purpleDownPos);
-                ++ballnumber;
-            }
-        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
-            if(!(startServoTime > 1)) {
-                startServoTime = servoTime.milliseconds();
-                shooterState = shooterState.WAITING_FOR_SERVO;
-            }
-            if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(purpleShootPos);
+                if(purpleBallDetected()) {
+                    ++ballnumber;
+                }
             }
         }
-        else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 60) {
+        else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
             if (!(startServoTime > 1)) {
+                purpleServo.setPosition(purpleShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
@@ -385,27 +381,21 @@ public class TELEOP_MAIN extends LinearOpMode {
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(purpleDownPos);
-                ++ballnumber;
+                if(purpleBallDetected()) {
+                    purpleServo.setPosition(purpleShootPos);
+                    ++ballnumber;
+                }
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
-            if(!(startServoTime > 1)) {
-                startServoTime = servoTime.milliseconds();
-                shooterState = shooterState.WAITING_FOR_SERVO;
-            }
-            if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(purpleShootPos);
-                ++ballnumber;
-            }
-            else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
                 if(!(startServoTime > 1)) {
                     startServoTime = servoTime.milliseconds();
                     shooterState = shooterState.WAITING_FOR_SERVO;
                 }
                 if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                     purpleServo.setPosition(purpleDownPos);
+                    ++ballnumber;
                 }
-            }
-        } else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 60) {
+        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
                 greenServo.setPosition(greenShootPos);
                 startServoTime = servoTime.milliseconds();
