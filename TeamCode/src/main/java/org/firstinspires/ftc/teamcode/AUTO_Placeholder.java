@@ -38,12 +38,9 @@ import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -74,14 +71,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class AUTO_Placeholder extends LinearOpMode {
 
     // Declare OpMode members.
-    private Limelight3A limelight;
     private SparkFunOTOS otos;
 
     private DcMotorSimple flywheel;
     private DcMotorSimple feeder;
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
-    private CRServo agitator;
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
 
@@ -99,7 +94,7 @@ public class AUTO_Placeholder extends LinearOpMode {
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(0, 0, Math.toRadians(0));
+    Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(-90));
 
     @Override
     public void runOpMode() {
@@ -114,13 +109,13 @@ public class AUTO_Placeholder extends LinearOpMode {
         // Establishing the direction and mode for the motors
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
         feeder.setDirection(DcMotorSimple.Direction.REVERSE);
-        ((DcMotorEx) flywheel).setMotorEnable();
-        ((DcMotorEx) feeder).setMotorEnable();
+//        ((DcMotorEx) flywheel).setMotorEnable();
+//        ((DcMotorEx) feeder).setMotorEnable();
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
-        //drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
+        drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
 
         //Set all actuator target positions
         flywheelPowerBank = 0.5;    //the bankshot shooting power
@@ -151,29 +146,23 @@ public class AUTO_Placeholder extends LinearOpMode {
 
         if(isStopRequested()) return;
 
-        flywheel.setPower(1);       //Set the flywheel to max power to start it up
+        flywheel.setPower(flywheelPowerBank);       //Set the flywheel to max power to start it up
 
         //Build the actions for our AUTO mode
         Actions.runBlocking(
                 drive.actionBuilder(beginPose)
 
-                        // First Move
-                        //Drive in a 30-in square straight, 90deg counterclockwise, straight, 90deg counterclockwise, straight, 90deg counterclockwise, straight, 90deg counterclockwise
-                        .lineToX(30)
-                        .turn(Math.toRadians(90))
-                        .lineToY(30)
-                        .turn(Math.toRadians(90))
-                        .lineToX(0)
-                        .turn(Math.toRadians(90))
-                        .lineToY(0)
-                        .turn(Math.toRadians(90))
+                        // Move to bankshot firing position
+                        .setReversed(false)
+                        .setTangent(Math.toRadians(45))
+                        .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))
 
 //                        //launch an artifact with the feeder
-//                        .stopAndAdd(new SequentialAction(
-//                                new launchArtifactAction(feeder, feederLaunchTime, feederPower),    //rotate the feeder for time feederLaunchTime
-//                                new setFeederPowerOffAction(feeder),                                //turn off the feeder
-//                                new launchWait(launchWaitTime)                                      //wait for launchWaitTime seconds
-//                        ))
+                        .stopAndAdd(new SequentialAction(
+                                new launchArtifactAction(feeder, feederLaunchTime, feederPower),    //rotate the feeder for time feederLaunchTime
+                                new setFeederPowerOffAction(feeder),                                //turn off the feeder
+                                new launchWait(launchWaitTime)                                      //wait for launchWaitTime seconds
+                        ))
 
 
                         .build());
@@ -225,6 +214,10 @@ public class AUTO_Placeholder extends LinearOpMode {
 
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            if (timer == null) {
+                timer = new ElapsedTime();
+            }
+
             feeder.setPower(feederPower);
 
             if (timer.seconds() < launchTime) {
