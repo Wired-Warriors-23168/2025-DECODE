@@ -160,9 +160,6 @@ public class TELEOP_MAIN extends LinearOpMode {
             greenServo.setPosition(greenDownPos);
             purpleServo.setPosition(purpleDownPos);
 
-            conveyorG.setPower(1);
-            conveyorP.setPower(1);
-
             runtime.reset();
             while (opModeIsActive()) {
 
@@ -256,21 +253,21 @@ public class TELEOP_MAIN extends LinearOpMode {
             limelight.pipelineSwitch(teamPipeline);
         }
 
-        if (gamepad2.yWasPressed()) {  //&& result.isValid()+
+        if (gamepad2.y) {  //&& result.isValid()+
 
             if (patternID == 22 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern22(); // Purple green purple
                 }
             } else if (patternID == 21 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern21(); // Green purple purple
                 }
             } else if (patternID == 23 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern23(); // Purple purple green
                 }
             }
