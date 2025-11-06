@@ -397,9 +397,11 @@ public class TELEOP_MAIN extends LinearOpMode {
                 greenServo.setPosition(greenShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                greenServo.setPosition(greenDownPos);
-                shooterState = shooterState.IDLE;
-                ballnumber = 0;
+                if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
+                    greenServo.setPosition(greenDownPos);
+                    shooterState = shooterState.IDLE;
+                    ballnumber = 0;
+                }
             }
         }
     }
