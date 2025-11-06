@@ -223,11 +223,11 @@ public class AUTO_Test extends LinearOpMode {
                 aimBot();
 
                 //Build the trajectory to follow when intaking off the field (drive forward slowly)
-                TrajectoryActionBuilder intakeTrajectoryBlue = drive.actionBuilder(new Pose2d(pos.x,-24,Math.toRadians(-90)))
+                TrajectoryActionBuilder intakeTrajectoryBlue = drive.actionBuilder(new Pose2d(pos.x,-49.5,Math.toRadians(-90)))
                         .lineToY(-45);
 //                .build();
 
-                TrajectoryActionBuilder intakeTrajectoryRed = drive.actionBuilder(new Pose2d(pos.x,24,Math.toRadians(90)))
+                TrajectoryActionBuilder intakeTrajectoryRed = drive.actionBuilder(new Pose2d(pos.x,49.5,Math.toRadians(90)))
                         .lineToY(45);
 
                     Action trajectoryIntake = intakeTrajectoryBlue.build();
