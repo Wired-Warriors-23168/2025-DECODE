@@ -190,11 +190,11 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     }
     private boolean greenBallDetected() {
-        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
+        if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
             telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
             telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         }
-        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
+        return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
 
     }
     private void aimBot() {

@@ -1,39 +1,51 @@
 package org.firstinspires.ftc.teamcode;
 
+import androidx.annotation.NonNull;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
+import com.acmerobotics.roadrunner.Trajectory;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.acmerobotics.roadrunner.Pose2d;
+import com.sun.source.tree.IfTree;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.List;
 
-//
+
 @Config //Required to be able to tune parameters in FTCDashboard
-@TeleOp(name = "Distance Sensor")
-public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
+@Autonomous(name="AUTO_Test", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+public class AUTO_Test extends LinearOpMode {
+    /////////////////////////////////////////////////////////////////////////
+    // Declare variables
+    /////////////////////////////////////////////////////////////////////////
 
     private DcMotorEx flywheel;
     private Limelight3A limelight;
     double previousError = 0;
-
     private DistanceSensor purpleDistanceSensor;
     private DistanceSensor greenDistanceSensor;
-
     private Servo purpleServo;
     private Servo greenServo;
     private ShooterState shooterState = ShooterState.IDLE;
@@ -44,10 +56,13 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
     private int teamPipeline = 0; // blue auton
     private int patternID = 0;
     private int ballnumber = 0;
-    private double servoShootPosGreen = 0.1667;  //was 0.2467
-    private double servoShootPosPurple = 0.17;  //was 0.0933
-    private double servoShootPosGreenDown = 0.32;
-    private double servoShootPosPurpleDown = 0.02;
+    private double greenShootPos = 0.1667;  //was 0.2467
+    private double purpleShootPos = 0.17;  //was 0.0933
+    private double greenDownPos = 0.32;
+    private double purpleDownPos = 0.02;
+    private double greenHoldPos = 0.27;
+    private double purpleHoldPos = 0.07;
+
 
     private double farVelocity = 1360;
     private double closeVelocity = 1200;
@@ -67,7 +82,8 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
     private CRServo conveyorP;
-    private double sortOffset = 55/300;
+
+    private double sortOffset = 55.0/300.0;
     private DcMotor lift;
 
 
@@ -84,7 +100,7 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
     private DcMotor leftBackDrive;
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
-    SparkFunOTOS poseOTOS;
+    SparkFunOTOS otos;
 
     private static double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
     public static final String ALLIANCE_KEY = "Alliance";
@@ -96,7 +112,7 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
-        poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
+        otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
         greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
 
@@ -145,28 +161,115 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
 
         telemetry.setMsTransmissionInterval(11);
 
-        configureOtos();
+        //configureOtos();
         deltaTimer.reset();
         lastTime = deltaTimer.seconds();
 
+        //TODO *********** Set the starting pose for the robot based on the alliance start position,
+        // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
+        // RADIANS by multiplying the value in DEGREES by Math.PI/180
+        Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(-90));
+
+        //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
+        //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
+        MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
+        drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
+
+        //Set all field positions for RoadRunner
+        //Pose2d waypointBank = new Pose2d(-30,-30,Math.toRadians(-135));  //Waypoint for spline, bankshot launch position
+        //Pose2d waypointMid = new Pose2d(-30,-30,Math.toRadians(-135));    //Waypoint for spline, middle launch position
+        //Pose2d waypointFar = new Pose2d(-30,-30,Math.toRadians(-135));    //Waypoint for spline, far launch position
+        //Pose2d waypointPushStart = new Pose2d(-30,-30,Math.toRadians(-135));   //Waypoint to start pushing artifacts
+        //Pose2d waypointPushEndSpline = new Pose2d(-30,-30,Math.toRadians(-135));       //Waypoint to end pushing artifacts with a spline
+        //Vector2d waypointPushEndLine = new Vector2d(-51,-39);                 //Waypoint to end pushing artifacts with a LineTo
+
+
+
+
+        ////////////////////////////////////////////////////////////////////////////////////
+        // Wait for the game to start (driver presses START)
+        ////////////////////////////////////////////////////////////////////////////////////
         waitForStart();
         if (opModeIsActive()) {
             double currentTime = deltaTimer.seconds();
             deltaTime = currentTime - lastTime;
             lastTime = currentTime;
             flywheel.setVelocity(targetVelocity);
-            greenServo.setPosition(servoShootPosGreenDown);
-            purpleServo.setPosition(servoShootPosPurpleDown);
+            greenServo.setPosition(greenDownPos);
+            purpleServo.setPosition(purpleDownPos);
 
             conveyorG.setPower(1);
             conveyorP.setPower(1);
 
             runtime.reset();
             while (opModeIsActive()) {
+                SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
+
+
+
+                //Roadrunner - drive first path
+                Actions.runBlocking(
+                        drive.actionBuilder(beginPose)
+
+                                // Move to bankshot firing position
+                                .setReversed(false)
+                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
+                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+
+                                .build());
+
+                //Launch the pattern - this needs to run outside RoadRunner because it uses an FSM
+                //need a method to command the launch since no gamepad
                 aimBot();
-                intakeSort(false);
-                drivetrain();
-                lift();
+
+                //Build the trajectory to follow when intaking off the field (drive forward slowly)
+                TrajectoryActionBuilder intakeTrajectoryBlue = drive.actionBuilder(new Pose2d(pos.x,-49.5,Math.toRadians(-90)))
+                        .lineToY(-45);
+//                .build();
+
+                TrajectoryActionBuilder intakeTrajectoryRed = drive.actionBuilder(new Pose2d(pos.x,49.5,Math.toRadians(90)))
+                        .lineToY(45);
+
+                    Action trajectoryIntake = intakeTrajectoryBlue.build();
+
+                //Roadrunner - drive second path to the first ball to intake, run intakeSort, move forward to intake, then path back to launch position
+                Actions.runBlocking(
+                        drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))  //start from current pose
+
+                                // Move to ball intake position
+//                                .setReversed(false)
+//                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
+//                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+
+                                //launch an artifact with the feeder
+                                .stopAndAdd(new ParallelAction(
+                                        new runIntakeSort(5.0),    //call an action to call intakeSort(), with a max time of 5.0 seconds
+                                        trajectoryIntake
+//                                        .lineToY(-45) //to drive forward in parallel to running intake sort.  try running forward a couple inches, change speed to slow, then to next ball and so-on
+                                ))
+
+                                //path back to launch position
+//                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
+//                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+
+                                .build());
+
+                //Launch the pattern
+                //need a method to command the launch since no gamepad
+                aimBot();
+
+                //Roadrunner - drive to park position
+                Actions.runBlocking(
+                        drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))  //start from current pose
+
+                                // Move to park position
+//                                .setReversed(false)
+//                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
+//                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+
+                                .build());
+
+
 
                 FtcDashboard dashboard = FtcDashboard.getInstance();
                 TelemetryPacket packet = new TelemetryPacket();
@@ -182,24 +285,77 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
         }
     }
 
-//    private boolean purpleBallDetected() {
-//        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
-//        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
-//            telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
-//            telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
-//        }
-//    }
+    ///////////////////////////////////////////////////
+    //PUBLIC CLASSES FOR ROADRUNNER ACTION DEFINITIONS
+    //////////////////////////////////////////////////
+
+
+    public class runIntakeSort implements Action {
+        double intakeTime;
+        ElapsedTime actionTimer;
+
+        public runIntakeSort(double intakeTime) {
+            this.intakeTime = intakeTime;
+            this.actionTimer = actionTimer;
+            actionTimer = new ElapsedTime();
+        }
+
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            if (actionTimer == null) {
+                actionTimer = new ElapsedTime();
+            }
+
+            intakeSort(false);
+
+            return actionTimer.seconds()<intakeTime; //runs the action for maximum intakeTime seconds
+        }
+    }
+
+
+
+    ///////////////////////////////////////////////////
+    //Functionality from TELEOP
+    //////////////////////////////////////////////////
+    private boolean purpleBallDetected() {
+        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
+            telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
+            telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
+        }
+        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
+
+    }
+    private boolean greenBallDetected() {
+        if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
+            telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
+            telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
+        }
+        return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
+
+    }
     private void aimBot() {
+        //State machine important!!!
         switch (shooterState) {
             case IDLE:
                 flywheel.setVelocity(idleVelocity);
+                if(greenBallDetected()){
+                    greenServo.setPosition(greenHoldPos);
+                }
+                else{
+                    greenServo.setPosition(greenDownPos);
+                }
+                if(purpleBallDetected()){
+                    purpleServo.setPosition(purpleHoldPos);
+                }
+                else{
+                    purpleServo.setPosition(purpleDownPos);
+                }
                 break;
             case WAITING_FOR_FLYWHEEL:
                 flywheel.setVelocity(targetVelocity);
                 break;
             case WAITING_FOR_SERVO:
                 if (servoTime.milliseconds() - startServoTime > 250) {
-                  //  startServoTime = 0;
                     shooterState = shooterState.IDLE_WITH_FLYWHEEL;
                 }
             case IDLE_WITH_FLYWHEEL:
@@ -233,32 +389,32 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
             limelight.pipelineSwitch(teamPipeline);
         }
 
-        if (gamepad2.yWasPressed()) {  //&& result.isValid()+
+        if (gamepad2.y) {  //&& result.isValid()+
 
             if (patternID == 22 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern22(); // Purple green purple
                 }
             } else if (patternID == 21 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern21(); // Green purple purple
                 }
             } else if (patternID == 23 && tagID == 20) {
                 rotate();
-                if (Math.abs(tx) < 5) {
+                if (Math.abs(ty) < 5) {
                     Pattern23(); // Purple purple green
                 }
             }
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
-            purpleServo.setPosition(servoShootPosPurple);
+            purpleServo.setPosition(purpleShootPos);
             sleep(250);
-            purpleServo.setPosition(servoShootPosPurpleDown);
+            purpleServo.setPosition(purpleDownPos);
         } else if (gamepad2.dpadLeftWasPressed()) {      // Forced shooting: Green
-            greenServo.setPosition(servoShootPosGreen);
+            greenServo.setPosition(greenShootPos);
             sleep(250);
-            greenServo.setPosition(servoShootPosGreenDown);
+            greenServo.setPosition(greenDownPos);
         }
         if (gamepad2.x) {
             ballnumber = 1;
@@ -266,7 +422,6 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
         if (gamepad1.aWasPressed()) {
             shooterOn = !shooterOn;
         }
-
         telemetry.addData("timer start", startServoTime);
         telemetry.addData("Shooter On", shooterOn);
         telemetry.addData("Pattern ID", patternID);
@@ -283,30 +438,31 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
         }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
-            if((startServoTime > 1)) {  //REMOVED THE ! TO TEST
+            if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                greenServo.setPosition(servoShootPosGreen);
+                greenServo.setPosition(greenShootPos);
            }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                greenServo.setPosition(servoShootPosGreenDown);
+                greenServo.setPosition(greenDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
-           if((startServoTime > 1)) {  //REMOVED THE ! TO TEST
+           if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
            }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
+                shooterState = shooterState.IDLE;
                 ballnumber = 0;
             }
         }
@@ -317,39 +473,34 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
             if(!(startServoTime > 1)) {
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                greenServo.setPosition(servoShootPosGreen);
+                greenServo.setPosition(greenShootPos);
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                greenServo.setPosition(servoShootPosGreenDown);
+                greenServo.setPosition(greenDownPos);
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
-                ++ballnumber;
-            }
-        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
-            if(!(startServoTime > 1)) {
-                startServoTime = servoTime.milliseconds();
-                shooterState = shooterState.WAITING_FOR_SERVO;
-            }
-            if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurple);
-                ballnumber = 0;
+                purpleServo.setPosition(purpleDownPos);
+                if(purpleBallDetected()) {
+                    ++ballnumber;
+                }
             }
         }
-        else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 60) {
+        else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
             if (!(startServoTime > 1)) {
+                purpleServo.setPosition(purpleShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
+                purpleServo.setPosition(purpleDownPos);
+                shooterState = shooterState.IDLE;
                 ballnumber = 0;
             }
         }
@@ -357,39 +508,33 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
     private void Pattern23() {
         if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
-                purpleServo.setPosition(servoShootPosPurple);
+                purpleServo.setPosition(purpleShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurpleDown);
-                ++ballnumber;
+                purpleServo.setPosition(purpleDownPos);
+                if(purpleBallDetected()) {
+                    purpleServo.setPosition(purpleShootPos);
+                    ++ballnumber;
+                }
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
-            if(!(startServoTime > 1)) {
-                startServoTime = servoTime.milliseconds();
-                shooterState = shooterState.WAITING_FOR_SERVO;
-            }
-            if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                purpleServo.setPosition(servoShootPosPurple);
-                ++ballnumber;
-            }
-            else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
                 if(!(startServoTime > 1)) {
                     startServoTime = servoTime.milliseconds();
                     shooterState = shooterState.WAITING_FOR_SERVO;
                 }
                 if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
-                    purpleServo.setPosition(servoShootPosPurpleDown);
-                    ballnumber = 0;
+                    purpleServo.setPosition(purpleDownPos);
+                    ++ballnumber;
                 }
-            }
-        } else if (ballnumber == 4 && flywheel.getVelocity() > targetVelocity - 60) {
+        } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
             if(!(startServoTime > 1)) {
-                greenServo.setPosition(servoShootPosGreen);
+                greenServo.setPosition(greenShootPos);
                 startServoTime = servoTime.milliseconds();
                 shooterState = shooterState.WAITING_FOR_SERVO;
-                greenServo.setPosition(servoShootPosGreenDown);
+                greenServo.setPosition(greenDownPos);
+                shooterState = shooterState.IDLE;
                 ballnumber = 0;
             }
         }
@@ -427,12 +572,13 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if(sumGreenPurpleness > 120){
-            //selector.setPosition(0.4 + sortOffset); //calculating the offset here isn't working - data type?
-            selector.setPosition(0.22);
+            selector.setPosition(0.4 + sortOffset); //calculating the offset here isn't working - data type?
+            //selector.setPosition(0.22);
         }
         else if (sumGreenPurpleness < -70 ) {
-           //selector.setPosition(0.4 - sortOffset);  //calculating the offset here isn't working - data type?
-            selector.setPosition(0.58);
+           selector.setPosition(0.4 - sortOffset);  //calculating the offset here isn't working - data type?
+           //Should work now
+            //selector.setPosition(0.58);
         }
         else {
             selector.setPosition(0.4);
@@ -487,97 +633,13 @@ public class TELEOP_DISTANCESENSOR_HOLDINGFLAP extends LinearOpMode {
         rightFrontDrive.setPower(frontRightPower);
         rightBackDrive.setPower(backRightPower);
 
-        SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
+        SparkFunOTOS.Pose2D pos = otos.getPosition();
 
         telemetry.addData("X coordinate", pos.x);
         telemetry.addData("Y coordinate", pos.y);
         telemetry.addData("Heading angle", pos.h);
-        telemetry.addLine("PLEASE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
     }
 
-
-    private void configureOtos() {
-        telemetry.addLine("Configuring OTOS...");
-        telemetry.update();
-
-        // Set the desired units for linear and angular measurements. Can be either
-        // meters or inches for linear, and radians or degrees for angular. If not
-        // set, the default is inches and degrees. Note that this setting is not
-        // persisted in the sensor, so you need to set at the start of all your
-        // OpModes if using the non-default value.
-        // poseOTOS.setLinearUnit(DistanceUnit.METER);
-        poseOTOS.setLinearUnit(DistanceUnit.INCH);
-        // poseOTOS.setAngularUnit(AnguleUnit.RADIANS);
-        poseOTOS.setAngularUnit(AngleUnit.DEGREES);
-
-
-        // Assuming you've mounted your sensor to a robot and it's not centered,
-        // you can specify the offset for the sensor relative to the center of the
-        // robot. The units default to inches and degrees, but if you want to use
-        // different units, specify them before setting the offset! Note that as of
-        // firmware version 1.0, these values will be lost after a power cycle, so
-        // you will need to set them each time you power up the sensor. For example, if
-        // the sensor is mounted 5 inches to the left (negative X) and 10 inches
-        // forward (positive Y) of the center of the robot, and mounted 90 degrees
-        // clockwise (negative rotation) from the robot's orientation, the offset
-        // would be {-5, 10, -90}. These can be any value, even the angle can be
-        // tweaked slightly to compensate for imperfect mounting (eg. 1.3 degrees).
-        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 0, 0);
-        poseOTOS.setOffset(offset);
-
-        // Here we can set the linear and angular scalars, which can compensate for
-        // scaling issues with the sensor measurements. Note that as of firmware
-        // version 1.0, these values will be lost after a power cycle, so you will
-        // need to set them each time you power up the sensor. They can be any value
-        // from 0.872 to 1.127 in increments of 0.001 (0.1%). It is recommended to
-        // first set both scalars to 1.0, then calibrate the angular scalar, then
-        // the linear scalar. To calibrate the angular scalar, spin the robot by
-        // multiple rotations (eg. 10) to get a precise error, then set the scalar
-        // to the inverse of the error. Remember that the angle wraps from -180 to
-        // 180 degrees, so for example, if after 10 rotations counterclockwise
-        // (positive rotation), the sensor reports -15 degrees, the required scalar
-        // would be 3600/3585 = 1.004. To calibrate the linear scalar, move the
-        // robot a known distance and measure the error; do this multiple times at
-        // multiple speeds to get an average, then set the linear scalar to the
-        // inverse of the error. For example, if you move the robot 100 inches and
-        // the sensor reports 103 inches, set the linear scalar to 100/103 = 0.971
-        poseOTOS.setLinearScalar(1.0);
-        poseOTOS.setAngularScalar(1.0);
-
-        // The IMU on the OTOS includes a gyroscope and accelerometer, which could
-        // have an offset. Note that as of firmware version 1.0, the calibration
-        // will be lost after a power cycle; the OTOS performs a quick calibration
-        // when it powers up, but it is recommended to perform a more thorough
-        // calibration at the start of all your OpModes. Note that the sensor must
-        // be completely stationary and flat during calibration! When calling
-        // calibrateImu(), you can specify the number of samples to take and whether
-        // to wait until the calibration is complete. If no parameters are provided,
-        // it will take 255 samples and wait until done; each sample takes about
-        // 2.4ms, so about 612ms total
-        poseOTOS.calibrateImu();
-
-        // Reset the tracking algorithm - this resets the position to the origin,
-        // but can also be used to recover from some rare tracking errors
-        poseOTOS.resetTracking();
-
-        // After resetting the tracking, the OTOS will report that the robot is at
-        // the origin. If your robot does not start at the origin, or you have
-        // another source of location information (eg. vision odometry), you can set
-        // the OTOS location to match and it will continue to track from there.
-        SparkFunOTOS.Pose2D currentPosition = new SparkFunOTOS.Pose2D(0, 0, 0);
-        poseOTOS.setPosition(currentPosition);
-
-        // Get the hardware and firmware version
-        SparkFunOTOS.Version hwVersion = new SparkFunOTOS.Version();
-        SparkFunOTOS.Version fwVersion = new SparkFunOTOS.Version();
-        poseOTOS.getVersionInfo(hwVersion, fwVersion);
-
-        //telemetry.addLine("OTOS configured! Press start to get position data!");
-        //telemetry.addLine();
-        telemetry.addLine(String.format("OTOS Hardware Version: v%d.%d", hwVersion.major, hwVersion.minor));
-        telemetry.addLine(String.format("OTOS Firmware Version: v%d.%d", fwVersion.major, fwVersion.minor));
-        telemetry.update();
-    }
 
 
 
