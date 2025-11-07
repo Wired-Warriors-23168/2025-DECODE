@@ -35,12 +35,15 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
@@ -57,10 +60,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Autonomous(name="AUTO_RED_3", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
+@Autonomous(name="AUTO_BLUE_4", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
-public class AUTO_RED_3 extends LinearOpMode {
+public class AUTO_BLUE_4 extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -71,6 +74,7 @@ public class AUTO_RED_3 extends LinearOpMode {
     private DcMotor leftBackDrive;
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
+    private Servo teamLED;
 
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
@@ -84,11 +88,13 @@ public class AUTO_RED_3 extends LinearOpMode {
     double launchWaitTime;
     ElapsedTime timer;
     ElapsedTime waitTimer;
+    public static final String ALLIANCE_KEY = "Alliance";
+    public String colorAlliance = "BLUE";
 
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(62.5, 32.5, Math.toRadians(90));
+    Pose2d beginPose = new Pose2d(62.5, -32.5, Math.toRadians(-90));
 
     @Override
     public void runOpMode() {
@@ -97,6 +103,8 @@ public class AUTO_RED_3 extends LinearOpMode {
         flywheel = hardwareMap.get(DcMotorSimple.class, "motor-flywheel");
         feeder = hardwareMap.get(DcMotorSimple.class, "motor-feeder");
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
+        teamLED = hardwareMap.get(Servo.class, "led-light");
+
 
         //initDevices(); // Initialize all motors, servos, sensors
 
@@ -111,12 +119,15 @@ public class AUTO_RED_3 extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
         drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
 
+        //Set the LED to green in INIT mode
+        teamLED.setPosition(0.5);//green
+
         //Set all actuator target positions
         flywheelPowerBank = 0.6;    //the bankshot shooting power
-        flywheelPowerMid = 0.64;     //the middle shooting power
-        flywheelPowerFar = 0.7;     //the far shooting power
+        flywheelPowerMid = 0.6;     //the middle shooting power
+        flywheelPowerFar = 1.0;     //the far shooting power
         feederPower = 0.6;          //the feeder power when activating
-        feederLaunchTime = 4.5;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
+        feederLaunchTime = 8.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
         feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)
         launchWaitTime = 2.5;       //the wait time between launches so the flywheel can spin up
 
@@ -140,16 +151,23 @@ public class AUTO_RED_3 extends LinearOpMode {
 
         if(isStopRequested()) return;
 
-        flywheel.setPower(flywheelPowerFar);       //Set the flywheel to max power to start it up
+        if(colorAlliance=="BLUE"){
+            teamLED.setPosition(0.600); //blue
+        }
+        else{
+            teamLED.setPosition(0.283);//red
+        }
+
+        flywheel.setPower(flywheelPowerMid);       //Set the flywheel to max power to start it up
 
         //Build the actions for our AUTO mode
         Actions.runBlocking(
                 drive.actionBuilder(beginPose)
 
-                        // Move to far firing position
+                        // Move to mid firing position
                         .setReversed(false)
-                        .setTangent(Math.toRadians(-90))
-                        .splineToLinearHeading(new Pose2d(54,12,Math.toRadians(154)),Math.toRadians(-26))
+                        .setTangent(Math.toRadians(180))
+                        .splineToLinearHeading(new Pose2d(-2,-12,Math.toRadians(-140)),Math.toRadians(170))
 
 //                        //launch an artifact with the feeder
                         .stopAndAdd(new SequentialAction(
@@ -167,9 +185,16 @@ public class AUTO_RED_3 extends LinearOpMode {
                                 //new launchWait(launchWaitTime,feeder)                                      //wait for launchWaitTime seconds
 
                         ))
+                        //Corral three balls on the goal
+                        .splineToLinearHeading(new Pose2d(1,-28,Math.toRadians(-90)),Math.toRadians(-90))
+                        .lineToY(-46)
+                        .setTangent(Math.toRadians(180))
+                        .splineToLinearHeading(new Pose2d(-47,-47,Math.toRadians(-45)),Math.toRadians(-180))
+
+                        //Park in the center near the line to draw a foul
                         .setReversed(false)
-                        .setTangent(Math.toRadians(135))
-                        .splineToLinearHeading(new Pose2d(60,60,Math.toRadians(90)),Math.toRadians(90))
+                        .setTangent(Math.toRadians(-45))
+                        .splineToLinearHeading(new Pose2d(8,-12,Math.toRadians(-90)),Math.toRadians(0))
 
                         .build());
 
@@ -177,6 +202,8 @@ public class AUTO_RED_3 extends LinearOpMode {
 
         SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
 
+        //Store the alliance color to memory for use in TELEOP
+        blackboard.put(ALLIANCE_KEY, colorAlliance);
 
         telemetry.addLine();
         telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
@@ -224,7 +251,7 @@ public class AUTO_RED_3 extends LinearOpMode {
             if (timer == null) {
                 timer = new ElapsedTime();
             }
-            sleep(3000);
+            sleep(2000);
             feeder.setPower(feederPower);
 //            telemetry.addData("timer", "t: (%.1f)", timer);
 //            telemetry.update();

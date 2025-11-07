@@ -24,10 +24,8 @@ public class TELEOP_MAIN extends LinearOpMode {
     private DcMotorSimple feeder;
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
-    private CRServo agitator;
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
-    private RevBlinkinLedDriver lightsLED; //NOT the gobilda light...
 
     private Servo teamLED;
     SparkFunOTOS poseOTOS;
@@ -50,8 +48,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         leftBackDrive = hardwareMap.get(DcMotor.class, "left-back-drive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "right-front-drive");
         rightBackDrive = hardwareMap.get(DcMotor.class, "right-back-drive");
-        agitator = hardwareMap.get(CRServo.class, "servo-agitator");
-        lightsLED = hardwareMap.get(RevBlinkinLedDriver.class,"pwm-LED");
         poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         teamLED = hardwareMap.get(Servo.class, "led-light");
 
@@ -64,8 +60,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        //Ensures the agitator is active and ready
-        agitator.setPower(0);
 
         // All the configuration for the OTOS is done in this helper method, check it out!
         configureOtos();
@@ -111,7 +105,6 @@ public class TELEOP_MAIN extends LinearOpMode {
                 dashboard.sendTelemetryPacket(packet); // Always send the packet
                 packet.put("Flywheel Power", flywheel.getPower()); // Robot-specific data
                 packet.put("Feeder Power", feeder.getPower()); // Robot-specific data
-                packet.put("Agitator Power", agitator.getPower()); // Robot-specific data
 
                 //Set up the Field overlay
                 packet.fieldOverlay()
@@ -166,12 +159,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         else if (gamepad1.aWasReleased()) {
             feeder.setPower(0);
         }
-        // Manual control for the hopper's servo
-        if (gamepad1.dpad_left) {
-            agitator.setPower(1);
-        } else if (gamepad1.dpad_right) {
-            agitator.setPower(-1);
-        }
     }
 
     /**
@@ -193,10 +180,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         } else {
             (flywheel).setPower(0);
             feeder.setPower(0);
-            // The check below is in place to prevent stuttering with the agitator. It checks if the agitator is under manual control!
-            if (!gamepad1.dpad_right && !gamepad1.dpad_left) {
-                agitator.setPower(0);
-            }
         }
     }
 
