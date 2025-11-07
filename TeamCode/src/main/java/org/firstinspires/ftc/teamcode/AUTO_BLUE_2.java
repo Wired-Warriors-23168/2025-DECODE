@@ -33,23 +33,17 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.JavaUtil;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 /*
@@ -65,10 +59,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Autonomous(name="AUTO-Placeholder", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
+@Autonomous(name="AUTO_BLUE_2", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
-public class AUTO_Placeholder extends LinearOpMode {
+public class AUTO_BLUE_2 extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -90,11 +84,13 @@ public class AUTO_Placeholder extends LinearOpMode {
     int feederRotations;
     double feederLaunchTime;
     double launchWaitTime;
+    ElapsedTime timer;
+    ElapsedTime waitTimer;
 
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(-90));
+    Pose2d beginPose = new Pose2d(62.5, -32.5, Math.toRadians(-90));
 
     @Override
     public void runOpMode() {
@@ -118,13 +114,13 @@ public class AUTO_Placeholder extends LinearOpMode {
         drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
 
         //Set all actuator target positions
-        flywheelPowerBank = 0.5;    //the bankshot shooting power
-        flywheelPowerMid = 0.9;     //the middle shooting power
+        flywheelPowerBank = 0.6;    //the bankshot shooting power
+        flywheelPowerMid = 0.64;     //the middle shooting power
         flywheelPowerFar = 1.0;     //the far shooting power
-        feederPower = 1.0;          //the feeder power when activating
-        feederLaunchTime = 1.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
+        feederPower = 0.6;          //the feeder power when activating
+        feederLaunchTime = 8.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
         feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)
-        launchWaitTime = 2.0;       //the wait time between launches so the flywheel can spin up
+        launchWaitTime = 2.5;       //the wait time between launches so the flywheel can spin up
 
         //Set all field positions
         //Pose2d waypointBank = new Pose2d(-30,-30,Math.toRadians(-135));  //Waypoint for spline, bankshot launch position
@@ -146,7 +142,7 @@ public class AUTO_Placeholder extends LinearOpMode {
 
         if(isStopRequested()) return;
 
-        flywheel.setPower(flywheelPowerBank);       //Set the flywheel to max power to start it up
+        flywheel.setPower(flywheelPowerMid);       //Set the flywheel to max power to start it up
 
         //Build the actions for our AUTO mode
         Actions.runBlocking(
@@ -154,20 +150,32 @@ public class AUTO_Placeholder extends LinearOpMode {
 
                         // Move to bankshot firing position
                         .setReversed(false)
-                        .setTangent(Math.toRadians(45))
-                        .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))
+                        .setTangent(Math.toRadians(90))
+                        .splineToLinearHeading(new Pose2d(56,-13,Math.toRadians(-153)),Math.toRadians(27))
 
 //                        //launch an artifact with the feeder
                         .stopAndAdd(new SequentialAction(
+                                new SleepAction(2),
                                 new launchArtifactAction(feeder, feederLaunchTime, feederPower),    //rotate the feeder for time feederLaunchTime
-                                new setFeederPowerOffAction(feeder),                                //turn off the feeder
-                                new launchWait(launchWaitTime)                                      //wait for launchWaitTime seconds
-                        ))
+                                //new setFeederPowerOffAction(feeder),                                //turn off the feeder
+                                //new SleepAction(3),
+                                //new launchWait(launchWaitTime, feeder),                                     //wait for launchWaitTime seconds
+                                new launchArtifactAction(feeder, feederLaunchTime, feederPower),    //rotate the feeder for time feederLaunchTime
+                                //new setFeederPowerOffAction(feeder),                                //turn off the feeder
+                                //new launchWait(launchWaitTime, feeder),
+                                //new SleepAction(3),
+                                new launchArtifactAction(feeder, feederLaunchTime, feederPower)    //rotate the feeder for time feederLaunchTime
+                                //new setFeederPowerOffAction(feeder)                                //turn off the feeder
+                                //new launchWait(launchWaitTime,feeder)                                      //wait for launchWaitTime seconds
 
+                        ))
+                        .setReversed(false)
+                        .setTangent(Math.toRadians(-135))
+                        .splineToLinearHeading(new Pose2d(-6,-48,Math.toRadians(-90)),Math.toRadians(-180))
 
                         .build());
 
-
+        flywheel.setPower(0);       //Set the flywheel to max power to start it up
 
         SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
 
@@ -188,6 +196,7 @@ public class AUTO_Placeholder extends LinearOpMode {
         DcMotorSimple feeder;
 
         public setFeederPowerOffAction(DcMotorSimple feeder) {
+
             this.feeder = feeder;
         }
 
@@ -204,7 +213,7 @@ public class AUTO_Placeholder extends LinearOpMode {
         double launchTime;
         double feederPower;
         ElapsedTime timer;
-
+//TODO
         public launchArtifactAction(DcMotorSimple feeder, double launchTime, double feederPower) {
             this.feeder = feeder;
             this.launchTime = launchTime;
@@ -217,34 +226,34 @@ public class AUTO_Placeholder extends LinearOpMode {
             if (timer == null) {
                 timer = new ElapsedTime();
             }
-
+            sleep(3000);
             feeder.setPower(feederPower);
+//            telemetry.addData("timer", "t: (%.1f)", timer);
+//            telemetry.update();
 
-            if (timer.seconds() < launchTime) {
-                return true;
-            } else {
-                return false;
-            }
+            return timer.seconds() < launchTime;
         }
     }
-
+//TODO
     // Wait a set time after a launch without using wait() or sleep()
     public class launchWait implements Action {
+        DcMotorSimple feeder;
         double waitTime;
-        ElapsedTime timer;
+        ElapsedTime waitTimer;
 
-        public launchWait(double waitTime) {
+        public launchWait(double waitTime,DcMotorSimple feeder) {
+            this.feeder = feeder;
             this.waitTime = waitTime;
-            timer = new ElapsedTime();
+            waitTimer = new ElapsedTime();
         }
 
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            if (timer.seconds() < waitTime) {
-                return true;
-            } else {
-                return false;
+            if (waitTimer == null) {
+                waitTimer = new ElapsedTime();
             }
+            feeder.setPower(0.0);
+            return waitTimer.seconds() < waitTime;
         }
     }
 
