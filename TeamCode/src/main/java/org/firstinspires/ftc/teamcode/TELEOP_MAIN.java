@@ -50,7 +50,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double purpleHoldPos = 0.07;
 
 
-    private double farVelocity = 1360;
+    private double farVelocity = 1450;
     private double closeVelocity = 1200;
     private double idleVelocity = 600;
     private double targetVelocity = 600;
@@ -182,19 +182,19 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
     }
     private boolean purpleBallDetected() {
-        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
+        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3) {
             telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
             telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         }
-        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
+        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3;
 
     }
     private boolean greenBallDetected() {
-        if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5) {
+        if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3) {
             telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
             telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         }
-        return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5;
+        return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3;
 
     }
     private void aimBot() {
@@ -219,11 +219,11 @@ public class TELEOP_MAIN extends LinearOpMode {
                 flywheel.setVelocity(targetVelocity);
                 break;
             case WAITING_FOR_SERVO:
-                if (servoTime.milliseconds() - startServoTime > 250) {
+                if (servoTime.milliseconds() - startServoTime > 1000) {
                     shooterState = shooterState.IDLE_WITH_FLYWHEEL;
                 }
             case IDLE_WITH_FLYWHEEL:
-
+                flywheel.setVelocity(targetVelocity);
                 break;
         }
 //        if (shooterOn) {
@@ -282,9 +282,15 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
         if (gamepad2.x) {
             ballnumber = 1;
+            shooterState = ShooterState.IDLE_WITH_FLYWHEEL;
         }
         if (gamepad1.aWasPressed()) {
             shooterOn = !shooterOn;
+        }
+        if (gamepad2.aWasPressed()) {
+            targetVelocity = closeVelocity;
+        } else if (gamepad2.bWasPressed()) {
+            targetVelocity = farVelocity;
         }
         telemetry.addData("timer start", startServoTime);
         telemetry.addData("Shooter On", shooterOn);
@@ -306,6 +312,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(purpleDownPos);
+                startServoTime = 150000; // big
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -316,6 +323,7 @@ public class TELEOP_MAIN extends LinearOpMode {
            }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 greenServo.setPosition(greenDownPos);
+                startServoTime = 150000; // big
                 ++ballnumber;
             }
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -327,6 +335,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(purpleDownPos);
                 shooterState = shooterState.IDLE;
+                startServoTime = 150000; // big
                 ballnumber = 0;
             }
         }
@@ -341,6 +350,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 greenServo.setPosition(greenDownPos);
+                startServoTime = 150000; // big
                 ++ballnumber;
             }
         } else if (ballnumber == 2 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -351,6 +361,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             }
             if(shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(purpleDownPos);
+                startServoTime = 150000; // big
                 if(purpleBallDetected()) {
                     ++ballnumber;
                 }
@@ -364,6 +375,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(purpleDownPos);
+                startServoTime = 150000; // big
                 shooterState = shooterState.IDLE;
                 ballnumber = 0;
             }
@@ -378,6 +390,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             }
             if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                 purpleServo.setPosition(purpleDownPos);
+                startServoTime = 150000; // big
                 if(purpleBallDetected()) {
                     purpleServo.setPosition(purpleShootPos);
                     ++ballnumber;
@@ -390,6 +403,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 }
                 if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                     purpleServo.setPosition(purpleDownPos);
+                    startServoTime = 150000; // big
                     ++ballnumber;
                 }
         } else if (ballnumber == 3 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -399,6 +413,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 shooterState = shooterState.WAITING_FOR_SERVO;
                 if (shooterState == shooterState.IDLE_WITH_FLYWHEEL) {
                     greenServo.setPosition(greenDownPos);
+                    startServoTime = 150000; // big
                     shooterState = shooterState.IDLE;
                     ballnumber = 0;
                 }
@@ -406,17 +421,18 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
     }
     private void rotate() {
-        double kP = (1/24);
+        double kP = (1.0/48.0);
         double kD = 0;
         // spin drive with p controller
-         double error = -ty;
+         double error = ty;
          double derivativeError = (error - previousError) / deltaTime;
-        double wheelpower = (error * kP + kD * derivativeError);
+        double wheelpower = ((error * kP) + (kD * derivativeError));
         previousError = error;
-//        leftFrontDrive.setPower(wheelpower);
-//        leftBackDrive.setPower(wheelpower);
-//        rightFrontDrive.setPower(wheelpower);
-//        rightBackDrive.setPower(wheelpower);
+        leftFrontDrive.setPower(wheelpower);
+        leftBackDrive.setPower(wheelpower);
+        rightFrontDrive.setPower(wheelpower);
+        rightBackDrive.setPower(wheelpower);
+        telemetry.addData("wheel power", wheelpower);
 
     }
     public void intakeSort(boolean auto) {
@@ -437,12 +453,12 @@ public class TELEOP_MAIN extends LinearOpMode {
     public void sortArtifact() {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
-        if(sumGreenPurpleness > 120){
-            selector.setPosition(0.4 + sortOffset); //calculating the offset here isn't working - data type?
+        if(sumGreenPurpleness > 50){
+            selector.setPosition(0.4 - sortOffset); //calculating the offset here isn't working - data type?
             //selector.setPosition(0.22);
         }
-        else if (sumGreenPurpleness < -70 ) {
-           selector.setPosition(0.4 - sortOffset);  //calculating the offset here isn't working - data type?
+        else if (sumGreenPurpleness < -50 ) {
+           selector.setPosition(0.4 + sortOffset);  //calculating the offset here isn't working - data type?
            //Should work now
             //selector.setPosition(0.58);
         }
@@ -489,16 +505,19 @@ public class TELEOP_MAIN extends LinearOpMode {
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
         double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double frontLeftPower = limitDrivePower * (y + x + rx) / denominator;
-        double backLeftPower = limitDrivePower * (y - x + rx) / denominator;
+        double frontLeftPower = -limitDrivePower * (y + x + rx) / denominator;
+        double backLeftPower = -limitDrivePower * (y - x + rx) / denominator;
         double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
         double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
-        leftFrontDrive.setPower(frontLeftPower);
-        leftBackDrive.setPower(backLeftPower);
-        rightFrontDrive.setPower(frontRightPower);
-        rightBackDrive.setPower(backRightPower);
-
+        if (gamepad1.dpad_up) {
+            rotate();
+        } else {
+            leftFrontDrive.setPower(frontLeftPower);
+            leftBackDrive.setPower(backLeftPower);
+            rightFrontDrive.setPower(frontRightPower);
+            rightBackDrive.setPower(backRightPower);
+        }
         SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
 
         telemetry.addData("X coordinate", pos.x);
