@@ -8,7 +8,9 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -20,6 +22,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -163,7 +166,7 @@ public class AUTO_Test_Pathing extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(-90));
+        Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(90));
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
@@ -195,6 +198,10 @@ public class AUTO_Test_Pathing extends LinearOpMode {
 
             conveyorG.setPower(1);
             conveyorP.setPower(1);
+            double shootX = -63;
+            double shootY = 25;
+            double endX = 58.5;
+            double endY = 35.5;
 
             runtime.reset();
             while (opModeIsActive()) {
@@ -208,9 +215,19 @@ public class AUTO_Test_Pathing extends LinearOpMode {
 
                                 // Move to bankshot firing position
                                 .setReversed(false)
-                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
-                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
-
+//                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
+//                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(-135)),Math.toRadians(45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+                                .strafeTo(new Vector2d(shootX, shootY))
+                                .stopAndAdd(new SequentialAction(
+                                        new launchArtifactG(feeder, feederLaunchTime, feederPower),
+                                        new launchArtifactP(feeder, feederLaunchTime, feederPower)
+                                ))
+                                .strafeTo(new Vector2d(endX, endY))
+//                                .splineToLinearHeading(new Pose2d(35.8, 25, Math.toRadians(90)),Math.toRadians(0))
+//                                .waitSeconds(.01)
+//                                .lineToY(56)
+//                                .lineToY(25)
+//                                .strafeTo(new Vector2d(shootX, shootY))
                                 .build());
 
                 //Launch the pattern - this needs to run outside RoadRunner because it uses an FSM
@@ -278,6 +295,18 @@ public class AUTO_Test_Pathing extends LinearOpMode {
             this.intakeTime = intakeTime;
             this.actionTimer = actionTimer;
             actionTimer = new ElapsedTime();
+        }
+        public launchArtifactG(DcMotorSimple feeder, double launchTime, double feederPower) {
+            this.feeder = feeder;
+            this.launchTime = launchTime;
+            this.feederPower = feederPower;
+            timer = new ElapsedTime();
+        }
+        public launchArtifactP(DcMotorSimple feeder, double launchTime, double feederPower) {
+            this.feeder = feeder;
+            this.launchTime = launchTime;
+            this.feederPower = feederPower;
+            timer = new ElapsedTime();
         }
 
         @Override
