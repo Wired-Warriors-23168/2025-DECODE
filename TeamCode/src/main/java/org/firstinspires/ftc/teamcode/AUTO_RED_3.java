@@ -35,8 +35,6 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -59,10 +57,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Autonomous(name="AUTO_BLUE_2", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
+@Autonomous(name="AUTO_RED_3", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
-public class AUTO_BLUE_2 extends LinearOpMode {
+public class AUTO_RED_3 extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -90,7 +88,7 @@ public class AUTO_BLUE_2 extends LinearOpMode {
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(62.5, -32.5, Math.toRadians(-90));
+    Pose2d beginPose = new Pose2d(62.5, 32.5, Math.toRadians(90));
 
     @Override
     public void runOpMode() {
@@ -118,7 +116,7 @@ public class AUTO_BLUE_2 extends LinearOpMode {
         flywheelPowerMid = 0.64;     //the middle shooting power
         flywheelPowerFar = 1.0;     //the far shooting power
         feederPower = 0.6;          //the feeder power when activating
-        feederLaunchTime = 8.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
+        feederLaunchTime = 4.5;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
         feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)
         launchWaitTime = 2.5;       //the wait time between launches so the flywheel can spin up
 
@@ -148,14 +146,14 @@ public class AUTO_BLUE_2 extends LinearOpMode {
         Actions.runBlocking(
                 drive.actionBuilder(beginPose)
 
-                        // Move to bankshot firing position
+                        // Move to far firing position
                         .setReversed(false)
-                        .setTangent(Math.toRadians(90))
-                        .splineToLinearHeading(new Pose2d(56,-13,Math.toRadians(-153)),Math.toRadians(27))
+                        .setTangent(Math.toRadians(-90))
+                        .splineToLinearHeading(new Pose2d(54,12,Math.toRadians(155)),Math.toRadians(-25))
 
 //                        //launch an artifact with the feeder
                         .stopAndAdd(new SequentialAction(
-                                new SleepAction(2),
+                                //new SleepAction(2),
                                 new launchArtifactAction(feeder, feederLaunchTime, feederPower),    //rotate the feeder for time feederLaunchTime
                                 //new setFeederPowerOffAction(feeder),                                //turn off the feeder
                                 //new SleepAction(3),
@@ -170,8 +168,8 @@ public class AUTO_BLUE_2 extends LinearOpMode {
 
                         ))
                         .setReversed(false)
-                        .setTangent(Math.toRadians(-135))
-                        .splineToLinearHeading(new Pose2d(8,-12,Math.toRadians(-90)),Math.toRadians(0))
+                        .setTangent(Math.toRadians(135))
+                        .splineToLinearHeading(new Pose2d(60,60,Math.toRadians(90)),Math.toRadians(90))
 
                         .build());
 

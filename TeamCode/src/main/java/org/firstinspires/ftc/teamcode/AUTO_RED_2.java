@@ -36,7 +36,6 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -59,10 +58,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Autonomous(name="AUTO_BLUE_2", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
+@Autonomous(name="AUTO_RED_2", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
-public class AUTO_BLUE_2 extends LinearOpMode {
+public class AUTO_RED_2 extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -90,7 +89,7 @@ public class AUTO_BLUE_2 extends LinearOpMode {
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(62.5, -32.5, Math.toRadians(-90));
+    Pose2d beginPose = new Pose2d(62.5, 32.5, Math.toRadians(90));
 
     @Override
     public void runOpMode() {
@@ -150,8 +149,8 @@ public class AUTO_BLUE_2 extends LinearOpMode {
 
                         // Move to bankshot firing position
                         .setReversed(false)
-                        .setTangent(Math.toRadians(90))
-                        .splineToLinearHeading(new Pose2d(56,-13,Math.toRadians(-153)),Math.toRadians(27))
+                        .setTangent(Math.toRadians(-90))
+                        .splineToLinearHeading(new Pose2d(54,12,Math.toRadians(155)),Math.toRadians(-25))
 
 //                        //launch an artifact with the feeder
                         .stopAndAdd(new SequentialAction(
@@ -170,9 +169,8 @@ public class AUTO_BLUE_2 extends LinearOpMode {
 
                         ))
                         .setReversed(false)
-                        .setTangent(Math.toRadians(-135))
-                        .splineToLinearHeading(new Pose2d(8,-12,Math.toRadians(-90)),Math.toRadians(0))
-
+                        .setTangent(Math.toRadians(135))
+                        .splineToLinearHeading(new Pose2d(10,13,Math.toRadians(90)),Math.toRadians(0))
                         .build());
 
         flywheel.setPower(0);       //Set the flywheel to max power to start it up
