@@ -39,7 +39,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
     private DistanceSensor greenDistanceSensor;
     private Servo purpleServo;
     private Servo greenServo;
-    private ShooterState shooterState = ShooterState.IDLE;
+//    private ShooterState shooterState = ShooterState.IDLE;
     private ElapsedTime servoTime = new ElapsedTime();
     private double startServoTime = 0;
     private boolean seenobelisk = false;
@@ -92,9 +92,11 @@ public class AUTO_BLUE_1 extends LinearOpMode {
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
     SparkFunOTOS otos;
+    private Servo teamLED;
 
     private static double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
-    public static final String ALLIANCE_KEY = "BLUE";
+    public static final String ALLIANCE_KEY = "Alliance";
+    public String colorAlliance = "BLUE";
 
     @Override
     public void runOpMode() {
@@ -106,6 +108,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
         greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
+        teamLED = hardwareMap.get(Servo.class, "led-light");
 
  //       flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 //        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, shooterpid);
@@ -152,10 +155,18 @@ public class AUTO_BLUE_1 extends LinearOpMode {
 
         telemetry.setMsTransmissionInterval(11);
 
+        //Set the LED to green in INIT mode
+        teamLED.setPosition(0.5);//green
+
         //configureOtos();
         deltaTimer.reset();
         lastTime = deltaTimer.seconds();
 
+        //set artifact holding positions
+        flywheel.setVelocity(0);
+        greenServo.setPosition(greenHoldPos);
+        purpleServo.setPosition(purpleHoldPos);
+        
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
@@ -186,11 +197,12 @@ public class AUTO_BLUE_1 extends LinearOpMode {
             deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
-           //set artifact holding positions
-            flywheel.setVelocity(0);
-            greenServo.setPosition(greenHoldPos);
-            purpleServo.setPosition(purpleHoldPos);
-
+            if(colorAlliance=="BLUE"){
+                teamLED.setPosition(0.600); //blue
+            }
+            else{
+                teamLED.setPosition(0.283);//red
+            }
 
 //            conveyorG.setPower(1);
 //            conveyorP.setPower(1);
@@ -260,7 +272,8 @@ public class AUTO_BLUE_1 extends LinearOpMode {
 
                 flywheel.setVelocity(0); //stop the flywheel
 
-
+                //Store the alliance color to memory for use in TELEOP
+                blackboard.put(ALLIANCE_KEY, colorAlliance);
 
                 FtcDashboard dashboard = FtcDashboard.getInstance();
                 TelemetryPacket packet = new TelemetryPacket();
