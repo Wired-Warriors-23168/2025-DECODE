@@ -30,7 +30,7 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private DcMotor rightBackDrive;
     private RevBlinkinLedDriver lightsLED; //NOT the gobilda light...
 
-    private Servo servo;
+    private Servo teamLED;
     SparkFunOTOS poseOTOS;
 
     // Declare variables
@@ -39,6 +39,9 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
     private static double bankVelocity = 0.6;
     private static double farVelocity = 0.85;
     private static double maxVelocity = 0.5;
+
+    public static final String ALLIANCE_KEY = "Alliance";
+    public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
 
     @Override
     public void runOpMode() {
@@ -51,7 +54,7 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
         agitator = hardwareMap.get(CRServo.class, "servo-agitator");
         lightsLED = hardwareMap.get(RevBlinkinLedDriver.class,"pwm-LED");
         poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
-        servo = hardwareMap.get(Servo.class, "led-light");
+        teamLED = hardwareMap.get(Servo.class, "led-light");
 
         // Establishing the direction and mode for the motors
         // flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -76,7 +79,12 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
                 // heading angle
                 SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
 
-
+                if(colorAlliance=="BLUE"){
+                    teamLED.setPosition(0.600); //blue
+                }
+                else{
+                    teamLED.setPosition(0.283);//red
+                }
 
                 // Calling our methods while the OpMode is running
                 splitStickArcadeDrive();
@@ -85,6 +93,7 @@ public class REVStarterBotTeleOpJava extends LinearOpMode {
 
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
+                telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
                 //telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
                 // Log the position to the telemetry

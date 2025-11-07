@@ -41,6 +41,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 
@@ -71,6 +72,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
     private DcMotor leftBackDrive;
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
+    private Servo teamLED;
 
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
@@ -84,6 +86,8 @@ public class AUTO_BLUE_1 extends LinearOpMode {
     double launchWaitTime;
     ElapsedTime timer;
     ElapsedTime waitTimer;
+    public static final String ALLIANCE_KEY = "Alliance";
+    public String colorAlliance = "BLUE";
 
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
@@ -97,6 +101,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         flywheel = hardwareMap.get(DcMotorSimple.class, "motor-flywheel");
         feeder = hardwareMap.get(DcMotorSimple.class, "motor-feeder");
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
+        teamLED = hardwareMap.get(Servo.class, "led-light");
 
         //initDevices(); // Initialize all motors, servos, sensors
 
@@ -110,6 +115,9 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
         drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
+
+        //Set the LED to green in INIT mode
+        teamLED.setPosition(0.5);//green
 
         //Set all actuator target positions
         flywheelPowerBank = 0.57;    //the bankshot shooting power
@@ -139,6 +147,13 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         waitForStart();
 
         if(isStopRequested()) return;
+
+        if(colorAlliance=="BLUE"){
+            teamLED.setPosition(0.600); //blue
+        }
+        else{
+            teamLED.setPosition(0.283);//red
+        }
 
         flywheel.setPower(flywheelPowerBank);       //Set the flywheel to max power to start it up
 
@@ -176,6 +191,8 @@ public class AUTO_BLUE_1 extends LinearOpMode {
 
         SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
 
+        //Store the alliance color to memory for use in TELEOP
+        blackboard.put(ALLIANCE_KEY, colorAlliance);
 
         telemetry.addLine();
         telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
