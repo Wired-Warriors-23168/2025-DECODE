@@ -186,6 +186,7 @@ public class AUTO_BLUE_4 extends LinearOpMode {
 
                         ))
                         //Corral three balls on the goal
+                        .setTangent(Math.toRadians(-90))
                         .splineToLinearHeading(new Pose2d(1,-28,Math.toRadians(-90)),Math.toRadians(-90))
                         .lineToY(-46)
                         .setTangent(Math.toRadians(180))

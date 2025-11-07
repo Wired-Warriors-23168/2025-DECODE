@@ -184,6 +184,7 @@ public class AUTO_RED_4 extends LinearOpMode {
 
                         ))
                         //Corral three balls on the goal
+                        .setTangent(Math.toRadians(90))
                         .splineToLinearHeading(new Pose2d(1,28,Math.toRadians(90)),Math.toRadians(90))
                         .lineToY(46)
                         .setTangent(Math.toRadians(180))
@@ -191,7 +192,7 @@ public class AUTO_RED_4 extends LinearOpMode {
 
                         //Park in the center near the line to draw a foul
                         .setReversed(false)
-                        .setTangent(Math.toRadians(-45))
+                        .setTangent(Math.toRadians(45))
                         .splineToLinearHeading(new Pose2d(8,12,Math.toRadians(90)),Math.toRadians(0))
 
                         .build());

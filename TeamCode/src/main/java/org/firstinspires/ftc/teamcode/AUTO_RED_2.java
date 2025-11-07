@@ -186,7 +186,7 @@ public class AUTO_RED_2 extends LinearOpMode {
                         ))
                         .setReversed(false)
                         .setTangent(Math.toRadians(135))
-                        .splineToLinearHeading(new Pose2d(10,13,Math.toRadians(90)),Math.toRadians(0))
+                        .splineToLinearHeading(new Pose2d(10,13,Math.toRadians(90)),Math.toRadians(180))
                         .build());
 
         flywheel.setPower(0);       //Set the flywheel to max power to start it up
