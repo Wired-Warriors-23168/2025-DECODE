@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -23,7 +24,7 @@ enum ShooterState {
     IDLE,
     IDLE_WITH_FLYWHEEL
 };
-
+@Disabled
 @TeleOp
 public class TELEOP_AIMBOT extends LinearOpMode {
 

@@ -6,11 +6,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
-import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -22,20 +18,16 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 import java.util.List;
-import java.util.ServiceConfigurationError;
 
 
 @Config //Required to be able to tune parameters in FTCDashboard
-@Autonomous(name="AUTO_Test_Pathing", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
-public class AUTO_Test_Pathing extends LinearOpMode {
+@Autonomous(name="AUTO_BLUE_2", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+public class AUTO_RED_2 extends LinearOpMode {
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
     /////////////////////////////////////////////////////////////////////////
@@ -102,7 +94,7 @@ public class AUTO_Test_Pathing extends LinearOpMode {
     SparkFunOTOS otos;
 
     private static double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
-    public static final String ALLIANCE_KEY = "Alliance";
+    public static final String ALLIANCE_KEY = "RED";
 
     @Override
     public void runOpMode() {
@@ -167,7 +159,7 @@ public class AUTO_Test_Pathing extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(180));
+        Pose2d beginPose = new Pose2d(62.5, 12, Math.toRadians(180));
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
@@ -214,7 +206,7 @@ public class AUTO_Test_Pathing extends LinearOpMode {
                 SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
 
                 //start the flywheel
-                flywheel.setVelocity(closeVelocity);
+                flywheel.setVelocity(farVelocity);
 
                 //drive to the obelisk read location
                 Actions.runBlocking(
@@ -223,7 +215,7 @@ public class AUTO_Test_Pathing extends LinearOpMode {
                                 // Move to close firing position
                                 .setReversed(false)
                                 .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
-                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(135)),Math.toRadians(-45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+                                .splineToLinearHeading(new Pose2d(56,13,Math.toRadians(-175)),Math.toRadians(5))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                                 .build());
 
                 //Read the limelight and determine pattern
@@ -253,12 +245,12 @@ public class AUTO_Test_Pathing extends LinearOpMode {
                         drive.actionBuilder(beginPose)
 
                                 // Turn to fact goal
-                                .turnTo(Math.toRadians(-135))
+                                .turnTo(Math.toRadians(153))
                                 //shoot the pattern
                                 .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,2000))
                                 //Move to the park position
-                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
-                                .splineToLinearHeading(new Pose2d(35.8, 25, Math.toRadians(90)),Math.toRadians(0))
+                                .setTangent(Math.toRadians(135))  //the heading the bot will take when leaving this position
+                                .splineToLinearHeading(new Pose2d(8, 12, Math.toRadians(90)),Math.toRadians(0))
 //
 //                                .lineToY(56)
 //                                .lineToY(25)
@@ -430,7 +422,7 @@ public class AUTO_Test_Pathing extends LinearOpMode {
     ///////////////////////////////////////////////////
     //Functionality from TELEOP
     //////////////////////////////////////////////////
-
+   
 //    public void intakeSort(boolean auto) {
 //
 //        sortArtifact();
