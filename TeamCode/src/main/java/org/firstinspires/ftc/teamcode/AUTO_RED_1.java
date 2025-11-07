@@ -26,7 +26,7 @@ import java.util.List;
 
 
 @Config //Required to be able to tune parameters in FTCDashboard
-@Autonomous(name="AUTO_BLUE_1", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+@Autonomous(name="AUTO_RED_1", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 public class AUTO_RED_1 extends LinearOpMode {
     /////////////////////////////////////////////////////////////////////////
     // Declare variables

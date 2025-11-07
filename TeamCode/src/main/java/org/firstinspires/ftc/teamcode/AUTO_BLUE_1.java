@@ -7,6 +7,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
@@ -170,7 +171,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(180));
+        Pose2d beginPose = new Pose2d(-62.3125, -34.8, Math.toRadians(180));
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
@@ -227,7 +228,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                                 // Move to close firing position
                                 .setReversed(false)
                                 .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
-                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(135)),Math.toRadians(-45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(170)),Math.toRadians(-45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                                 .build());
 
                 //Read the limelight and determine pattern
@@ -250,12 +251,17 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                     tagID = 0;
                     limelight.pipelineSwitch(teamPipeline);
                 }
-
+                telemetry.addData("Pattern ID", patternID);
+                telemetry.addData("Seen obelisk", seenobelisk);
+                telemetry.addData("Tag ID", tagID);
+                telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
+                telemetry.addData("Flywheel Power", flywheel.getPower());
+                telemetry.update();
 
                 //Roadrunner - turn to goal, shoot, then drive to park position
                 Actions.runBlocking(
-                        drive.actionBuilder(beginPose)
-
+                        drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
+                                .stopAndAdd(new SleepAction(1.5))
                                 // Turn to fact goal
                                 .turnTo(Math.toRadians(-135))
                                 //shoot the pattern
