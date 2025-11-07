@@ -125,7 +125,7 @@ public class AUTO_BLUE_2 extends LinearOpMode {
         //Set all actuator target positions
         flywheelPowerBank = 0.6;    //the bankshot shooting power
         flywheelPowerMid = 0.64;     //the middle shooting power
-        flywheelPowerFar = 0.7;     //the far shooting power
+        flywheelPowerFar = 0.75;     //the far shooting power
         feederPower = 0.6;          //the feeder power when activating
         feederLaunchTime = 8.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
         feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)

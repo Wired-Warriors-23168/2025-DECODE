@@ -183,7 +183,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                         ))
                         .setReversed(false)
                         .setTangent(Math.toRadians(45))
-                        .splineToLinearHeading(new Pose2d(8,-14,Math.toRadians(-90)),Math.toRadians(0))
+                        .splineToLinearHeading(new Pose2d(10,-14,Math.toRadians(-90)),Math.toRadians(0))
 
                         .build());
 
