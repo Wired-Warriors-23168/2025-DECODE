@@ -94,7 +94,7 @@ public class AUTO_BLUE_2 extends LinearOpMode {
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(62.5, -32.5, Math.toRadians(-90));
+    Pose2d beginPose = new Pose2d(61, -15, Math.toRadians(180));
 
     @Override
     public void runOpMode() {
@@ -126,8 +126,8 @@ public class AUTO_BLUE_2 extends LinearOpMode {
         flywheelPowerBank = 0.6;    //the bankshot shooting power
         flywheelPowerMid = 0.64;     //the middle shooting power
         flywheelPowerFar = 0.75;     //the far shooting power
-        feederPower = 0.6;          //the feeder power when activating
-        feederLaunchTime = 8.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
+        feederPower = 0.45;          //the feeder power when activating
+        feederLaunchTime = 1.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
         feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)
         launchWaitTime = 2.5;       //the wait time between launches so the flywheel can spin up
 
@@ -166,8 +166,8 @@ public class AUTO_BLUE_2 extends LinearOpMode {
 
                         // Move to bankshot firing position
                         .setReversed(false)
-                        .setTangent(Math.toRadians(90))
-                        .splineToLinearHeading(new Pose2d(56,-13,Math.toRadians(-153)),Math.toRadians(27))
+                        .setTangent(Math.toRadians(180))
+                        .splineToLinearHeading(new Pose2d(56,-13,Math.toRadians(-159)),Math.toRadians(-159))
 
 //                        //launch an artifact with the feeder
                         .stopAndAdd(new SequentialAction(
@@ -244,7 +244,7 @@ public class AUTO_BLUE_2 extends LinearOpMode {
             if (timer == null) {
                 timer = new ElapsedTime();
             }
-            sleep(3000);
+            sleep(2000);
             feeder.setPower(feederPower);
 //            telemetry.addData("timer", "t: (%.1f)", timer);
 //            telemetry.update();

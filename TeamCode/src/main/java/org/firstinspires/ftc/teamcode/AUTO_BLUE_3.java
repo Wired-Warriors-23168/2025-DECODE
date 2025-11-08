@@ -35,7 +35,6 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -59,7 +58,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Autonomous(name="AUTO_BLUE_3", group="AUTO", preselectTeleOp = "REVStarterBotTeleOpJava")
+@Autonomous(name="AUTO_BLUE_3", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
 public class AUTO_BLUE_3 extends LinearOpMode {
@@ -93,7 +92,7 @@ public class AUTO_BLUE_3 extends LinearOpMode {
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(62.5, -32.5, Math.toRadians(-90));
+    Pose2d beginPose = new Pose2d(61, -15, Math.toRadians(180));
 
     @Override
     public void runOpMode() {
@@ -103,6 +102,7 @@ public class AUTO_BLUE_3 extends LinearOpMode {
         feeder = hardwareMap.get(DcMotorSimple.class, "motor-feeder");
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         teamLED = hardwareMap.get(Servo.class, "led-light");
+
 
         //initDevices(); // Initialize all motors, servos, sensors
 
@@ -122,10 +122,10 @@ public class AUTO_BLUE_3 extends LinearOpMode {
 
         //Set all actuator target positions
         flywheelPowerBank = 0.6;    //the bankshot shooting power
-        flywheelPowerMid = 0.64;     //the middle shooting power
-        flywheelPowerFar = 0.7;     //the far shooting power
+        flywheelPowerMid = 0.55;     //the middle shooting power
+        flywheelPowerFar = 1.0;     //the far shooting power
         feederPower = 0.6;          //the feeder power when activating
-        feederLaunchTime = 4.5;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
+        feederLaunchTime = 1.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
         feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)
         launchWaitTime = 2.5;       //the wait time between launches so the flywheel can spin up
 
@@ -156,16 +156,16 @@ public class AUTO_BLUE_3 extends LinearOpMode {
             teamLED.setPosition(0.283);//red
         }
 
-        flywheel.setPower(flywheelPowerFar);       //Set the flywheel to max power to start it up
+        flywheel.setPower(flywheelPowerMid);       //Set the flywheel to max power to start it up
 
         //Build the actions for our AUTO mode
         Actions.runBlocking(
                 drive.actionBuilder(beginPose)
 
-                        // Move to far firing position
+                        // Move to mid firing position
                         .setReversed(false)
-                        .setTangent(Math.toRadians(90))
-                        .splineToLinearHeading(new Pose2d(56,-13,Math.toRadians(-155)),Math.toRadians(26))
+                        .setTangent(Math.toRadians(180))
+                        .splineToLinearHeading(new Pose2d(-2,-12,Math.toRadians(-140)),Math.toRadians(180))
 
 //                        //launch an artifact with the feeder
                         .stopAndAdd(new SequentialAction(
@@ -183,9 +183,17 @@ public class AUTO_BLUE_3 extends LinearOpMode {
                                 //new launchWait(launchWaitTime,feeder)                                      //wait for launchWaitTime seconds
 
                         ))
+//                        //Corral three balls on the goal
+//                        .setTangent(Math.toRadians(-90))
+//                        .splineToLinearHeading(new Pose2d(1,-28,Math.toRadians(-90)),Math.toRadians(-90))
+//                        .lineToY(-46)
+//                        .setTangent(Math.toRadians(180))
+//                        .splineToLinearHeading(new Pose2d(-47,-47,Math.toRadians(-45)),Math.toRadians(-180))
+//
+                        //Park in the center near the line to draw a foul
                         .setReversed(false)
-                        .setTangent(Math.toRadians(-135))
-                        .splineToLinearHeading(new Pose2d(60,-60,Math.toRadians(-90)),Math.toRadians(-90))
+                        .setTangent(Math.toRadians(-45))
+                        .splineToLinearHeading(new Pose2d(12,-12,Math.toRadians(-90)),Math.toRadians(0))
 
                         .build());
 
@@ -242,7 +250,7 @@ public class AUTO_BLUE_3 extends LinearOpMode {
             if (timer == null) {
                 timer = new ElapsedTime();
             }
-            sleep(3000);
+            sleep(2000);
             feeder.setPower(feederPower);
 //            telemetry.addData("timer", "t: (%.1f)", timer);
 //            telemetry.update();
