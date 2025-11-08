@@ -2,15 +2,11 @@ package org.firstinspires.ftc.teamcode;
 
 import androidx.annotation.NonNull;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -23,12 +19,10 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import java.util.List;
-
 
 @Config //Required to be able to tune parameters in FTCDashboard
-@Autonomous(name="AUTO_BLUE_1", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
-public class AUTO_BLUE_1 extends LinearOpMode {
+@Autonomous(name="AUTO_BLUE_OLD", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+public class AUTO_BLUE_OLD extends LinearOpMode {
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
     /////////////////////////////////////////////////////////////////////////
@@ -230,12 +224,64 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                                 .splineToLinearHeading(new Pose2d(12,-12,Math.toRadians(-90)),Math.toRadians(45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                                 .build());
 
+//                //Read the limelight and determine pattern
+//                LLResult result = limelight.getLatestResult();
+//               if (result != null && result.isValid()) {
+//                    tx = result.getTx();
+//                    ty = result.getTy();
+//                }
+//                List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+//                for (LLResultTypes.FiducialResult fiducial : fiducials) {
+//                    if (fiducial != null) {
+//                        tagID = fiducial.getFiducialId();
+//                    }
+//                }
+//
+//                if (tagID != 0  && !seenobelisk) {
+//                    seenobelisk = true;
+//                    patternID = tagID; // save pattern
+//                    sleep(50);
+//                    tagID = 0;
+//                    limelight.pipelineSwitch(teamPipeline);
+//                }
+//                SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
+//                telemetry.addData("Pattern ID", patternID);
+//                telemetry.addData("Seen obelisk", seenobelisk);
+//                telemetry.addData("Tag ID", tagID);
+//                telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
+//                telemetry.addData("Flywheel Power", flywheel.getPower());
+//                telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
+//                telemetry.update();
+//
+//                //Roadrunner - turn to goal, shoot, then drive to park position
+//                Actions.runBlocking(
+//                        drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
+//                                .stopAndAdd(new SleepAction(1.5))
+//                                // Turn to fact goal
+//                                .turnTo(Math.toRadians(-135))
+//                                //shoot the pattern
+//                                .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,2000))
+//                                //Move to the park position
+//                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
+//                                .splineToLinearHeading(new Pose2d(12, -18, Math.toRadians(-90)),Math.toRadians(0))
+//
+//                                .lineToY(56)
+//                                .lineToY(25)
+//                                .strafeTo(new Vector2d(shootX, shootY))
+//                                .build());
+
 
                 flywheel.setVelocity(0); //stop the flywheel
 
                 //Store the alliance color to memory for use in TELEOP
                 blackboard.put(ALLIANCE_KEY, colorAlliance);
 
+//                FtcDashboard dashboard = FtcDashboard.getInstance();
+//                TelemetryPacket packet = new TelemetryPacket();
+//                dashboard.sendTelemetryPacket(packet); // Always send the packet
+//                packet.fieldOverlay()
+//                        .setFill("blue")
+//                        .fillRect(-20, -20, 40, 40);
 
                 telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
                 telemetry.addData("time", runtime.time());
@@ -252,6 +298,140 @@ public class AUTO_BLUE_1 extends LinearOpMode {
     ///////////////////////////////////////////////////
     //PUBLIC CLASSES FOR ROADRUNNER ACTION DEFINITIONS
     //////////////////////////////////////////////////
+
+    public class patternLaunchAction implements Action {
+        Servo purpleServo;
+        double purpleShootPos;
+        double purpleDownPos;
+        double servoLaunchTime;
+        Servo greenServo;
+        double greenShootPos;
+        double greenDownPos;
+        int patternID; // 21 = GPP, 22 = PPG, 23 = PGG
+        ElapsedTime actionTimer;
+
+
+        public patternLaunchAction(int patternID,Servo purpleServo, double purpleShootPos, double purpleDownPos,Servo greenServo,double greenShootPos,double greenDownPos,double servoLaunchTime) {
+            this.purpleServo = purpleServo;
+            this.patternID = patternID;
+            this.servoLaunchTime = servoLaunchTime;
+            this.purpleShootPos = purpleShootPos;
+            this.purpleDownPos = purpleDownPos;
+            actionTimer = new ElapsedTime();
+        }
+        //
+        @Override
+        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+            if (actionTimer == null) {
+                actionTimer = new ElapsedTime();
+            }
+
+            if (patternID == 21) {
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+            }
+                else if (patternID == 22) {
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+            }
+                else if (patternID == 23) {
+                purpleServo.setPosition(purpleShootPos);
+//                sleep(2000);
+                purpleServo.setPosition(purpleDownPos);
+//                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+//                sleep(2000);
+                purpleServo.setPosition(purpleDownPos);
+//                sleep(2000);
+                greenServo.setPosition(greenShootPos);
+//                sleep(400);
+                greenServo.setPosition(greenDownPos);
+            }
+            return true;
+            //return actionTimer.seconds()<servoLaunchTime; //runs the action for maximum intakeTime seconds
+        }
+    }
+
+//    public class launchArtifactP implements Action {
+//        Servo purpleServo;
+//        double purpleShootPos;
+//        double purpleDownPos;
+//        double servoLaunchTime;
+//        double launchPosition;
+//        ElapsedTime actionTimer;
+//
+//
+//        public launchArtifactP(Servo purpleServo, double launchPosition, double purpleShootPos, double purpleDownPos,double servoLaunchTime) {
+//            this.purpleServo = purpleServo;
+//            this.servoLaunchTime = servoLaunchTime;
+//            this.purpleShootPos = purpleShootPos;
+//            this.purpleDownPos = purpleDownPos;
+//            this.launchPosition = launchPosition;
+//            actionTimer = new ElapsedTime();
+//        }
+//        //
+//        @Override
+//        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//            if (actionTimer == null) {
+//                actionTimer = new ElapsedTime();
+//            }
+//
+//            purpleServo.setPosition(purpleShootPos);
+//            sleep(250);
+//            purpleServo.setPosition(purpleDownPos);
+//            return true;
+//            //return actionTimer.seconds()<servoLaunchTime; //runs the action for maximum intakeTime seconds
+//        }
+//    }
+//
+//    public class launchArtifactG implements Action {
+//        Servo greenServo;
+//        double greenShootPos;
+//        double greenDownPos;
+//        double servoLaunchTime;
+//        double launchPosition;
+//        ElapsedTime actionTimer;
+//
+//        public launchArtifactG(Servo greenServo, double launchPosition, double greenShootPos, double greenDownPos,double servoLaunchTime) {
+//            this.greenServo = greenServo;
+//            this.servoLaunchTime = servoLaunchTime;
+//            this.greenShootPos = greenShootPos;
+//            this.greenDownPos = greenDownPos;
+//            this.launchPosition = launchPosition;
+//            actionTimer = new ElapsedTime();
+//        }
+//        //
+//        @Override
+//        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+//            if (actionTimer == null) {
+//                actionTimer = new ElapsedTime();
+//            }
+//
+//            greenServo.setPosition(greenShootPos);
+//            sleep(250);
+//            greenServo.setPosition(greenDownPos);
+//            return true;
+//            //return actionTimer.seconds()<servoLaunchTime; //runs the action for maximum intakeTime seconds
+//        }
+//    }
 
     ///////////////////////////////////////////////////
     //Functionality from TELEOP
