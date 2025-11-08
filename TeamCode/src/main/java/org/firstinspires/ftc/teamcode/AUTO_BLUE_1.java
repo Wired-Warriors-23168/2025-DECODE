@@ -228,7 +228,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                                 // Move to close firing position
                                 .setReversed(false)
                                 .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
-                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(170)),Math.toRadians(-45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(150)),Math.toRadians(-30))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                                 .build());
 
                 //Read the limelight and determine pattern
@@ -257,6 +257,9 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                 telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
                 telemetry.update();
+                sleep(1500);
+                telemetry.update();
+                sleep(1500);
 
                 //Roadrunner - turn to goal, shoot, then drive to park position
                 Actions.runBlocking(
