@@ -50,12 +50,13 @@ import com.qualcomm.robotcore.util.Range;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
-@Disabled
+//@Disabled
 @TeleOp
 public class servozero extends LinearOpMode {
 
     // Declare OpMode members.
     private Servo test = null;
+    private double pos = 0.4;
 
     @Override
     public void runOpMode() {
@@ -65,7 +66,7 @@ public class servozero extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        test  = hardwareMap.get(Servo.class, "test");
+        test  = hardwareMap.get(Servo.class, "servo-selector");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
@@ -78,7 +79,14 @@ public class servozero extends LinearOpMode {
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
 
-            test.setPosition(0);
+            if(gamepad1.aWasPressed()){
+                pos = pos+0.05;
+            }else if(gamepad1.bWasPressed()){
+                pos = pos-0.05;
+            }
+
+            test.setPosition(pos);
+            telemetry.addData("pos", pos);
             telemetry.update();
         }
     }

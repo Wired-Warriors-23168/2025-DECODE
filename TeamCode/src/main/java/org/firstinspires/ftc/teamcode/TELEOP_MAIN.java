@@ -48,8 +48,8 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double purpleDownPos = 0.02;
     private double greenHoldPos = 0.27;
     private double purpleHoldPos = 0.07;
-
-
+    private double purpleFLapHoldPos = 0.0;
+    private double purpleFLapDownPos = 0.3;
     private double farVelocity = 1450;
     private double closeVelocity = 1200;
     private double idleVelocity = 600;
@@ -64,12 +64,13 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     private DcMotor intake;
     private Servo selector;
+    private Servo purpleHoldFlap;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
     private CRServo conveyorP;
 
-    private double sortOffset = 55.0/300.0;
+    private double sortOffset = 81.0/300.0; //changed with the new selector print  was 55.0/300.0
     private DcMotor lift;
 
 
@@ -88,7 +89,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private DcMotor rightBackDrive;
     SparkFunOTOS poseOTOS;
 
-    private static double limitDrivePower = 0.5;  //Mutliplier to limit the drive wheel power for training
+    private static double limitDrivePower =1.0;  //Mutliplier to limit the drive wheel power for training
     public static final String ALLIANCE_KEY = "Alliance";
 
     @Override
@@ -98,6 +99,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
+        purpleHoldFlap = hardwareMap.get(Servo.class, "purpleHoldFlap");
         poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
         greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
@@ -108,6 +110,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
+        purpleHoldFlap.setDirection(Servo.Direction.FORWARD);
 
         limelight.start();
         limelight.pipelineSwitch(2);
@@ -210,9 +213,11 @@ public class TELEOP_MAIN extends LinearOpMode {
                 }
                 if(purpleBallDetected()){
                     purpleServo.setPosition(purpleHoldPos);
+                    purpleHoldFlap.setPosition(purpleFLapHoldPos);
                 }
                 else{
                     purpleServo.setPosition(purpleDownPos);
+                    purpleHoldFlap.setPosition(purpleFLapDownPos);
                 }
                 break;
             case WAITING_FOR_FLYWHEEL:
@@ -224,6 +229,20 @@ public class TELEOP_MAIN extends LinearOpMode {
                 }
             case IDLE_WITH_FLYWHEEL:
                 flywheel.setVelocity(targetVelocity);
+                if(greenBallDetected()){
+                    greenServo.setPosition(greenHoldPos);
+                }
+                else{
+                    greenServo.setPosition(greenDownPos);
+                }
+                if(purpleBallDetected()){
+                    purpleServo.setPosition(purpleHoldPos);
+                    purpleHoldFlap.setPosition(purpleFLapHoldPos);
+                }
+                else{
+                    purpleServo.setPosition(purpleDownPos);
+                    purpleHoldFlap.setPosition(purpleFLapDownPos);
+                }
                 break;
         }
 //        if (shooterOn) {
@@ -454,11 +473,11 @@ public class TELEOP_MAIN extends LinearOpMode {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if(sumGreenPurpleness > 50){
-            selector.setPosition(0.4 - sortOffset); //calculating the offset here isn't working - data type?
+            selector.setPosition(0.47 - sortOffset); //updated zero position for new print (shaft was turned...)
             //selector.setPosition(0.22);
         }
         else if (sumGreenPurpleness < -50 ) {
-           selector.setPosition(0.4 + sortOffset);  //calculating the offset here isn't working - data type?
+           selector.setPosition(0.47 + sortOffset);  //updated zero position for new print (shaft was turned...)
            //Should work now
             //selector.setPosition(0.58);
         }
@@ -510,7 +529,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
         double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
-        if (gamepad1.dpad_up) {
+        if (gamepad1.left_bumper) {
             rotate();
         } else {
             leftFrontDrive.setPower(frontLeftPower);
@@ -518,6 +537,7 @@ public class TELEOP_MAIN extends LinearOpMode {
             rightFrontDrive.setPower(frontRightPower);
             rightBackDrive.setPower(backRightPower);
         }
+
         SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
 
         telemetry.addData("X coordinate", pos.x);
