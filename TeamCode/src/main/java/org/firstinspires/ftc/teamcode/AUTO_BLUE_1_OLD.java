@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode;
 
 import androidx.annotation.NonNull;
-
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
@@ -10,6 +11,7 @@ import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -19,7 +21,9 @@ import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.util.List;
 
+@Disabled
 @Config //Required to be able to tune parameters in FTCDashboard
 @Autonomous(name="AUTO_BLUE_1_OLD", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 public class AUTO_BLUE_1_OLD extends LinearOpMode {
@@ -223,47 +227,47 @@ public class AUTO_BLUE_1_OLD extends LinearOpMode {
                                 .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
                                 .splineToLinearHeading(new Pose2d(-18,-48,Math.toRadians(90)),Math.toRadians(0))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                                 .build());
-//
-//                //Read the limelight and determine pattern
-//                LLResult result = limelight.getLatestResult();
-////                if (result != null && result.isValid()) {
-////                    tx = result.getTx();
-////                    ty = result.getTy();
-////                }
-//                List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
-//                for (LLResultTypes.FiducialResult fiducial : fiducials) {
-//                    if (fiducial != null) {
-//                        tagID = fiducial.getFiducialId();
-//                    }
+
+                //Read the limelight and determine pattern
+                LLResult result = limelight.getLatestResult();
+//                if (result != null && result.isValid()) {
+//                    tx = result.getTx();
+//                    ty = result.getTy();
 //                }
+                List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+                for (LLResultTypes.FiducialResult fiducial : fiducials) {
+                    if (fiducial != null) {
+                        tagID = fiducial.getFiducialId();
+                    }
+                }
+
+                if (tagID != 0  && !seenobelisk) {
+                    seenobelisk = true;
+                    patternID = tagID; // save pattern
+                    sleep(50);
+                    tagID = 0;
+                    limelight.pipelineSwitch(teamPipeline);
+                }
+                sleep(2500);
+                SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for next move
+
+
+                //Roadrunner - turn to goal, shoot, then drive to park position
+                Actions.runBlocking(
+                        drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
+
+                                // Turn to fact goal
+                                .turnTo(Math.toRadians(135))
+                                //shoot the pattern
+                                .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,2000))
+                                //Move to the park position
+                                .setTangent(Math.toRadians(-45))  //the heading the bot will take when leaving this position
+                                .splineToLinearHeading(new Pose2d(12, 18, Math.toRadians(90)),Math.toRadians(0))
 //
-//                if (tagID != 0  && !seenobelisk) {
-//                    seenobelisk = true;
-//                    patternID = tagID; // save pattern
-//                    sleep(50);
-//                    tagID = 0;
-//                    limelight.pipelineSwitch(teamPipeline);
-//                }
-//                sleep(2500);
-//                SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for next move
-//
-//
-//                //Roadrunner - turn to goal, shoot, then drive to park position
-//                Actions.runBlocking(
-//                        drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
-//
-//                                // Turn to fact goal
-//                                .turnTo(Math.toRadians(135))
-//                                //shoot the pattern
-//                                .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,2000))
-//                                //Move to the park position
-//                                .setTangent(Math.toRadians(-45))  //the heading the bot will take when leaving this position
-//                                .splineToLinearHeading(new Pose2d(12, 18, Math.toRadians(90)),Math.toRadians(0))
-////
-////                                .lineToY(56)
-////                                .lineToY(25)
-////                                .strafeTo(new Vector2d(shootX, shootY))
-//                                .build());
+//                                .lineToY(56)
+//                                .lineToY(25)
+//                                .strafeTo(new Vector2d(shootX, shootY))
+                                .build());
 
 
                 flywheel.setVelocity(0); //stop the flywheel
@@ -277,15 +281,15 @@ public class AUTO_BLUE_1_OLD extends LinearOpMode {
 //                packet.fieldOverlay()
 //                        .setFill("blue")
 //                        .fillRect(-20, -20, 40, 40);
-//
-//                telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
-//                telemetry.addData("time", runtime.time());
-//                telemetry.addData("Pattern ID", patternID);
-//                telemetry.addData("Seen obelisk", seenobelisk);
-//                telemetry.addData("Tag ID", tagID);
-//                telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
-//                telemetry.addData("Flywheel Power", flywheel.getPower());
-//                telemetry.update();
+
+                telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
+                telemetry.addData("time", runtime.time());
+                telemetry.addData("Pattern ID", patternID);
+                telemetry.addData("Seen obelisk", seenobelisk);
+                telemetry.addData("Tag ID", tagID);
+                telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
+                telemetry.addData("Flywheel Power", flywheel.getPower());
+                telemetry.update();
             }
         }
     }
