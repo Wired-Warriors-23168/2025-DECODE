@@ -35,12 +35,11 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -64,11 +63,10 @@ import java.util.List;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Disabled
-@Autonomous(name="AUTO_BLUE_1_NEWTEST", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+@Autonomous(name="AUTO_BLUE_ShootTest", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
-public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
+public class AUTO_BLUE_ShootTest extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -80,9 +78,20 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
     private Servo teamLED;
+    private Limelight3A limelight;
     private Servo purpleServo;
     private Servo greenServo;
-    private Limelight3A limelight;
+    private boolean seenobelisk = false;
+
+    private int teamPipeline = 0; // blue auton
+    private int patternID = 0;
+    int tagID;
+    private double greenShootPos = 0.1667;  //was 0.2467
+    private double purpleShootPos = 0.17;  //was 0.0933
+    private double greenDownPos = 0.32;
+    private double purpleDownPos = 0.02;
+    private double greenHoldPos = 0.27;
+    private double purpleHoldPos = 0.07;
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -95,45 +104,17 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     int feederRotations;
     double feederLaunchTime;
     double launchWaitTime;
-    private boolean seenobelisk = false;
-
-    private int teamPipeline = 0; // blue auton
-    private int patternID = 0;
-    private double greenShootPos = 0.1667;  //was 0.2467
-    private double purpleShootPos = 0.17;  //was 0.0933
-    private double greenDownPos = 0.32;
-    private double purpleDownPos = 0.02;
-    private double greenHoldPos = 0.27;
-    private double purpleHoldPos = 0.07;
     private double farVelocity = 1360;
     private double closeVelocity = 1200;
     private double idleVelocity = 600;
     private double targetVelocity = 600;
-    int tagID;
-    double deltaTime;
     public static final String ALLIANCE_KEY = "Alliance";
     public String colorAlliance = "BLUE";
-
-
-    private ElapsedTime runtime = new ElapsedTime();
-    public double lastTime = 0.0;
 
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
     Pose2d beginPose = new Pose2d(-62.5, -34.8, Math.toRadians(180));
-
-    //Set AUTO waypoints
-    Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to read the obelisk
-    Pose2d shootPose = new Pose2d(-30,-30,Math.toRadians(-135));    //pose to shoot the pattern
-    Pose2d intakePose1 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from first row
-    Pose2d intakePose2 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from second row
-    Pose2d endPose = new Pose2d(-30,-30,Math.toRadians(-135));      //pose at end of AUTO
-    double firstArtifact = -36;     //Y-position of the first artifact in the row
-    double secondArtifact = -41;    //Y-position of the second artifact in the row
-    double thirdArtifact = -46;     //Y-position of the third artifact in the row
-
-
 
     @Override
     public void runOpMode() {
@@ -141,8 +122,6 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
         //Set Hardware Map
         flywheel = hardwareMap.get(DcMotorEx.class, "motor-flywheel");
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
-        greenServo = hardwareMap.get(Servo.class, "greenServo");
-        purpleServo = hardwareMap.get(Servo.class, "purpleServo");
         teamLED = hardwareMap.get(Servo.class, "led-light");
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
 
@@ -155,22 +134,16 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
         purpleServo.setDirection(Servo.Direction.FORWARD);
 
         limelight.start();
-        limelight.pipelineSwitch(2);
+        limelight.pipelineSwitch(2);    //pipeline to read the obelisk AprilTag
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
         drive.localizer.setPose(beginPose);  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
 
-        telemetry.setMsTransmissionInterval(11);
-
         //Set the LED to green in INIT mode
         teamLED.setPosition(0.5);//green
 
-        //set artifact holding positions
-        flywheel.setVelocity(0);
-        greenServo.setPosition(greenHoldPos);
-        purpleServo.setPosition(purpleHoldPos);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
@@ -191,16 +164,6 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
 
         flywheel.setVelocity(closeVelocity);
 
-        //Build the actions for our AUTO mode
-        Actions.runBlocking(
-                drive.actionBuilder(beginPose)
-
-                        // Move to bankshot firing position
-                        .setReversed(false)
-                        .setTangent(Math.toRadians(45))
-                        .splineToLinearHeading(new Pose2d(-18,-48,Math.toRadians(90)),Math.toRadians(0))
-
-                        .build());
 
         //Read the limelight and determine pattern
         LLResult result = limelight.getLatestResult();
@@ -222,14 +185,23 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
             tagID = 0;
             limelight.pipelineSwitch(teamPipeline);
         }
+        sleep(2500);
+        SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for next move
+
+
+        //Build the actions for our AUTO mode
+        Actions.runBlocking(
+                drive.actionBuilder(beginPose)
+                        .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,2000))
+
+                        .build());
 
         flywheel.setPower(0);
 
-        SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
+        //pos = otos.getPosition(); //Read OTOS Pose for telemetry
 
         //Store the alliance color to memory for use in TELEOP
         blackboard.put(ALLIANCE_KEY, colorAlliance);
-
         telemetry.addLine();
 
         // run until the end of the match (driver presses STOP)
@@ -239,47 +211,74 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     //PUBLIC CLASSES FOR ROADRUNNER ACTION DEFINITIONS
     //////////////////////////////////////////////////
 
-    /**
-     * Set the position of the purple launch servo, simple action
-     * Use sleep actions in RR for timing, allow 250ms for launcher to raise and lower
-     */
-    // Set the feeder power to zero
-    public class setPurpleServoPosition implements Action {
+    public class patternLaunchAction implements Action {
         Servo purpleServo;
-        double purpleServerSetPos;
-
-        public setPurpleServoPosition(Servo purpleServo,double purpleServerSetPos) {
-
-            this.purpleServo = purpleServo;
-            this.purpleServerSetPos = purpleServerSetPos;
-        }
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            purpleServo.setPosition(purpleServerSetPos);
-            return false;
-        }
-    }
-
-    /**
-     * Set the position of the purple launch servo, simple action
-     * Use sleep actions in RR for timing, allow 250ms for launcher to raise and lower
-     */
-    // Set the feeder power to zero
-    public class setGreenServoPosition implements Action {
+        double purpleShootPos;
+        double purpleDownPos;
+        double servoLaunchTime;
         Servo greenServo;
-        double greenServerSetPos;
+        double greenShootPos;
+        double greenDownPos;
+        int patternID; // 21 = GPP, 22 = PPG, 23 = PGG
+        ElapsedTime actionTimer;
 
-        public setGreenServoPosition(Servo greenServo,double greenServerSetPos) {
 
-            this.greenServo = greenServo;
-            this.greenServerSetPos = greenServerSetPos;
+        public patternLaunchAction(int patternID,Servo purpleServo, double purpleShootPos, double purpleDownPos,Servo greenServo,double greenShootPos,double greenDownPos,double servoLaunchTime) {
+            this.purpleServo = purpleServo;
+            this.patternID = patternID;
+            this.servoLaunchTime = servoLaunchTime;
+            this.purpleShootPos = purpleShootPos;
+            this.purpleDownPos = purpleDownPos;
+            actionTimer = new ElapsedTime();
         }
-
+        //
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            greenServo.setPosition(greenServerSetPos);
-            return false;
+            if (actionTimer == null) {
+                actionTimer = new ElapsedTime();
+            }
+
+            if (patternID == 21) {
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+            }
+            else if (patternID == 22) {
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+            }
+            else if (patternID == 23) {
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+            }
+            return true;
+            //return actionTimer.seconds()<servoLaunchTime; //runs the action for maximum intakeTime seconds
         }
     }
 
@@ -298,14 +297,7 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     // PRIVATE VOIDS REFERENCED IN THE PUBLIC VOID
     //////////////////////////////////////////////////
 
-    // Initializes all devices: sensors and actuators, to clean up the code
-    private void initDevices(){
-        //INIT LIMELIGHT
-
-
-        // Initialize actuators
-
-    }
+    
 
 
 
