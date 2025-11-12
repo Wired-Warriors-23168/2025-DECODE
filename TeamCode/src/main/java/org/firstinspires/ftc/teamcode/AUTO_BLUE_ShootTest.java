@@ -211,76 +211,7 @@ public class AUTO_BLUE_ShootTest extends LinearOpMode {
     //PUBLIC CLASSES FOR ROADRUNNER ACTION DEFINITIONS
     //////////////////////////////////////////////////
 
-    public class patternLaunchAction implements Action {
-        Servo purpleServo;
-        double purpleShootPos;
-        double purpleDownPos;
-        double servoLaunchTime;
-        Servo greenServo;
-        double greenShootPos;
-        double greenDownPos;
-        int patternID; // 21 = GPP, 22 = PPG, 23 = PGG
-        ElapsedTime actionTimer;
 
-
-        public patternLaunchAction(int patternID,Servo purpleServo, double purpleShootPos, double purpleDownPos,Servo greenServo,double greenShootPos,double greenDownPos,double servoLaunchTime) {
-            this.purpleServo = purpleServo;
-            this.patternID = patternID;
-            this.servoLaunchTime = servoLaunchTime;
-            this.purpleShootPos = purpleShootPos;
-            this.purpleDownPos = purpleDownPos;
-            actionTimer = new ElapsedTime();
-        }
-        //
-        @Override
-        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            if (actionTimer == null) {
-                actionTimer = new ElapsedTime();
-            }
-
-            if (patternID == 21) {
-                greenServo.setPosition(greenShootPos);
-                sleep(250);
-                greenServo.setPosition(greenDownPos);
-                sleep(2000);
-                purpleServo.setPosition(purpleShootPos);
-                sleep(250);
-                purpleServo.setPosition(purpleDownPos);
-                sleep(2000);
-                purpleServo.setPosition(purpleShootPos);
-                sleep(250);
-                purpleServo.setPosition(purpleDownPos);
-            }
-            else if (patternID == 22) {
-                purpleServo.setPosition(purpleShootPos);
-                sleep(250);
-                purpleServo.setPosition(purpleDownPos);
-                sleep(2000);
-                greenServo.setPosition(greenShootPos);
-                sleep(250);
-                greenServo.setPosition(greenDownPos);
-                sleep(2000);
-                purpleServo.setPosition(purpleShootPos);
-                sleep(250);
-                purpleServo.setPosition(purpleDownPos);
-            }
-            else if (patternID == 23) {
-                purpleServo.setPosition(purpleShootPos);
-                sleep(250);
-                purpleServo.setPosition(purpleDownPos);
-                sleep(2000);
-                purpleServo.setPosition(purpleShootPos);
-                sleep(250);
-                purpleServo.setPosition(purpleDownPos);
-                sleep(2000);
-                greenServo.setPosition(greenShootPos);
-                sleep(250);
-                greenServo.setPosition(greenDownPos);
-            }
-            return true;
-            //return actionTimer.seconds()<servoLaunchTime; //runs the action for maximum intakeTime seconds
-        }
-    }
 
 
 
@@ -297,8 +228,175 @@ public class AUTO_BLUE_ShootTest extends LinearOpMode {
     // PRIVATE VOIDS REFERENCED IN THE PUBLIC VOID
     //////////////////////////////////////////////////
 
-    
 
 
 
+
+}
+
+class patternLaunchAction implements Action {
+    private Servo purpleServo;
+    double purpleShootPos;
+    double purpleDownPos;
+    double servoLaunchTime;
+    private Servo greenServo;
+    double greenShootPos;
+    double greenDownPos;
+    int patternID; // 21 = GPP, 22 = PPG, 23 = PGG
+    ElapsedTime actionTimer;
+
+    private enum State {
+        INIT,
+        WAIT_FOR_SHOOT_1,
+        DOWN_1,
+        WAIT_FOR_SHOOT_2,
+        DOWN_2,
+        WAIT_FOR_SHOOT_3,
+        DOWN_3,
+        DONE
+    }
+
+    private State currentState = State.INIT;
+
+    public patternLaunchAction(int patternID,Servo purpleServo, double purpleShootPos, double purpleDownPos,Servo greenServo,double greenShootPos,double greenDownPos,double servoLaunchTime) {
+        this.purpleServo = purpleServo;
+        this.patternID = patternID;
+        this.servoLaunchTime = servoLaunchTime;
+        this.purpleShootPos = purpleShootPos;
+        this.purpleDownPos = purpleDownPos;
+        this.greenServo = greenServo;
+        this.greenShootPos = greenShootPos;
+        this.greenDownPos = greenDownPos;
+        actionTimer = new ElapsedTime();
+    }
+    //
+    @Override
+    public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+        if (actionTimer == null) {
+            actionTimer = new ElapsedTime();
+        }
+
+        switch (currentState) {
+            case INIT:
+                // Determine the entire sequence of artifacts based on patternID
+                // (You'd typically pre-calculate or use a list, but we'll keep the switch for clarity)
+
+                // Start the sequence timer and move to the first action
+                actionTimer.reset();
+
+                // *** Handle first artifact launch based on pattern ***
+                if (patternID == 21 || patternID == 23) { // G P P or P G G
+                    purpleServo.setPosition(purpleShootPos);
+                    telemetryPacket.addLine("Shooting Purple (1)");
+                } else if (patternID == 22) { // P P G
+                    purpleServo.setPosition(purpleShootPos);
+                    telemetryPacket.addLine("Shooting Purple (1)");
+                }
+                // Transition to the first waiting state
+                currentState = State.WAIT_FOR_SHOOT_1;
+                break;
+
+            case WAIT_FOR_SHOOT_1:
+                // Wait for the servo to finish moving (250ms originally)
+                if (actionTimer.milliseconds() >= 250) {
+                    // *** Handle first artifact down position ***
+                    if (patternID == 21 || patternID == 23) { // G P P or P G G
+                        purpleServo.setPosition(purpleDownPos);
+                    } else if (patternID == 22) { // P P G
+                        purpleServo.setPosition(purpleDownPos);
+                    }
+                    actionTimer.reset();
+                    currentState = State.DOWN_1;
+                }
+                break;
+
+            case DOWN_1:
+                // Wait for the long recovery period (2000ms originally)
+                if (actionTimer.milliseconds() >= 2000) {
+
+                    // *** Handle second artifact launch ***
+                    if (patternID == 21) { // G P P: Launch Purple (2)
+                        purpleServo.setPosition(purpleShootPos);
+                        telemetryPacket.addLine("Shooting Purple (2)");
+                    } else if (patternID == 22) { // P P G: Launch Green (2)
+                        greenServo.setPosition(greenShootPos);
+                        telemetryPacket.addLine("Shooting Green (2)");
+                    } else if (patternID == 23) { // P G G: Launch Purple (2)
+                        purpleServo.setPosition(purpleShootPos);
+                        telemetryPacket.addLine("Shooting Purple (2)");
+                    }
+                    actionTimer.reset();
+                    currentState = State.WAIT_FOR_SHOOT_2;
+                }
+                break;
+
+            case WAIT_FOR_SHOOT_2:
+                // Wait for the servo to finish moving (250ms originally)
+                if (actionTimer.milliseconds() >= 250) {
+                    // *** Handle second artifact down position ***
+                    if (patternID == 21) {
+                        purpleServo.setPosition(purpleDownPos);
+                    } else if (patternID == 22) {
+                        greenServo.setPosition(greenDownPos);
+                    } else if (patternID == 23) {
+                        purpleServo.setPosition(purpleDownPos);
+                    }
+                    actionTimer.reset();
+                    currentState = State.DOWN_2;
+                }
+                break;
+
+            case DOWN_2:
+                // Wait for the long recovery period (2000ms originally)
+                if (actionTimer.milliseconds() >= 2000) {
+
+                    // *** Handle third artifact launch ***
+                    if (patternID == 21) { // G P P: Launch Green (3)
+                        greenServo.setPosition(greenShootPos);
+                        telemetryPacket.addLine("Shooting Green (3)");
+                    } else if (patternID == 22) { // P P G: Launch Purple (3)
+                        purpleServo.setPosition(purpleShootPos);
+                        telemetryPacket.addLine("Shooting Purple (3)");
+                    } else if (patternID == 23) { // P G G: Launch Green (3)
+                        greenServo.setPosition(greenShootPos);
+                        telemetryPacket.addLine("Shooting Green (3)");
+                    }
+                    actionTimer.reset();
+                    currentState = State.WAIT_FOR_SHOOT_3;
+                }
+                break;
+
+            case WAIT_FOR_SHOOT_3:
+                // Wait for the servo to finish moving (250ms originally)
+                if (actionTimer.milliseconds() >= 250) {
+                    // *** Handle third artifact down position ***
+                    if (patternID == 21) {
+                        greenServo.setPosition(greenDownPos);
+                    } else if (patternID == 22) {
+                        purpleServo.setPosition(purpleDownPos);
+                    } else if (patternID == 23) {
+                        greenServo.setPosition(greenDownPos);
+                    }
+                    actionTimer.reset();
+                    currentState = State.DOWN_3;
+                }
+                break;
+
+            case DOWN_3:
+                // Final short delay to ensure servo movement finishes
+                if (actionTimer.milliseconds() >= 250) {
+                    currentState = State.DONE;
+                }
+                break;
+
+            case DONE:
+                // The action is complete. Return true to signal RoadRunner to move on.
+                return true;
+        }
+
+        // The action is still running. Return false to signal RoadRunner to call run() again.
+        return false;
+
+        //return actionTimer.seconds()<servoLaunchTime; //runs the action for maximum intakeTime seconds
+    }
 }

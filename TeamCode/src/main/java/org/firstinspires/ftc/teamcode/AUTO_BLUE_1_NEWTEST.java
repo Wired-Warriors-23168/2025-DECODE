@@ -64,7 +64,7 @@ import java.util.List;
  * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
  *
  */
-@Disabled
+//@Disabled
 @Autonomous(name="AUTO_BLUE_1_NEWTEST", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
@@ -195,11 +195,10 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
         Actions.runBlocking(
                 drive.actionBuilder(beginPose)
 
-                        // Move to bankshot firing position
+                        // Move to close firing position
                         .setReversed(false)
-                        .setTangent(Math.toRadians(45))
-                        .splineToLinearHeading(new Pose2d(-18,-48,Math.toRadians(90)),Math.toRadians(0))
-
+                        .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
+                        .splineToLinearHeading(new Pose2d(-18,-48,Math.toRadians(90)),Math.toRadians(0))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                         .build());
 
         //Read the limelight and determine pattern
@@ -239,47 +238,77 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     //PUBLIC CLASSES FOR ROADRUNNER ACTION DEFINITIONS
     //////////////////////////////////////////////////
 
-    /**
-     * Set the position of the purple launch servo, simple action
-     * Use sleep actions in RR for timing, allow 250ms for launcher to raise and lower
-     */
-    // Set the feeder power to zero
-    public class setPurpleServoPosition implements Action {
-        Servo purpleServo;
-        double purpleServerSetPos;
+    public class patternLaunchAction implements Action {
+        private Servo purpleServo;
+        double purpleShootPos;
+        double purpleDownPos;
+        double servoLaunchTime;
+        private Servo greenServo;
+        double greenShootPos;
+        double greenDownPos;
+        int patternID; // 21 = GPP, 22 = PPG, 23 = PGG
+        ElapsedTime actionTimer;
 
-        public setPurpleServoPosition(Servo purpleServo,double purpleServerSetPos) {
 
+        public patternLaunchAction(int patternID,Servo purpleServo, double purpleShootPos, double purpleDownPos,Servo greenServo,double greenShootPos,double greenDownPos,double servoLaunchTime) {
             this.purpleServo = purpleServo;
-            this.purpleServerSetPos = purpleServerSetPos;
-        }
-
-        @Override
-        public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            purpleServo.setPosition(purpleServerSetPos);
-            return false;
-        }
-    }
-
-    /**
-     * Set the position of the purple launch servo, simple action
-     * Use sleep actions in RR for timing, allow 250ms for launcher to raise and lower
-     */
-    // Set the feeder power to zero
-    public class setGreenServoPosition implements Action {
-        Servo greenServo;
-        double greenServerSetPos;
-
-        public setGreenServoPosition(Servo greenServo,double greenServerSetPos) {
-
+            this.patternID = patternID;
+            this.servoLaunchTime = servoLaunchTime;
+            this.purpleShootPos = purpleShootPos;
+            this.purpleDownPos = purpleDownPos;
             this.greenServo = greenServo;
-            this.greenServerSetPos = greenServerSetPos;
+            this.greenShootPos = greenShootPos;
+            this.greenDownPos = greenDownPos;
+            actionTimer = new ElapsedTime();
         }
-
+        //
         @Override
         public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-            greenServo.setPosition(greenServerSetPos);
-            return false;
+            if (actionTimer == null) {
+                actionTimer = new ElapsedTime();
+            }
+
+            if (patternID == 21) {
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+            }
+            else if (patternID == 22) {
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+            }
+            else if (patternID == 23) {
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                purpleServo.setPosition(purpleShootPos);
+                sleep(250);
+                purpleServo.setPosition(purpleDownPos);
+                sleep(2000);
+                greenServo.setPosition(greenShootPos);
+                sleep(250);
+                greenServo.setPosition(greenDownPos);
+            }
+            return true;
+            //return actionTimer.seconds()<servoLaunchTime; //runs the action for maximum intakeTime seconds
         }
     }
 
