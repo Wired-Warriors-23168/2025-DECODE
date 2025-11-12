@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import static java.lang.Math.abs;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -35,6 +37,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     private static double bankVelocity = 1900;
     private static double farVelocity = 2200;
     private static double maxVelocity = 1300;
+    private double targetVelocity;
 
     public static final String ALLIANCE_KEY = "Alliance";
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
@@ -53,7 +56,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         // Establishing the direction and mode for the motors
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotor.Direction.REVERSE);
-        feeder.setDirection(DcMotor.Direction.REVERSE);
+        feeder.setDirection(DcMotor.Direction.FORWARD);
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -82,7 +85,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 // Calling our methods while the OpMode is running
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
-                manualFeederAndagitatorControl();
+                manualFeederControl();
 
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
@@ -96,6 +99,12 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
                 telemetry.update();
 
+                if (Math.abs(((DcMotorEx) flywheel).getVelocity() - targetVelocity) < 60) {
+                    teamLED.setPosition(0.500);//green
+                }
+                else {
+                    teamLED.setPosition(0.283);//green
+                }
             }
         }
     }
@@ -117,7 +126,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         // Denominator is the largest motor power (absolute value) or 1
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+        double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
         double frontLeftPower = (y + x + rx)*0.5 / denominator;
         double backLeftPower = (y - x + rx)*0.5 / denominator;
         double frontRightPower = (y - x - rx)*0.5 / denominator;
@@ -134,13 +143,13 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     /**
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
      */
-    private void manualFeederAndagitatorControl() {
+    private void manualFeederControl() {
         // Manual control for the Core Hex agitator
         if (gamepad1.aWasPressed()) {
-            feeder.setPower(0.5);
+            feeder.setPower(-0.5);
         }
         else if (gamepad1.y) {
-            feeder.setPower(-0.5);
+            feeder.setPower(0.5);
         }
         else if (gamepad1.aWasReleased()) {
             feeder.setPower(0);
@@ -157,12 +166,17 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
             flywheel.setPower(-0.5);
         } else if (gamepad1.x) {
             ((DcMotorEx) flywheel).setVelocity(farVelocity);
-        } /*else if (gamepad1.right_bumper) {
-           flywheel.setPower(0.7);
-        } */   else if (gamepad1.b) {
+            targetVelocity = farVelocity;
+        }else if (gamepad1.right_trigger >0.1){
+            bankShotAuto();
+        }else if (gamepad1.left_trigger >0.1){
+            farPowerAuto();
+        } else if (gamepad1.b) {
             ((DcMotorEx) flywheel).setVelocity(bankVelocity);
+            targetVelocity = bankVelocity;
         } else if (gamepad1.left_bumper) {
             ((DcMotorEx) flywheel).setVelocity(maxVelocity);
+            targetVelocity = maxVelocity;
         } else {
             (flywheel).setPower(0);
             feeder.setPower(0);
