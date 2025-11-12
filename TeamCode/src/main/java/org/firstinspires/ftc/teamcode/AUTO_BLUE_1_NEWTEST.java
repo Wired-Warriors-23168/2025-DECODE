@@ -74,7 +74,6 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     private SparkFunOTOS otos;
 
     private DcMotorEx flywheel;
-    private DcMotorSimple feeder;
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
     private DcMotor rightFrontDrive;
@@ -88,11 +87,6 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
     //TODO ********** Set the Alliance Color  **************
-    double flywheelPowerBank;
-    double flywheelPowerMid;
-    double flywheelPowerFar;
-    double feederPower;
-    int feederRotations;
     double feederLaunchTime;
     double launchWaitTime;
     private boolean seenobelisk = false;
@@ -121,14 +115,15 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(-62.5, -34.8, Math.toRadians(180));
+    Pose2d beginPose = new Pose2d(-62.5, -34.8, Math.toRadians(180)); //UPDATE THIS FOR NEW STARTING POSITION
 
     //Set AUTO waypoints
-    Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to read the obelisk
-    Pose2d shootPose = new Pose2d(-30,-30,Math.toRadians(-135));    //pose to shoot the pattern
+    Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(158));  //pose to read the obelisk
+    double shootHeading = -135;
+    Pose2d shootPose = new Pose2d(-30,-30,Math.toRadians(shootHeading));    //pose to shoot the pattern
     Pose2d intakePose1 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from first row
     Pose2d intakePose2 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from second row
-    Pose2d endPose = new Pose2d(-30,-30,Math.toRadians(-135));      //pose at end of AUTO
+    Pose2d endPose = new Pose2d(12,-18,Math.toRadians(90));      //pose at end of AUTO
     double firstArtifact = -36;     //Y-position of the first artifact in the row
     double secondArtifact = -41;    //Y-position of the second artifact in the row
     double thirdArtifact = -46;     //Y-position of the third artifact in the row
@@ -198,22 +193,18 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
                         // Move to close firing position
                         .setReversed(false)
                         .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
-                        .splineToLinearHeading(new Pose2d(-18,-48,Math.toRadians(90)),Math.toRadians(0))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+                        .splineToLinearHeading(obeliskPose,Math.toRadians(0))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                         .build());
 
-        //Read the limelight and determine pattern
+        //Read the limelight and determine the pattern, then stop the limelight
         LLResult result = limelight.getLatestResult();
-//                if (result != null && result.isValid()) {
-//                    tx = result.getTx();
-//                    ty = result.getTy();
-//                }
+
         List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
         for (LLResultTypes.FiducialResult fiducial : fiducials) {
             if (fiducial != null) {
                 tagID = fiducial.getFiducialId();
             }
         }
-
         if (tagID != 0  && !seenobelisk) {
             seenobelisk = true;
             patternID = tagID; // save pattern
@@ -221,10 +212,38 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
             tagID = 0;
             limelight.pipelineSwitch(teamPipeline);
         }
+        limelight.stop();
+
+        //Read the OTOS pose and use it as the beginning pose for the next drive
+        SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for next move
+
+        //Update telemetry to show obelisk was read
+        telemetry.addData("Pattern ID", patternID);
+        telemetry.addData("Seen obelisk", seenobelisk);
+        telemetry.addData("Tag ID", tagID);
+        telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
+        telemetry.update();
+
+        //Roadrunner - turn to goal, shoot, then drive to park position
+        Actions.runBlocking(
+                drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
+
+                        // Turn to face goal
+                        .turnTo(Math.toRadians(shootHeading))
+                        //shoot the pattern
+                        .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,400))
+                        //Move to the park position
+                        .setTangent(Math.toRadians(-45))  //the heading the bot will take when leaving this position
+                        .splineToLinearHeading(endPose,Math.toRadians(0))
+                        .build());
 
         flywheel.setPower(0);
 
-        SparkFunOTOS.Pose2D pos = otos.getPosition(); //Read OTOS Pose for telemetry
+        pos = otos.getPosition(); //Read OTOS Pose for telemetry
+        telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
+        telemetry.update();
+
+        sleep(10000);
 
         //Store the alliance color to memory for use in TELEOP
         blackboard.put(ALLIANCE_KEY, colorAlliance);
@@ -242,7 +261,7 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
         private Servo purpleServo;
         double purpleShootPos;
         double purpleDownPos;
-        double servoLaunchTime;
+        long servoLaunchTime;
         private Servo greenServo;
         double greenShootPos;
         double greenDownPos;
@@ -250,7 +269,7 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
         ElapsedTime actionTimer;
 
 
-        public patternLaunchAction(int patternID,Servo purpleServo, double purpleShootPos, double purpleDownPos,Servo greenServo,double greenShootPos,double greenDownPos,double servoLaunchTime) {
+        public patternLaunchAction(int patternID,Servo purpleServo, double purpleShootPos, double purpleDownPos,Servo greenServo,double greenShootPos,double greenDownPos,long servoLaunchTime) {
             this.purpleServo = purpleServo;
             this.patternID = patternID;
             this.servoLaunchTime = servoLaunchTime;
@@ -270,41 +289,41 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
 
             if (patternID == 21) {
                 greenServo.setPosition(greenShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 greenServo.setPosition(greenDownPos);
                 sleep(2000);
                 purpleServo.setPosition(purpleShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 purpleServo.setPosition(purpleDownPos);
                 sleep(2000);
                 purpleServo.setPosition(purpleShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 purpleServo.setPosition(purpleDownPos);
             }
             else if (patternID == 22) {
                 purpleServo.setPosition(purpleShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 purpleServo.setPosition(purpleDownPos);
                 sleep(2000);
                 greenServo.setPosition(greenShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 greenServo.setPosition(greenDownPos);
                 sleep(2000);
                 purpleServo.setPosition(purpleShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 purpleServo.setPosition(purpleDownPos);
             }
             else if (patternID == 23) {
                 purpleServo.setPosition(purpleShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 purpleServo.setPosition(purpleDownPos);
                 sleep(2000);
                 purpleServo.setPosition(purpleShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 purpleServo.setPosition(purpleDownPos);
                 sleep(2000);
                 greenServo.setPosition(greenShootPos);
-                sleep(250);
+                sleep(servoLaunchTime);
                 greenServo.setPosition(greenDownPos);
             }
             return true;
