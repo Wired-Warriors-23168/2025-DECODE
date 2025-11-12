@@ -7,6 +7,7 @@ import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -18,8 +19,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @TeleOp
 public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
-    private DcMotorSimple flywheel;
-    private DcMotorSimple feeder;
+    private DcMotor flywheel;
+    private DcMotor feeder;
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
     private DcMotor rightFrontDrive;
@@ -31,17 +32,17 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    private static double bankVelocity = 0.6;
-    private static double farVelocity = 0.85;
-    private static double maxVelocity = 0.5;
+    private static double bankVelocity = 1900;
+    private static double farVelocity = 2200;
+    private static double maxVelocity = 1300;
 
     public static final String ALLIANCE_KEY = "Alliance";
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
 
     @Override
     public void runOpMode() {
-        flywheel = hardwareMap.get(DcMotorSimple.class, "motor-flywheel");
-        feeder = hardwareMap.get(DcMotorSimple.class, "motor-feeder");
+        flywheel = hardwareMap.get(DcMotor.class, "motor-flywheel");
+        feeder = hardwareMap.get(DcMotor.class, "motor-feeder");
         leftFrontDrive = hardwareMap.get(DcMotor.class, "left-front-drive");
         leftBackDrive = hardwareMap.get(DcMotor.class, "left-back-drive");
         rightFrontDrive = hardwareMap.get(DcMotor.class, "right-front-drive");
@@ -50,8 +51,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         teamLED = hardwareMap.get(Servo.class, "led-light");
 
         // Establishing the direction and mode for the motors
-        // flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheel.setDirection(DcMotor.Direction.REVERSE);
         feeder.setDirection(DcMotor.Direction.REVERSE);
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -64,6 +65,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
+
             while (opModeIsActive()) {
 
                 // Get the latest position, which includes the x and y coordinates, plus the
@@ -85,7 +87,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
                 telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
-                //telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
+                telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
                 telemetry.addData("Flywheel Power", flywheel.getPower());
                 // Log the position to the telemetry
                 telemetry.addData("X coordinate", pos.x);
@@ -94,20 +96,6 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
                 telemetry.update();
 
-                /////////////////////////////////////////////////////////////////////////////////
-                // Set up channels for display in FTCDashboard
-                FtcDashboard dashboard = FtcDashboard.getInstance();
-                TelemetryPacket packet = new TelemetryPacket();
-
-                // Send a value to the dashboard for graphing
-                dashboard.sendTelemetryPacket(packet); // Always send the packet
-                packet.put("Flywheel Power", flywheel.getPower()); // Robot-specific data
-                packet.put("Feeder Power", feeder.getPower()); // Robot-specific data
-
-                //Set up the Field overlay
-                packet.fieldOverlay()
-                        .setFill("blue")
-                        .fillRect(-20, -20, 40, 40);
             }
         }
     }
@@ -168,13 +156,13 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         if (gamepad1.options) {
             flywheel.setPower(-0.5);
         } else if (gamepad1.x) {
-            (flywheel).setPower(farVelocity);
+            ((DcMotorEx) flywheel).setVelocity(farVelocity);
         } /*else if (gamepad1.right_bumper) {
            flywheel.setPower(0.7);
         } */   else if (gamepad1.b) {
-            flywheel.setPower(bankVelocity);
+            ((DcMotorEx) flywheel).setVelocity(bankVelocity);
         } else if (gamepad1.left_bumper) {
-            flywheel.setPower(maxVelocity);
+            ((DcMotorEx) flywheel).setVelocity(maxVelocity);
         } else {
             (flywheel).setPower(0);
             feeder.setPower(0);
@@ -186,31 +174,27 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
      * When running this function, the flywheel will spin up and the Core Hex will wait before balls can be fed.
      * The agitator will spin until the bumper is released.
      */
-   /*  private void bankShotAuto() {
-        (flywheel).setPower(bankVelocity);
-        agitator.setPower(-1);
-       if (flywheel).getPower() >= bankVelocity - 50) {
+    private void farPowerAuto() {
+        ((DcMotorEx) flywheel).setVelocity(farVelocity);
+        if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
             feeder.setPower(1);
         } else {
             feeder.setPower(0);
         }
-    }*/
+    }private void bankShotAuto() {
+        (flywheel).setPower(bankVelocity);
+       if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 50) {
+            feeder.setPower(1);
+        } else {
+            feeder.setPower(0);
+        }
+    }
 
     /**
      * The far power velocity is intended for launching balls a few feet from the goal. It may require adjusting the deflector.
      * When running this function, the flywheel will spin up and the Core Hex will wait before balls can be fed.
      * The agitator will spin until the bumper is released.
      */
-   /* private void farPowerAuto() {
-        (flywheel).setPower(farVelocity);
-        int farVelocity1 = (farVelocity);
-        agitator.setPower(-1);
-        if (flywheel).getVelocity() >= farVelocity1 - 100) {
-            feeder.setPower(1);
-        } else {
-            feeder.setPower(0);
-        }
-    }*/
 
     private void configureOtos() {
         telemetry.addLine("Configuring OTOS...");
