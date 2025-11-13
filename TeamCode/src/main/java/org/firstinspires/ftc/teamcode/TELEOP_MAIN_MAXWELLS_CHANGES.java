@@ -84,13 +84,6 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 // heading angle
                 SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
 
-                if(colorAlliance=="BLUE"){
-                    teamLED.setPosition(0.600); //blue
-                }
-                else{
-                    teamLED.setPosition(0.283);//red
-                }
-
                 // Calling our methods while the OpMode is running
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
