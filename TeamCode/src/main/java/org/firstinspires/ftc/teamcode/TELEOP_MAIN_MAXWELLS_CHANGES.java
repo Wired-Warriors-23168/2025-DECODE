@@ -75,6 +75,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
             allianceLEDColor = 0.283; // red
         }
 
+        teamLED.setPosition(allianceLEDColor);  //turn on the LED to the alliance color
+
         waitForStart();
         if (opModeIsActive()) {
 
