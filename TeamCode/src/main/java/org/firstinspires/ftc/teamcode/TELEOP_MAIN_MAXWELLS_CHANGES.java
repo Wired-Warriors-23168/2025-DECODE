@@ -99,12 +99,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
                 telemetry.update();
 
-                if (Math.abs(((DcMotorEx) flywheel).getVelocity() - targetVelocity) < 60) {
-                    teamLED.setPosition(0.500);//green
-                }
-                else {
-                    teamLED.setPosition(0.283);//green
-                }
+
             }
         }
     }
@@ -192,16 +187,21 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         ((DcMotorEx) flywheel).setVelocity(farVelocity);
         if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
             feeder.setPower(1);
+            teamLED.setPosition(0.500);//green
         } else {
             feeder.setPower(0);
+            teamLED.setPosition(0.283);//red
         }
     }private void bankShotAuto() {
         (flywheel).setPower(bankVelocity);
        if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 50) {
             feeder.setPower(1);
+            teamLED.setPosition(0.500);//green
         } else {
             feeder.setPower(0);
+            teamLED.setPosition(0.283);//red
         }
+
     }
 
     /**
