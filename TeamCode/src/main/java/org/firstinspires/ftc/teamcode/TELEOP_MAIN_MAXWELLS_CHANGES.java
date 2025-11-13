@@ -34,9 +34,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    private static double bankVelocity = 1900;
-    private static double farVelocity = 2200;
-    private static double maxVelocity = 1300;
+    private static double bankVelocity = 1300;
+    private static double farVelocity = 1900;
+    private static double maxVelocity = 2200;
     private double targetVelocity;
 
     public static final String ALLIANCE_KEY = "Alliance";

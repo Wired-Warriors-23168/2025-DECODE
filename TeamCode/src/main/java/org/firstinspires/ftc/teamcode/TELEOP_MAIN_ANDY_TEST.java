@@ -47,7 +47,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     public double redGoalY = 71;
     public double goalY;
     public double goalX = -71;
-    public double goalHeading = 180;
+    public double goalHeading = Math.toRadians(180);
 
 
     @Override
@@ -109,7 +109,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
                 manualFeederControl();
-                goalHeading();
+                //goalHeading();
 
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
@@ -120,6 +120,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 telemetry.addData("X coordinate", pos.x);
                 telemetry.addData("Y coordinate", pos.y);
                 telemetry.addData("Heading angle", pos.h);
+                telemetry.addData("Heading to Goal", goalHeading);
 
                 telemetry.update();
 
@@ -168,22 +169,22 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     /**
      * Function to calculate the heading and distance to the alliance goal.
      */
-    private void goalHeading(){
-        //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
-        //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
-        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-0, -0, Math.toRadians(0)));
-        drive.localizer.setPose(new Pose2d(-0, -0, Math.toRadians(0)));  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
-
-        SparkFunOTOS.Pose2D pos = poseOTOS.getPosition(); //Read OTOS Pose for telemetry
-
-        if (gamepad1.right_trigger>0.1){
-            goalHeading = Math.atan2((goalY - pos.y),(goalX - pos.x));  //use ATAN2 function to calculate heading to goal corner
-            Actions.runBlocking(                                        //turn bot to heading using Roadrunner
-                    drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
-                            .turnTo(goalHeading)
-                    .build());
-        }
-    }
+//    private void goalHeading(){
+//        //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
+//        //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
+//        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-0, -0, Math.toRadians(0)));
+//        drive.localizer.setPose(new Pose2d(-0, -0, Math.toRadians(0)));  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
+//
+//        SparkFunOTOS.Pose2D pos = poseOTOS.getPosition(); //Read OTOS Pose for telemetry
+//
+//        if (gamepad2.right_trigger>0.1){
+//            goalHeading = Math.atan2((goalY - pos.y),(goalX - pos.x));  //use ATAN2 function to calculate heading to goal corner
+//            Actions.runBlocking(                                        //turn bot to heading using Roadrunner
+//                    drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
+//                            .turnTo(goalHeading)
+//                    .build());
+//        }
+//    }
 
     /**
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
