@@ -41,6 +41,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
     public static final String ALLIANCE_KEY = "Alliance";
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
+    public double allianceLEDColor;
 
     @Override
     public void runOpMode() {
@@ -65,6 +66,14 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
         // All the configuration for the OTOS is done in this helper method, check it out!
         configureOtos();
+
+        //Set alliance-specific settings
+        if(colorAlliance=="BLUE"){
+            allianceLEDColor = 0.600; // blue
+        }
+        else{
+            allianceLEDColor = 0.283; // red
+        }
 
         waitForStart();
         if (opModeIsActive()) {
@@ -187,21 +196,21 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         ((DcMotorEx) flywheel).setVelocity(farVelocity);
         if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
             feeder.setPower(1);
-            teamLED.setPosition(0.500);//green
+            teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
-            teamLED.setPosition(0.283);//red
+            teamLED.setPosition(allianceLEDColor);
         }
-    }private void bankShotAuto() {
+    }
+    private void bankShotAuto() {
         (flywheel).setPower(bankVelocity);
-       if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 50) {
+        if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 50) {
             feeder.setPower(1);
-            teamLED.setPosition(0.500);//green
+            teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
-            teamLED.setPosition(0.283);//red
+            teamLED.setPosition(allianceLEDColor);
         }
-
     }
 
     /**

@@ -41,6 +41,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
     public static final String ALLIANCE_KEY = "Alliance";
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
+    public double allianceLEDColor;
 
     public double blueGoalY = -71;
     public double redGoalY = 71;
@@ -72,6 +73,18 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
         // All the configuration for the OTOS is done in this helper method, check it out!
         configureOtos();
+
+        //Set alliance-specific settings
+        if(colorAlliance=="BLUE"){
+            allianceLEDColor = 0.600; // blue
+            goalY = blueGoalY;
+        }
+        else{
+            allianceLEDColor = 0.283; // red
+            goalY = redGoalY;
+        }
+
+        teamLED.setPosition(allianceLEDColor);
 
         waitForStart();
         if (opModeIsActive()) {
@@ -224,15 +237,20 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
         ((DcMotorEx) flywheel).setVelocity(farVelocity);
         if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
             feeder.setPower(1);
+            teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
+            teamLED.setPosition(allianceLEDColor);
         }
-    }private void bankShotAuto() {
+    }
+    private void bankShotAuto() {
         (flywheel).setPower(bankVelocity);
        if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 50) {
             feeder.setPower(1);
+           teamLED.setPosition(0.500); //green
         } else {
-            feeder.setPower(0);
+           feeder.setPower(0);
+           teamLED.setPosition(allianceLEDColor);
         }
     }
 
