@@ -207,6 +207,16 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
             teamLED.setPosition(allianceLEDColor);
         }
     }
+    private void maxShotAuto() {
+        (flywheel).setPower(maxVelocity);
+        if (((DcMotorEx) flywheel).getVelocity()>= maxVelocity - 100) {
+            feeder.setPower(1);
+            teamLED.setPosition(0.500); //green
+        } else {
+            feeder.setPower(0);
+            teamLED.setPosition(allianceLEDColor);
+        }
+    }
 
     /**
      * The far power velocity is intended for launching balls a few feet from the goal. It may require adjusting the deflector.
