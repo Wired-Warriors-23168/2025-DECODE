@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -43,10 +44,12 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    private static double bankVelocity = 1900;
-    private static double farVelocity = 2200;
-    private static double maxVelocity = 1300;
+    private static double bankVelocity = 750;
+    private static double farVelocity = 1250;
+    private static double maxVelocity = 1750;
     private double targetVelocity;
+    public static PIDFCoefficients flywheelPID = new PIDFCoefficients(10,3,0,0);
+//    PIDFCoefficients flywheelPID;
 
     public static final String ALLIANCE_KEY = "Alliance";
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
@@ -72,8 +75,9 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
         teamLED = hardwareMap.get(Servo.class, "led-light");
 
         // Establishing the direction and mode for the motors
-        flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheel.setDirection(DcMotor.Direction.REVERSE);
+        flywheel.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,flywheelPID);
+        flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         feeder.setDirection(DcMotor.Direction.FORWARD);
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
@@ -152,9 +156,6 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
                 if (gamepad1.a) {
                     runningActions.add(new SequentialAction(
-                           new InstantAction(() -> feeder.setPower(0.5))
-                    ));
-                    runningActions.add(new SequentialAction(
                             turnGoal
                     ));
                 }
@@ -173,6 +174,11 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 telemetry.addData("Y coordinate", pos.y);
                 telemetry.addData("Heading angle", pos.h);
                 telemetry.addData("Heading to Goal", goalHeading);
+                telemetry.addLine();
+                telemetry.addData("Flywheel P", flywheelPID.p);
+                telemetry.addData("Flywheel I", flywheelPID.i);
+                telemetry.addData("Flywheel D", flywheelPID.d);
+                telemetry.addData("Flywheel F", flywheelPID.f);
                 telemetry.update();
 
                 /////////////////////////////////////////////////////////////////////////////////
@@ -249,15 +255,18 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
      */
     private void manualFeederControl() {
-        // Manual control for the Core Hex agitator
-        if (gamepad1.aWasPressed()) {
-            feeder.setPower(-0.5);
+        // Manual control for the Core Hex feeder
+        if (gamepad1.leftBumperWasPressed()) {
+            feeder.setPower(1.0);
+            teamLED.setPosition(1.0);
         }
-        else if (gamepad1.y) {
-            feeder.setPower(0.5);
+        else if (gamepad1.rightBumperWasPressed()) {
+            feeder.setPower(-1.0);
+            teamLED.setPosition(1.0);
         }
-        else if (gamepad1.aWasReleased()) {
+        else if (gamepad1.leftBumperWasReleased() || gamepad1.rightBumperWasReleased()) {
             feeder.setPower(0);
+            teamLED.setPosition(allianceLEDColor);
         }
     }
 
@@ -276,6 +285,8 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
             bankShotAuto();
         }else if (gamepad1.left_trigger >0.1){
             farPowerAuto();
+        }else if (gamepad1.right_bumper){
+            maxShotAuto();
         } else if (gamepad1.b) {
             flywheel.setVelocity(bankVelocity);
             targetVelocity = bankVelocity;
@@ -285,6 +296,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
         } else {
             (flywheel).setPower(0);
             feeder.setPower(0);
+            teamLED.setPosition(allianceLEDColor);
         }
     }
 
@@ -295,8 +307,8 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
      */
     private void farPowerAuto() {
         flywheel.setVelocity(farVelocity);
-        if (flywheel.getVelocity() >= farVelocity - 100) {
-            feeder.setPower(1);
+        if (flywheel.getVelocity() >= farVelocity - 75) {
+            feeder.setPower(0.5);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
@@ -305,12 +317,22 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     }
     private void bankShotAuto() {
         (flywheel).setPower(bankVelocity);
-       if (flywheel.getVelocity()>= bankVelocity - 50) {
-            feeder.setPower(1);
-           teamLED.setPosition(0.500); //green
+        if (flywheel.getVelocity()>= bankVelocity - 75) {
+            feeder.setPower(0.5);
+            teamLED.setPosition(0.500); //green
         } else {
-           feeder.setPower(0);
-           teamLED.setPosition(allianceLEDColor);
+            feeder.setPower(0);
+            teamLED.setPosition(allianceLEDColor);
+        }
+    }
+    private void maxShotAuto() {
+        (flywheel).setPower(maxVelocity);
+        if (flywheel.getVelocity()>= maxVelocity - 75) {
+            feeder.setPower(0.5);
+            teamLED.setPosition(0.500); //green
+        } else {
+            feeder.setPower(0);
+            teamLED.setPosition(allianceLEDColor);
         }
     }
 

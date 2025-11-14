@@ -97,7 +97,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
                 // Calling our methods while the OpMode is running
                 splitStickArcadeDrive();
-                setFlywheelAndFeeder();
+                setFlywheelVelocity();
                 manualFeederControl();
 
                 /////////////////////////////////////////////////////////////////////////////////
@@ -168,15 +168,18 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
      */
     private void manualFeederControl() {
-        // Manual control for the Core Hex agitator
-        if (gamepad1.aWasPressed()) {
-            feeder.setPower(-0.5);
+        // Manual control for the Core Hex feeder
+        if (gamepad1.leftBumperWasPressed()) {
+            feeder.setPower(1.0);
+            teamLED.setPosition(1.0);
         }
-        else if (gamepad1.y) {
-            feeder.setPower(0.5);
+        else if (gamepad1.rightBumperWasPressed()) {
+            feeder.setPower(-1.0);
+            teamLED.setPosition(1.0);
         }
-        else if (gamepad1.aWasReleased()) {
+        else if (gamepad1.leftBumperWasReleased() || gamepad1.rightBumperWasReleased()) {
             feeder.setPower(0);
+            teamLED.setPosition(allianceLEDColor);
         }
     }
 
@@ -190,7 +193,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
      * dpad right = manual med flywheel velocity (for testing)
      * dpad down = manual bank flywheel velocity (for testing)
      */
-    //    private void setFlywheelAndFeeder() {
+    //    private void setFlywheelVelocity() {
 //        if (gamepad1.yWasPressed()){                //Auto shoot close (bank)
 //            bankShotAuto();
 //            targetVelocity = bankVelocity;
@@ -214,19 +217,13 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 //            ((DcMotorEx) flywheel).setVelocity(maxVelocity);
 //            targetVelocity = maxVelocity;
 //            teamLED.setPosition(1.0);
-//        } else if (gamepad1.left_bumper) {          //Manually run feeder forward for testing or jam
-//            feeder.setPower(1.0);
-//            teamLED.setPosition(1.0);
-//        } else if (gamepad1.right_bumper) {         //Manually run feeder in reverse for testing or jam
-//            feeder.setPower(-1.0);
-//            teamLED.setPosition(1.0);
 //        } else {                                    //Set everything back to zero
 //            (flywheel).setPower(0);
 //            feeder.setPower(0);
 //            teamLED.setPosition(allianceLEDColor);
 //        }
 //    }
-    private void setFlywheelAndFeeder() {
+    private void setFlywheelVelocity() {
         if (gamepad1.options) {
             flywheel.setPower(-0.5);
         } else if (gamepad1.x) {
