@@ -272,8 +272,8 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
         // OpModes if using the non-default value.
         // poseOTOS.setLinearUnit(DistanceUnit.METER);
         poseOTOS.setLinearUnit(DistanceUnit.INCH);
-        // poseOTOS.setAngularUnit(AnguleUnit.RADIANS);
-        poseOTOS.setAngularUnit(AngleUnit.DEGREES);
+        poseOTOS.setAngularUnit(AngleUnit.RADIANS);
+        // poseOTOS.setAngularUnit(AngleUnit.DEGREES);
 
         // Assuming you've mounted your sensor to a robot and it's not centered,
         // you can specify the offset for the sensor relative to the center of the
@@ -305,8 +305,8 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
         // multiple speeds to get an average, then set the linear scalar to the
         // inverse of the error. For example, if you move the robot 100 inches and
         // the sensor reports 103 inches, set the linear scalar to 100/103 = 0.971
-        poseOTOS.setLinearScalar(1.0);
-        poseOTOS.setAngularScalar(1.0);
+        poseOTOS.setLinearScalar(0.9792);
+        poseOTOS.setAngularScalar(-0.9928);
 
         // The IMU on the OTOS includes a gyroscope and accelerometer, which could
         // have an offset. Note that as of firmware version 1.0, the calibration
