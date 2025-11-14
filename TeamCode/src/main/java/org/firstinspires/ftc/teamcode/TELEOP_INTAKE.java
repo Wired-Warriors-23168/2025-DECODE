@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.ColorSensor;
-@Disabled
+
 @TeleOp
 public class TELEOP_INTAKE extends LinearOpMode {
 
@@ -21,6 +21,9 @@ public class TELEOP_INTAKE extends LinearOpMode {
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
     private CRServo conveyorP;
+
+    private double sortOffset = 55.0/300.0;
+    private double neutralPos = 140.0/300.0;
 
     @Override
     public void runOpMode() {
@@ -71,13 +74,13 @@ public class TELEOP_INTAKE extends LinearOpMode {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if(sumGreenPurpleness > 120){
-            selector.setPosition(1);
+            selector.setPosition(neutralPos - sortOffset);
         }
         else if (sumGreenPurpleness < -70 ) {
-            selector.setPosition(0.5);
+            selector.setPosition(neutralPos + sortOffset);
         }
         else {
-            selector.setPosition(0.75);
+            selector.setPosition(neutralPos);
         }
         telemetry.addData("selector_pos",selector.getPosition());
     }
