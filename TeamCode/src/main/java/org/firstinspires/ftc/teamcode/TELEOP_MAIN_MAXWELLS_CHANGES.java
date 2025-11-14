@@ -121,6 +121,10 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 packet.put("Flywheel Actual Velocity", flywheel.getVelocity()); // Robot-specific data
                 packet.put("Flywheel Target Velocity", targetVelocity); // Robot-specific data
                 dashboard.sendTelemetryPacket(packet); // Always send the packet
+                telemetry.addData("Flywheel Actual Velocity", flywheel.getVelocity());
+                telemetry.addData("Flywheel Target Velocity", targetVelocity);
+                telemetry.update();
+
                 //Set up the Field overlay
                 packet.fieldOverlay()
                         .setFill("blue")

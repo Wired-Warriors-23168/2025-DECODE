@@ -3,8 +3,14 @@ package org.firstinspires.ftc.teamcode;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan2;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.Pose2d;
+import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -16,12 +22,15 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
 public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
-    private DcMotor flywheel;
+    private DcMotorEx flywheel;
     private DcMotor feeder;
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
@@ -48,11 +57,12 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     public double goalY;
     public double goalX = -71;
     public double goalHeading = Math.toRadians(180);
+    private List<Action> runningActions = new ArrayList<>();    //List of RoadRunner Actions that we want to run in TELEOP
 
 
     @Override
     public void runOpMode() {
-        flywheel = hardwareMap.get(DcMotor.class, "motor-flywheel");
+        flywheel = hardwareMap.get(DcMotorEx.class, "motor-flywheel");
         feeder = hardwareMap.get(DcMotor.class, "motor-feeder");
         leftFrontDrive = hardwareMap.get(DcMotor.class, "left-front-drive");
         leftBackDrive = hardwareMap.get(DcMotor.class, "left-back-drive");
@@ -84,16 +94,27 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
             goalY = redGoalY;
         }
 
-        teamLED.setPosition(allianceLEDColor);
+        teamLED.setPosition(0.400);  //green, ready to go
+
+        // Set up channels for display in FTCDashboard
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        telemetry = dashboard.getTelemetry();
 
         waitForStart();
         if (opModeIsActive()) {
 
             while (opModeIsActive()) {
+                //Create new FTCDashboard packet
+                TelemetryPacket packet = new TelemetryPacket();
 
                 // Get the latest position, which includes the x and y coordinates, plus the
                 // heading angle
                 SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
+
+                //Set up the RoadRunner drive
+                MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(pos.x, -pos.y, pos.h));
+                drive.localizer.setPose(new Pose2d(pos.x, -pos.y, pos.h));  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
+
 
                 //Set alliance-specific settings
                 if(colorAlliance=="BLUE"){
@@ -111,6 +132,37 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 manualFeederControl();
                 //goalHeading();
 
+
+                goalHeading = Math.atan2((goalY - pos.y),(goalX - pos.x));  //use ATAN2 function to calculate heading to goal corner
+
+                //Update running RoadRunner Actions
+                List<Action> newActions = new ArrayList<>();
+                for (Action action : runningActions) {
+                    action.preview(packet.fieldOverlay());
+                    if (action.run(packet)) {
+                        newActions.add(action);
+                    }
+                }
+                runningActions = newActions;
+
+                // Create trajectory for turning to the goal
+                TrajectoryActionBuilder turn1 = drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
+                        .turnTo(goalHeading);
+                Action turnGoal = turn1.build();
+
+                if (gamepad1.a) {
+                    runningActions.add(new SequentialAction(
+                           new InstantAction(() -> feeder.setPower(0.5))
+                    ));
+                    runningActions.add(new SequentialAction(
+                            turnGoal
+                    ));
+                }
+
+
+
+
+
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
                 telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
@@ -121,15 +173,22 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 telemetry.addData("Y coordinate", pos.y);
                 telemetry.addData("Heading angle", pos.h);
                 telemetry.addData("Heading to Goal", goalHeading);
-
                 telemetry.update();
 
-                if (Math.abs(((DcMotorEx) flywheel).getVelocity() - targetVelocity) < 60) {
-                    teamLED.setPosition(0.500);//green
-                }
-                else {
-                    teamLED.setPosition(0.283);//green
-                }
+                /////////////////////////////////////////////////////////////////////////////////
+                // Send a value to the dashboard for graphing
+
+                packet.put("Flywheel Actual Velocity", flywheel.getVelocity()); // Robot-specific data
+                packet.put("Flywheel Target Velocity", targetVelocity); // Robot-specific data
+                dashboard.sendTelemetryPacket(packet); // Always send the packet
+                telemetry.addData("Flywheel Actual Velocity", flywheel.getVelocity());
+                telemetry.addData("Flywheel Target Velocity", targetVelocity);
+                telemetry.update();
+
+                //Set up the Field overlay
+                packet.fieldOverlay()
+                        .setFill("blue")
+                        .fillRect(-20, -20, 40, 40);
             }
         }
     }
@@ -211,17 +270,17 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
         if (gamepad1.options) {
             flywheel.setPower(-0.5);
         } else if (gamepad1.x) {
-            ((DcMotorEx) flywheel).setVelocity(farVelocity);
+            flywheel.setVelocity(farVelocity);
             targetVelocity = farVelocity;
         }else if (gamepad1.right_trigger >0.1){
             bankShotAuto();
         }else if (gamepad1.left_trigger >0.1){
             farPowerAuto();
         } else if (gamepad1.b) {
-            ((DcMotorEx) flywheel).setVelocity(bankVelocity);
+            flywheel.setVelocity(bankVelocity);
             targetVelocity = bankVelocity;
         } else if (gamepad1.left_bumper) {
-            ((DcMotorEx) flywheel).setVelocity(maxVelocity);
+            flywheel.setVelocity(maxVelocity);
             targetVelocity = maxVelocity;
         } else {
             (flywheel).setPower(0);
@@ -235,8 +294,8 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
      * The agitator will spin until the bumper is released.
      */
     private void farPowerAuto() {
-        ((DcMotorEx) flywheel).setVelocity(farVelocity);
-        if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
+        flywheel.setVelocity(farVelocity);
+        if (flywheel.getVelocity() >= farVelocity - 100) {
             feeder.setPower(1);
             teamLED.setPosition(0.500); //green
         } else {
@@ -246,7 +305,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     }
     private void bankShotAuto() {
         (flywheel).setPower(bankVelocity);
-       if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 50) {
+       if (flywheel.getVelocity()>= bankVelocity - 50) {
             feeder.setPower(1);
            teamLED.setPosition(0.500); //green
         } else {
