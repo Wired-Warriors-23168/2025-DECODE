@@ -34,9 +34,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    private static double bankVelocity = 1300;
-    private static double farVelocity = 1900;
-    private static double maxVelocity = 2200;
+    private static double bankVelocity = 750;
+    private static double farVelocity = 1250;
+    private static double maxVelocity = 1750;
     private double targetVelocity;
 
     public static final String ALLIANCE_KEY = "Alliance";
@@ -126,10 +126,10 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
         double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
-        double frontLeftPower = (y + x + rx)*0.5 / denominator;
-        double backLeftPower = (y - x + rx)*0.5 / denominator;
-        double frontRightPower = (y - x - rx)*0.5 / denominator;
-        double backRightPower = (y + x - rx)*0.5 / denominator;
+        double frontLeftPower = (y + x + rx)*0.75 / denominator;
+        double backLeftPower = (y - x + rx)*0.75 / denominator;
+        double frontRightPower = (y - x - rx)*0.75 / denominator;
+        double backRightPower = (y + x - rx)*0.75 / denominator;
 
         leftFrontDrive.setPower(frontLeftPower);
         leftBackDrive.setPower(backLeftPower);
@@ -170,6 +170,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
             bankShotAuto();
         }else if (gamepad1.left_trigger >0.1){
             farPowerAuto();
+        }else if (gamepad1.right_bumper){
+            maxShotAuto();
         } else if (gamepad1.b) {
             ((DcMotorEx) flywheel).setVelocity(bankVelocity);
             targetVelocity = bankVelocity;
@@ -189,8 +191,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
      */
     private void farPowerAuto() {
         ((DcMotorEx) flywheel).setVelocity(farVelocity);
-        if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 100) {
-            feeder.setPower(1);
+        if (((DcMotorEx) flywheel).getVelocity() >= farVelocity - 75) {
+            feeder.setPower(0.5);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
@@ -199,8 +201,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     }
     private void bankShotAuto() {
         (flywheel).setPower(bankVelocity);
-        if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 50) {
-            feeder.setPower(1);
+        if (((DcMotorEx) flywheel).getVelocity()>= bankVelocity - 75) {
+            feeder.setPower(0.5);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
@@ -209,8 +211,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     }
     private void maxShotAuto() {
         (flywheel).setPower(maxVelocity);
-        if (((DcMotorEx) flywheel).getVelocity()>= maxVelocity - 100) {
-            feeder.setPower(1);
+        if (((DcMotorEx) flywheel).getVelocity()>= maxVelocity - 75) {
+            feeder.setPower(0.5);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
