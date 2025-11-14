@@ -52,7 +52,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double purpleFLapDownPos = 0.3;
     private double farVelocity = 1450;
     private double closeVelocity = 1200;
-    private double idleVelocity = 600;
+    private double idleVelocity = 0;
     private double targetVelocity = 600;
     private boolean shooterOn = false;
     public double txLimelight;
@@ -69,8 +69,8 @@ public class TELEOP_MAIN extends LinearOpMode {
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
     private CRServo conveyorP;
-
-    private double sortOffset = 81.0/300.0; //changed with the new selector print  was 55.0/300.0
+    private double sortOffset = 55.0/300.0;
+    private double neutralPos = 140.0/300.0;
     private DcMotor lift;
 
 
@@ -215,11 +215,9 @@ public class TELEOP_MAIN extends LinearOpMode {
                 }
                 if(purpleBallDetected()){
                     purpleServo.setPosition(purpleHoldPos);
-                    purpleHoldFlap.setPosition(purpleFLapHoldPos);
                 }
-                else{
+                else {
                     purpleServo.setPosition(purpleDownPos);
-                    purpleHoldFlap.setPosition(purpleFLapDownPos);
                 }
                 break;
             case WAITING_FOR_FLYWHEEL:
@@ -446,7 +444,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
         if(gamepad2.right_bumper){
             intake.setPower(-1);
-            selector.setPosition(0.4);
+            selector.setPosition(neutralPos);
         }
         if(gamepad2.right_trigger > 0.2 || auto){
             intake.setPower(1);
@@ -459,16 +457,16 @@ public class TELEOP_MAIN extends LinearOpMode {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if(sumGreenPurpleness > 50){
-            selector.setPosition(0.47 - sortOffset); //updated zero position for new print (shaft was turned...)
+            selector.setPosition(neutralPos - sortOffset); //updated zero position for new print (shaft was turned...)
             //selector.setPosition(0.22);
         }
         else if (sumGreenPurpleness < -50 ) {
-           selector.setPosition(0.47 + sortOffset);  //updated zero position for new print (shaft was turned...)
+           selector.setPosition(neutralPos + sortOffset);  //updated zero position for new print (shaft was turned...)
            //Should work now
             //selector.setPosition(0.58);
         }
         else {
-            selector.setPosition(0.4);
+            selector.setPosition(neutralPos);
         }
         telemetry.addData("selector pos",selector.getPosition());
     }
