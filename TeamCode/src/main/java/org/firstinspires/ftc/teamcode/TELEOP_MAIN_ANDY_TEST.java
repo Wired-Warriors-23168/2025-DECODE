@@ -154,7 +154,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                         .turnTo(goalHeading);
                 Action turnGoal = turn1.build();
 
-                if (gamepad1.a) {
+                if (gamepad1.right_trigger >= 0.1) {
                     runningActions.add(new SequentialAction(
                             turnGoal
                     ));
@@ -217,10 +217,10 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
         double denominator = Math.max(abs(y) + abs(x) + abs(rx), 1);
-        double frontLeftPower = (y + x + rx)*0.5 / denominator;
-        double backLeftPower = (y - x + rx)*0.5 / denominator;
-        double frontRightPower = (y - x - rx)*0.5 / denominator;
-        double backRightPower = (y + x - rx)*0.5 / denominator;
+        double frontLeftPower = (y + x + rx)*0.75 / denominator;
+        double backLeftPower = (y - x + rx)*0.75 / denominator;
+        double frontRightPower = (y - x - rx)*0.75 / denominator;
+        double backRightPower = (y + x - rx)*0.75 / denominator;
 
         leftFrontDrive.setPower(frontLeftPower);
         leftBackDrive.setPower(backLeftPower);
