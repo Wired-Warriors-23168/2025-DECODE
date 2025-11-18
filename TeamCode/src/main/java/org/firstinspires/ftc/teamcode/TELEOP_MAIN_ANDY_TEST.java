@@ -154,7 +154,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                         .turnTo(goalHeading);
                 Action turnGoal = turn1.build();
 
-                if (gamepad1.right_trigger >= 0.1) {
+                if (gamepad2.right_trigger >= 0.1) {
                     runningActions.add(new SequentialAction(
                             turnGoal
                     ));
