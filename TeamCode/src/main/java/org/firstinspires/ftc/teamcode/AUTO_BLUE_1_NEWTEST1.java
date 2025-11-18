@@ -33,20 +33,18 @@ import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
-import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.ftc.Actions;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -67,10 +65,10 @@ import java.util.List;
  *
  */
 //@Disabled
-@Autonomous(name="AUTO_BLUE_1_NEWTEST", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+@Autonomous(name="AUTO_BLUE_1_NEWTEST1", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")
 //@Disabled
-public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
+public class AUTO_BLUE_1_NEWTEST1 extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -195,7 +193,11 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
                 drive.actionBuilder(beginPose)
 
                         // Move to close firing position
-                        .setReversed(false)
+                        .stopAndAdd(new ParallelAction(
+                                new trjObelisk.build()),
+                                new readPatternAction(4.0,limelight)
+
+                        )
                         .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
                         .splineToLinearHeading(obeliskPose,Math.toRadians(0))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
                         .build());
