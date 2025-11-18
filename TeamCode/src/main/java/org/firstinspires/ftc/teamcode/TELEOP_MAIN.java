@@ -294,7 +294,10 @@ public class TELEOP_MAIN extends LinearOpMode {
         } else if (gamepad2.dpadLeftWasPressed()) {      // Forced shooting: Green
             greenServo.setPosition(greenShootPos);
             sleep(250);
+        } else if (!gamepad2.dpad_left){
             greenServo.setPosition(greenDownPos);
+        } else if (!gamepad2.dpad_right) {
+            purpleServo.setPosition(purpleDownPos);
         }
         if (gamepad2.x) {
             ballnumber = 1;
