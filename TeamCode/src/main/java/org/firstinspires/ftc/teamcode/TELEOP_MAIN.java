@@ -275,17 +275,14 @@ public class TELEOP_MAIN extends LinearOpMode {
         if (gamepad2.y) {  //&& result.isValid()+
 
             if (patternID == 22 && tagID == 20) {
-                rotate();
                 if (Math.abs(ty) < 5) {
                     Pattern22(); // Purple green purple
                 }
             } else if (patternID == 21 && tagID == 20) {
-                rotate();
                 if (Math.abs(ty) < 5) {
                     Pattern21(); // Green purple purple
                 }
             } else if (patternID == 23 && tagID == 20) {
-                rotate();
                 if (Math.abs(ty) < 5) {
                     Pattern23(); // Purple purple green
                 }
@@ -424,10 +421,19 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
     }
     private void rotate() {
-        double kP = (1.0/48.0);
+        SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
+        int blueX = -71;
+        int blueY = -71;
+        int redX = -71;
+        int redY = 71;
+        double angle;
+        double kP = (1.0/36.0);
         double kD = 0;
         // spin drive with p controller
-         double error = ty;
+        double x = blueX - pos.x;
+        double y = blueY - pos.y;
+        angle = Math.atan2(x,y);
+         double error = angle - pos.h;
          double derivativeError = (error - previousError) / deltaTime;
         double wheelpower = ((error * kP) + (kD * derivativeError));
         previousError = error;
@@ -513,7 +519,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
         double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
-        if (gamepad1.left_bumper) {
+        if (gamepad2.y){
             rotate();
         } else {
             leftFrontDrive.setPower(frontLeftPower);
