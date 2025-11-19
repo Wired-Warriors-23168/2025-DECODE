@@ -55,9 +55,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  *    - Road Runner using a localizer for the OTOS developed by @j5155 on the FTC Discord https://github.com/jdhs-ftc
  *
  * All of the drive configuration is done via MecanumDrive.java, you do not have to manage that here.
- *
- * THIS MODE IS CONFIGURED FOR WAFFLES, NOT PANCAKE
- *
+ * *
  */
 @Autonomous(name="AUTO_BLUE_1_LAUNCHTEST", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Autonomous(name="AUTO-BLUE-1", group="AUTO", preselectTeleOp = "TELEOP-BLUE (Blocks to Java)")

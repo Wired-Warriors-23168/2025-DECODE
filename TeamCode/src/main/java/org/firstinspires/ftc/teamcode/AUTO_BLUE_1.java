@@ -93,6 +93,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
     Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(-90));
+//    Pose2d beginPose = new Pose2d(-62.125, -38.875, Math.toRadians(-90));       //Update to sit inside the goal triangle and touch the launch line
 
     @Override
     public void runOpMode() {
