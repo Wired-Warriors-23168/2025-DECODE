@@ -19,6 +19,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -44,24 +45,23 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    private static double bankVelocity = 750;
-    private static double farVelocity = 1250;
-    private static double maxVelocity = 1750;
+    private static double bankVelocity = 760;
+    private static double farVelocity = 1260;
+    private static double maxVelocity = 1760;
     private double targetVelocity;
-    public static PIDFCoefficients flywheelPID = new PIDFCoefficients(10,3,0,0);
-//    PIDFCoefficients flywheelPID;
-
+    public static PIDFCoefficients flywheelPID = new PIDFCoefficients(400,40,0,0);
     public static final String ALLIANCE_KEY = "Alliance";
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
     public double allianceLEDColor;
+    double previousError = 0;
+    double deltaTime;
+    public ElapsedTime deltaTimer = new ElapsedTime();
+    public double lastTime = 0.0;       // Create a variable to hold the last recorded time
 
     public double blueGoalY = -71;      //Y coordinate of the blue alliance goal corner
     public double redGoalY = 71;        //Y coordinate of the red alliance goal corner
     public double goalY;                //Y goal coordinate
     public double goalX = -71;          //X coordinate of the goal corner (same for both alliances)
-    public double goalHeading = Math.toRadians(180);    //the Heading to the goal corner
-    private List<Action> runningActions = new ArrayList<>();    //List of RoadRunner Actions that we want to run in TELEOP
-
 
     @Override
     public void runOpMode() {
@@ -76,7 +76,7 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
         // Establishing the direction and mode for the motors
         flywheel.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,flywheelPID);
-        flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+//        flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         feeder.setDirection(DcMotor.Direction.FORWARD);
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -87,6 +87,8 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
         // All the configuration for the OTOS is done in this helper method, check it out!
         configureOtos();
+        deltaTimer.reset();
+        lastTime = deltaTimer.seconds();
 
         //Set alliance-specific settings
         if(colorAlliance=="BLUE"){
@@ -106,6 +108,9 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
+            double currentTime = deltaTimer.seconds();
+            deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
 
             while (opModeIsActive()) {
                 //Create new FTCDashboard packet
@@ -114,10 +119,6 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 // Get the latest position, which includes the x and y coordinates, plus the
                 // heading angle
                 SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
-
-//                //Set up the RoadRunner drive
-//                MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(pos.x, -pos.y, pos.h));
-//                drive.localizer.setPose(new Pose2d(pos.x, -pos.y, pos.h));  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
 
 
                 //Set alliance-specific settings
@@ -133,41 +134,12 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 // Calling our methods while the OpMode is running
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
-                manualFeederControl();
-                //goalHeading();
+//                manualFeederControl();
 
-
-                goalHeading = Math.atan2((goalY - pos.y),(goalX - pos.x));  //use ATAN2 function to calculate heading to goal corner
-
-//                //Update running RoadRunner Actions
-//                List<Action> newActions = new ArrayList<>();
-//                for (Action action : runningActions) {
-//                    action.preview(packet.fieldOverlay());
-//                    if (action.run(packet)) {
-//                        newActions.add(action);
-//                    }
-//                }
-//                runningActions = newActions;
-//
-//                // Create trajectory for turning to the goal
-//                TrajectoryActionBuilder turn1 = drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
-//                        .turnTo(goalHeading);
-//                Action turnGoal = turn1.build();
-//
-//                if (gamepad2.right_trigger >= 0.1) {
-//                    runningActions.add(new SequentialAction(
-//                            turnGoal
-//                    ));
-//                }
-
-                //Option using simple proportional gain rather than Roadrunner
-                double headingError = (goalHeading-pos.h);
-                double wheelPower = headingError*0.5;
-                if (gamepad2.right_trigger >=0.1 && Math.abs(headingError)>0.05){
-                    leftBackDrive.setPower(wheelPower);
-                    leftFrontDrive.setPower(wheelPower);
-                    rightBackDrive.setPower(-wheelPower);
-                    rightFrontDrive.setPower(-wheelPower);
+                //Call the rotate function to aim the robot at the alliance goal
+                //NOTE: the bot should be pointed in the general direction of the goal for this to work best
+                if (gamepad2.right_trigger >=0.1 ){
+                    rotate();
                 }
 
 
@@ -181,14 +153,6 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
                 telemetry.addData("X coordinate", pos.x);
                 telemetry.addData("Y coordinate", pos.y);
                 telemetry.addData("Heading angle", pos.h);
-                telemetry.addData("Heading to Goal", goalHeading);
-                telemetry.addData("Heading Error", headingError);
-                telemetry.addData("Wheel Power", wheelPower);
-                telemetry.addLine();
-                telemetry.addData("Flywheel P", flywheelPID.p);
-                telemetry.addData("Flywheel I", flywheelPID.i);
-                telemetry.addData("Flywheel D", flywheelPID.d);
-                telemetry.addData("Flywheel F", flywheelPID.f);
                 telemetry.update();
 
                 /////////////////////////////////////////////////////////////////////////////////
@@ -200,11 +164,11 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 //                telemetry.addData("Flywheel Actual Velocity", flywheel.getVelocity());
 //                telemetry.addData("Flywheel Target Velocity", targetVelocity);
 //                telemetry.update();
-
-                //Set up the Field overlay
-                packet.fieldOverlay()
-                        .setFill("blue")
-                        .fillRect(-20, -20, 40, 40);
+//
+//                //Set up the Field overlay
+//                packet.fieldOverlay()
+//                        .setFill("blue")
+//                        .fillRect(-20, -20, 40, 40);
             }
         }
     }
@@ -242,43 +206,23 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
 
 
     /**
-     * Function to calculate the heading and distance to the alliance goal.
-     */
-//    private void goalHeading(){
-//        //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
-//        //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
-//        MecanumDrive drive = new MecanumDrive(hardwareMap, new Pose2d(-0, -0, Math.toRadians(0)));
-//        drive.localizer.setPose(new Pose2d(-0, -0, Math.toRadians(0)));  //may have to do this for the new RR version per https://community.sparkfun.com/t/sparkfun-otos-with-ftc-inital-pose-always-0/67256
-//
-//        SparkFunOTOS.Pose2D pos = poseOTOS.getPosition(); //Read OTOS Pose for telemetry
-//
-//        if (gamepad2.right_trigger>0.1){
-//            goalHeading = Math.atan2((goalY - pos.y),(goalX - pos.x));  //use ATAN2 function to calculate heading to goal corner
-//            Actions.runBlocking(                                        //turn bot to heading using Roadrunner
-//                    drive.actionBuilder(new Pose2d(pos.x,pos.y,pos.h))
-//                            .turnTo(goalHeading)
-//                    .build());
-//        }
-//    }
-
-    /**
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
      */
-    private void manualFeederControl() {
-        // Manual control for the Core Hex feeder
-        if (gamepad1.leftBumperWasPressed()) {
-            feeder.setPower(1.0);
-            teamLED.setPosition(1.0);
-        }
-        else if (gamepad1.rightBumperWasPressed()) {
-            feeder.setPower(-1.0);
-            teamLED.setPosition(1.0);
-        }
-        else if (gamepad1.leftBumperWasReleased() || gamepad1.rightBumperWasReleased()) {
-            feeder.setPower(0);
-            teamLED.setPosition(allianceLEDColor);
-        }
-    }
+//    private void manualFeederControl() {
+//        // Manual control for the Core Hex feeder
+//        if (gamepad1.leftBumperWasPressed()) {
+//            feeder.setPower(1.0);
+//            teamLED.setPosition(1.0);
+//        }
+//        else if (gamepad1.rightBumperWasPressed()) {
+//            feeder.setPower(-1.0);
+//            teamLED.setPosition(1.0);
+//        }
+//        else if (gamepad1.leftBumperWasReleased() || gamepad1.rightBumperWasReleased()) {
+//            feeder.setPower(0);
+//            teamLED.setPosition(allianceLEDColor);
+//        }
+//    }
 
     /**
      * This if/else statement contains the controls for the flywheel, both manual and auto.
@@ -347,78 +291,69 @@ public class TELEOP_MAIN_ANDY_TEST extends LinearOpMode {
     }
 
     /**
-     * The far power velocity is intended for launching balls a few feet from the goal. It may require adjusting the deflector.
-     * When running this function, the flywheel will spin up and the Core Hex will wait before balls can be fed.
-     * The agitator will spin until the bumper is released.
+     * rotate() calculates the heading to the alliance goal using ATAN2
+     * The included PD controller turns the bot by calculating the difference between the
+     * goal heading "angle" and the actual field heading of the bot pos.h.
+     * THIS CODE CAME FROM THE 7TH-8TH GRADE BOT PROGRAMMERS AND WAS MODIFIED FOR NOODLES
      */
+
+    private void rotate() {
+        SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
+//        int blueX = -71;
+//        int blueY = -71;
+//        int redX = -71;
+//        int redY = 71;
+        double angle;
+        double kP = (0.8);
+//        double kP = (1.0/36.0);
+        double kD = 0;
+        // spin drive with p controller
+//        double x = blueX - pos.x;
+//        double y = blueY - pos.y;
+        double x = goalX - pos.x;
+        double y = goalY - pos.y;
+        angle = Math.atan2(y,x);
+        double error = angle - pos.h;
+        double derivativeError = (error - previousError) / deltaTime;
+        double wheelpower = ((error * kP) + (kD * derivativeError));
+        previousError = error;
+        leftFrontDrive.setPower(-wheelpower);
+        leftBackDrive.setPower(-wheelpower);
+        rightFrontDrive.setPower(wheelpower);
+        rightBackDrive.setPower(wheelpower);
+        telemetry.addData("wheel power", wheelpower);
+        telemetry.addData("angle", angle);
+        telemetry.addData("pos x", pos.x);
+        telemetry.addData("pos y", pos.y);
+        telemetry.addData("pos h", pos.h);
+
+    }
 
     private void configureOtos() {
         telemetry.addLine("Configuring OTOS...");
         telemetry.update();
 
-        // Set the desired units for linear and angular measurements. Can be either
-        // meters or inches for linear, and radians or degrees for angular. If not
-        // set, the default is inches and degrees. Note that this setting is not
-        // persisted in the sensor, so you need to set at the start of all your
-        // OpModes if using the non-default value.
+        // Set the desired units for linear and angular measurements.
         // poseOTOS.setLinearUnit(DistanceUnit.METER);
         poseOTOS.setLinearUnit(DistanceUnit.INCH);
         poseOTOS.setAngularUnit(AngleUnit.RADIANS);
         // poseOTOS.setAngularUnit(AngleUnit.DEGREES);
 
-        // Assuming you've mounted your sensor to a robot and it's not centered,
-        // you can specify the offset for the sensor relative to the center of the
-        // robot. The units default to inches and degrees, but if you want to use
-        // different units, specify them before setting the offset! Note that as of
-        // firmware version 1.0, these values will be lost after a power cycle, so
-        // you will need to set them each time you power up the sensor. For example, if
-        // the sensor is mounted 5 inches to the left (negative X) and 10 inches
-        // forward (positive Y) of the center of the robot, and mounted 90 degrees
-        // clockwise (negative rotation) from the robot's orientation, the offset
-        // would be {-5, 10, -90}. These can be any value, even the angle can be
-        // tweaked slightly to compensate for imperfect mounting (eg. 1.3 degrees).
+        // Sensor position offset from RR tuning
         SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 0.65625, 0);
         poseOTOS.setOffset(offset);
 
-        // Here we can set the linear and angular scalars, which can compensate for
-        // scaling issues with the sensor measurements. Note that as of firmware
-        // version 1.0, these values will be lost after a power cycle, so you will
-        // need to set them each time you power up the sensor. They can be any value
-        // from 0.872 to 1.127 in increments of 0.001 (0.1%). It is recommended to
-        // first set both scalars to 1.0, then calibrate the angular scalar, then
-        // the linear scalar. To calibrate the angular scalar, spin the robot by
-        // multiple rotations (eg. 10) to get a precise error, then set the scalar
-        // to the inverse of the error. Remember that the angle wraps from -180 to
-        // 180 degrees, so for example, if after 10 rotations counterclockwise
-        // (positive rotation), the sensor reports -15 degrees, the required scalar
-        // would be 3600/3585 = 1.004. To calibrate the linear scalar, move the
-        // robot a known distance and measure the error; do this multiple times at
-        // multiple speeds to get an average, then set the linear scalar to the
-        // inverse of the error. For example, if you move the robot 100 inches and
-        // the sensor reports 103 inches, set the linear scalar to 100/103 = 0.971
+        // Linear and angular scalars that were tuned in OTOSLocalizer during RoadRunner tuning
         poseOTOS.setLinearScalar(0.9792);
         poseOTOS.setAngularScalar(-0.9928);
 
-        // The IMU on the OTOS includes a gyroscope and accelerometer, which could
-        // have an offset. Note that as of firmware version 1.0, the calibration
-        // will be lost after a power cycle; the OTOS performs a quick calibration
-        // when it powers up, but it is recommended to perform a more thorough
-        // calibration at the start of all your OpModes. Note that the sensor must
-        // be completely stationary and flat during calibration! When calling
-        // calibrateImu(), you can specify the number of samples to take and whether
-        // to wait until the calibration is complete. If no parameters are provided,
-        // it will take 255 samples and wait until done; each sample takes about
-        // 2.4ms, so about 612ms total
+        // Calibrate the IMU when the bot is at rest during init()
         poseOTOS.calibrateImu();
 
-        // Reset the tracking algorithm - this resets the position to the origin,
-        // but can also be used to recover from some rare tracking errors
+        // Reset the tracking algorithm - this resets the position to the origin
         poseOTOS.resetTracking();
 
-        // After resetting the tracking, the OTOS will report that the robot is at
-        // the origin. If your robot does not start at the origin, or you have
-        // another source of location information (eg. vision odometry), you can set
-        // the OTOS location to match and it will continue to track from there.
+        // The origin position.  We reset this to the end position in AUTO from the blackboard
         SparkFunOTOS.Pose2D currentPosition = new SparkFunOTOS.Pose2D(0, 0, 0);
         poseOTOS.setPosition(currentPosition);
 
