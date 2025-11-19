@@ -305,7 +305,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 //        int redY = 71;
         double angle;
         double kP = (0.8);
-//        double kP = (1.0/36.0);
+//        double kP = (1.0/36.0);  //Stiffles' gain
         double kD = 0;
         // spin drive with p controller
 //        double x = blueX - pos.x;
@@ -317,8 +317,8 @@ public class TELEOP_MAIN extends LinearOpMode {
         double derivativeError = (error - previousError) / deltaTime;
         double wheelpower = ((error * kP) + (kD * derivativeError));
         previousError = error;
-        leftFrontDrive.setPower(-wheelpower);
-        leftBackDrive.setPower(-wheelpower);
+        leftFrontDrive.setPower(-wheelpower);   //changed to (-) for Noodle's wiring
+        leftBackDrive.setPower(-wheelpower);    //changed to (-) for Noodle's wiring
         rightFrontDrive.setPower(wheelpower);
         rightBackDrive.setPower(wheelpower);
         telemetry.addData("wheel power", wheelpower);
