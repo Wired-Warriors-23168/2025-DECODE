@@ -64,13 +64,14 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     private DcMotor intake;
     private Servo selector;
-    private Servo purpleHoldFlap;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
     private CRServo conveyorP;
     private double sortOffset = 55.0/300.0;
     private double neutralPos = 140.0/300.0;
+    private double greenTargetPos;
+    private double purpleTargetPos;
     private DcMotor lift;
 
 
@@ -91,7 +92,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private DcMotor rightBackDrive;
     SparkFunOTOS poseOTOS;
 
-    private static double limitDrivePower =1.0;  //Mutliplier to limit the drive wheel power for training
+    private static double limitDrivePower = 1.0;  //Mutliplier to limit the drive wheel power for training
     public static final String ALLIANCE_KEY = "Alliance";
 
     @Override
@@ -101,7 +102,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
-        purpleHoldFlap = hardwareMap.get(Servo.class, "purpleHoldFlap");
         poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
         greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
@@ -112,7 +112,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
-        purpleHoldFlap.setDirection(Servo.Direction.FORWARD);
 
         limelight.start();
         limelight.pipelineSwitch(2);
@@ -208,16 +207,14 @@ public class TELEOP_MAIN extends LinearOpMode {
             case IDLE:
                 flywheel.setVelocity(idleVelocity);
                 if(greenBallDetected()){
-                    greenServo.setPosition(greenHoldPos);
-                }
-                else{
-                    greenServo.setPosition(greenDownPos);
+                    greenTargetPos = greenHoldPos;
+                } else {
+                    greenTargetPos = greenDownPos;
                 }
                 if(purpleBallDetected()){
-                    purpleServo.setPosition(purpleHoldPos);
-                }
-                else {
-                    purpleServo.setPosition(purpleDownPos);
+                    purpleTargetPos = purpleHoldPos;
+                } else {
+                    purpleTargetPos = purpleDownPos;
                 }
                 break;
             case WAITING_FOR_FLYWHEEL:
@@ -230,18 +227,14 @@ public class TELEOP_MAIN extends LinearOpMode {
             case IDLE_WITH_FLYWHEEL:
                 flywheel.setVelocity(targetVelocity);
                 if(greenBallDetected()){
-                    greenServo.setPosition(greenHoldPos);
-                }
-                else{
-                    greenServo.setPosition(greenDownPos);
+                    greenTargetPos = greenHoldPos;
+                } else {
+                    greenTargetPos = greenDownPos;
                 }
                 if(purpleBallDetected()){
-                    purpleServo.setPosition(purpleHoldPos);
-                    purpleHoldFlap.setPosition(purpleFLapHoldPos);
-                }
-                else{
-                    purpleServo.setPosition(purpleDownPos);
-                    purpleHoldFlap.setPosition(purpleFLapDownPos);
+                    purpleTargetPos = purpleHoldPos;
+                } else {
+                    purpleTargetPos = purpleDownPos;
                 }
                 break;
         }
@@ -290,14 +283,15 @@ public class TELEOP_MAIN extends LinearOpMode {
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
             purpleServo.setPosition(purpleShootPos);
             sleep(250);
-            purpleServo.setPosition(purpleDownPos);
         } else if (gamepad2.dpadLeftWasPressed()) {      // Forced shooting: Green
             greenServo.setPosition(greenShootPos);
             sleep(250);
-        } else if (!gamepad2.dpad_left){
-            greenServo.setPosition(greenDownPos);
-        } else if (!gamepad2.dpad_right) {
-            purpleServo.setPosition(purpleDownPos);
+        }
+        if (!gamepad2.dpad_left){
+            greenServo.setPosition(greenTargetPos);
+        }
+        if (!gamepad2.dpad_right) {
+            purpleServo.setPosition(purpleTargetPos);
         }
         if (gamepad2.x) {
             ballnumber = 1;
