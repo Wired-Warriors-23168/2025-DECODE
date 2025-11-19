@@ -34,11 +34,11 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    public static double bankVelocity = 750;
-    public static double farVelocity = 1250;
-    public static double maxVelocity = 1750;
+    public static double bankVelocity = 760;
+    public static double farVelocity = 1260;
+    public static double maxVelocity = 1760;
     public static  double targetVelocity;
-    public static PIDFCoefficients flywheelPID = new PIDFCoefficients(10,3,0,0);
+    public static PIDFCoefficients flywheelPID = new PIDFCoefficients(400,40,0,0);
 //    PIDFCoefficients flywheelPID;
 
     public static final String ALLIANCE_KEY = "Alliance";
@@ -58,7 +58,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
         // Establishing the direction and mode for the motors
         flywheel.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,flywheelPID);
-        flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+//        flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         feeder.setDirection(DcMotor.Direction.FORWARD);
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
@@ -66,7 +66,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
-        flywheelPID = flywheel.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
+//        flywheelPID = flywheel.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         // All the configuration for the OTOS is done in this helper method, check it out!
         configureOtos();
@@ -82,8 +82,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         teamLED.setPosition(0.400);  //green, ready to go
 
         // Set up channels for display in FTCDashboard
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        telemetry = dashboard.getTelemetry();
+//        FtcDashboard dashboard = FtcDashboard.getInstance();
+//        telemetry = dashboard.getTelemetry();
 
         waitForStart();
         if (opModeIsActive()) {
@@ -98,7 +98,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 // Calling our methods while the OpMode is running
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
-                manualFeederControl();
+//                manualFeederControl();
 
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
@@ -115,20 +115,20 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 telemetry.addData("Flywheel F", flywheelPID.f);
                 telemetry.update();
 
-                /////////////////////////////////////////////////////////////////////////////////
-                // Send a value to the dashboard for graphing
-                TelemetryPacket packet = new TelemetryPacket();
-                packet.put("Flywheel Actual Velocity", flywheel.getVelocity()); // Robot-specific data
-                packet.put("Flywheel Target Velocity", targetVelocity); // Robot-specific data
-                dashboard.sendTelemetryPacket(packet); // Always send the packet
-                telemetry.addData("Flywheel Actual Velocity", flywheel.getVelocity());
-                telemetry.addData("Flywheel Target Velocity", targetVelocity);
-                telemetry.update();
-
-                //Set up the Field overlay
-                packet.fieldOverlay()
-                        .setFill("blue")
-                        .fillRect(-20, -20, 40, 40);
+//                /////////////////////////////////////////////////////////////////////////////////
+//                // Send a value to the dashboard for graphing
+//                TelemetryPacket packet = new TelemetryPacket();
+//                packet.put("Flywheel Actual Velocity", flywheel.getVelocity()); // Robot-specific data
+//                packet.put("Flywheel Target Velocity", targetVelocity); // Robot-specific data
+//                dashboard.sendTelemetryPacket(packet); // Always send the packet
+//                telemetry.addData("Flywheel Actual Velocity", flywheel.getVelocity());
+//                telemetry.addData("Flywheel Target Velocity", targetVelocity);
+//                telemetry.update();
+//
+//                //Set up the Field overlay
+//                packet.fieldOverlay()
+//                        .setFill("blue")
+//                        .fillRect(-20, -20, 40, 40);
             }
         }
     }
@@ -167,21 +167,21 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     /**
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
      */
-    private void manualFeederControl() {
-        // Manual control for the Core Hex feeder
-        if (gamepad1.leftBumperWasPressed()) {
-            feeder.setPower(1.0);
-            teamLED.setPosition(1.0);
-        }
-        else if (gamepad1.rightBumperWasPressed()) {
-            feeder.setPower(-1.0);
-            teamLED.setPosition(1.0);
-        }
-        else if (gamepad1.leftBumperWasReleased() || gamepad1.rightBumperWasReleased()) {
-            feeder.setPower(0);
-            teamLED.setPosition(allianceLEDColor);
-        }
-    }
+//    private void manualFeederControl() {
+//        // Manual control for the Core Hex feeder
+//        if (gamepad1.leftBumperWasPressed()) {
+//            feeder.setPower(1.0);
+//            teamLED.setPosition(1.0);
+//        }
+//        else if (gamepad1.rightBumperWasPressed()) {
+//            feeder.setPower(-1.0);
+//            teamLED.setPosition(1.0);
+//        }
+//        else if (gamepad1.leftBumperWasReleased() || gamepad1.rightBumperWasReleased()) {
+//            feeder.setPower(0);
+//            teamLED.setPosition(allianceLEDColor);
+//        }
+//    }
 
     /** NEW BUTTON PROPOSAL:
      * Y = close launch (closest to the goal from driver's perspective
@@ -254,9 +254,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
      * The agitator will spin until the bumper is released.
      */
     private void farPowerAuto() {
-        flywheel.setVelocity(farVelocity);
-        if (flywheel.getVelocity() >= farVelocity - 75) {
-            feeder.setPower(0.5);
+        ((DcMotorEx) flywheel).setVelocity(farVelocity);
+        if (flywheel.getVelocity() >= farVelocity - 50) {
+            feeder.setPower(1);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
@@ -264,9 +264,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         }
     }
     private void bankShotAuto() {
-        (flywheel).setPower(bankVelocity);
-        if (flywheel.getVelocity()>= bankVelocity - 75) {
-            feeder.setPower(0.5);
+        ((DcMotorEx) flywheel).setVelocity(bankVelocity);
+        if (flywheel.getVelocity()>= bankVelocity - 50) {
+            feeder.setPower(1);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
@@ -274,9 +274,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         }
     }
     private void maxShotAuto() {
-        (flywheel).setPower(maxVelocity);
-        if (flywheel.getVelocity()>= maxVelocity - 75) {
-            feeder.setPower(0.5);
+        ((DcMotorEx) flywheel).setVelocity(maxVelocity);
+        if (flywheel.getVelocity()>= maxVelocity - 50) {
+            feeder.setPower(1);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
