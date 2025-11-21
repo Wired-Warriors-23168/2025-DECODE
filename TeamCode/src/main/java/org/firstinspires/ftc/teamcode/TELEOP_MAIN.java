@@ -64,14 +64,13 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     private DcMotor intake;
     private Servo selector;
+    private Servo purpleHoldFlap;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
     private CRServo conveyorP;
     private double sortOffset = 55.0/300.0;
     private double neutralPos = 140.0/300.0;
-    private double greenTargetPos;
-    private double purpleTargetPos;
     private DcMotor lift;
 
 
@@ -83,7 +82,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     // Create a variable to hold the last recorded time
     public double lastTime = 0.0;
-    
+
     public int stage = 1;
 
     private DcMotor leftFrontDrive;
@@ -92,7 +91,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private DcMotor rightBackDrive;
     SparkFunOTOS poseOTOS;
 
-    private static double limitDrivePower = 1.0;  //Mutliplier to limit the drive wheel power for training
+    private static double limitDrivePower =1.0;  //Mutliplier to limit the drive wheel power for training
     public static final String ALLIANCE_KEY = "Alliance";
 
     @Override
@@ -102,6 +101,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
+        purpleHoldFlap = hardwareMap.get(Servo.class, "purpleHoldFlap");
         poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
         greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
@@ -112,6 +112,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
+        purpleHoldFlap.setDirection(Servo.Direction.FORWARD);
 
         limelight.start();
         limelight.pipelineSwitch(2);
@@ -207,14 +208,16 @@ public class TELEOP_MAIN extends LinearOpMode {
             case IDLE:
                 flywheel.setVelocity(idleVelocity);
                 if(greenBallDetected()){
-                    greenTargetPos = greenHoldPos;
-                } else {
-                    greenTargetPos = greenDownPos;
+                    greenServo.setPosition(greenHoldPos);
+                }
+                else{
+                    greenServo.setPosition(greenDownPos);
                 }
                 if(purpleBallDetected()){
-                    purpleTargetPos = purpleHoldPos;
-                } else {
-                    purpleTargetPos = purpleDownPos;
+                    purpleServo.setPosition(purpleHoldPos);
+                }
+                else {
+                    purpleServo.setPosition(purpleDownPos);
                 }
                 break;
             case WAITING_FOR_FLYWHEEL:
@@ -227,14 +230,18 @@ public class TELEOP_MAIN extends LinearOpMode {
             case IDLE_WITH_FLYWHEEL:
                 flywheel.setVelocity(targetVelocity);
                 if(greenBallDetected()){
-                    greenTargetPos = greenHoldPos;
-                } else {
-                    greenTargetPos = greenDownPos;
+                    greenServo.setPosition(greenHoldPos);
+                }
+                else{
+                    greenServo.setPosition(greenDownPos);
                 }
                 if(purpleBallDetected()){
-                    purpleTargetPos = purpleHoldPos;
-                } else {
-                    purpleTargetPos = purpleDownPos;
+                    purpleServo.setPosition(purpleHoldPos);
+                    purpleHoldFlap.setPosition(purpleFLapHoldPos);
+                }
+                else{
+                    purpleServo.setPosition(purpleDownPos);
+                    purpleHoldFlap.setPosition(purpleFLapDownPos);
                 }
                 break;
         }
@@ -283,21 +290,15 @@ public class TELEOP_MAIN extends LinearOpMode {
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
             purpleServo.setPosition(purpleShootPos);
             sleep(250);
+            purpleServo.setPosition(purpleDownPos);
         } else if (gamepad2.dpadLeftWasPressed()) {      // Forced shooting: Green
             greenServo.setPosition(greenShootPos);
             sleep(250);
+            greenServo.setPosition(greenDownPos);
         }
-        if (!gamepad2.dpad_left){
-            greenServo.setPosition(greenTargetPos);
-        }
-        if (!gamepad2.dpad_right) {
-            purpleServo.setPosition(purpleTargetPos);
-        }
-        if (gamepad2.xWasPressed() && !(shooterState == ShooterState.IDLE)) {
+        if (gamepad2.x) {
             ballnumber = 1;
             shooterState = ShooterState.IDLE_WITH_FLYWHEEL;
-        } else {
-            shooterState = ShooterState.IDLE;
         }
         if (gamepad1.aWasPressed()) {
             shooterOn = !shooterOn;
@@ -431,8 +432,8 @@ public class TELEOP_MAIN extends LinearOpMode {
         // spin drive with p controller
         double x = blueX - pos.x;
         double y = blueY - pos.y;
-        angle = Math.atan2(y,x);
-         double error = Math.toDegrees(angle) - pos.h;
+        angle = Math.atan2(x,y);
+         double error = angle - pos.h;
          double derivativeError = (error - previousError) / deltaTime;
         double wheelpower = ((error * kP) + (kD * derivativeError));
         previousError = error;
@@ -441,9 +442,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         rightFrontDrive.setPower(wheelpower);
         rightBackDrive.setPower(wheelpower);
         telemetry.addData("wheel power", wheelpower);
-        telemetry.addData("pos x", pos.x);
-        telemetry.addData("pos y", pos.y);
-        telemetry.addData("pos h", pos.h);
 
     }
     public void intakeSort(boolean auto) {
@@ -453,7 +451,8 @@ public class TELEOP_MAIN extends LinearOpMode {
         if(gamepad2.right_bumper){
             intake.setPower(-1);
             selector.setPosition(neutralPos);
-        } else if(gamepad2.right_trigger > 0.2 || auto){
+        }
+        if(gamepad2.right_trigger > 0.2 || auto){
             intake.setPower(1);
         } else {
             intake.setPower(0);
@@ -463,14 +462,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     public void sortArtifact() {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
         telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
-        if(gamepad2.left_bumper){
-            selector.setPosition(neutralPos-sortOffset);
-        }
-        else if (gamepad2.left_trigger>0.1){
-            selector.setPosition(neutralPos+sortOffset);
-        }
-
-        else if(sumGreenPurpleness > 50){
+        if(sumGreenPurpleness > 50){
             selector.setPosition(neutralPos - sortOffset); //updated zero position for new print (shaft was turned...)
             //selector.setPosition(0.22);
         }
@@ -527,16 +519,13 @@ public class TELEOP_MAIN extends LinearOpMode {
         double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
         double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
-        if (gamepad1.y){
+        if (gamepad2.y){
             rotate();
         } else {
             leftFrontDrive.setPower(frontLeftPower);
             leftBackDrive.setPower(backLeftPower);
             rightFrontDrive.setPower(frontRightPower);
             rightBackDrive.setPower(backRightPower);
-        }
-        if (gamepad1.start) {
-            poseOTOS.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
         }
 
         SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
