@@ -39,7 +39,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double startServoTime = 0;
     private boolean seenobelisk = false;
 
-    private int teamPipeline = 0; // blue auton
+    private int teamPipeline = 1; // blue auton
     private int patternID = 0;
     private int ballnumber = 0;
     private double greenShootPos = 0.1667;  //was 0.2467
@@ -50,7 +50,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double purpleHoldPos = 0.07;
     private double purpleFLapHoldPos = 0.0;
     private double purpleFLapDownPos = 0.3;
-    private double farVelocity = 1450;
+    private double farVelocity = 1400;
     private double closeVelocity = 1200;
     private double idleVelocity = 0;
     private double targetVelocity = 600;
@@ -293,11 +293,15 @@ public class TELEOP_MAIN extends LinearOpMode {
         if (!gamepad2.dpad_right) {
             purpleServo.setPosition(purpleTargetPos);
         }
-        if (gamepad2.xWasPressed() && !(shooterState == ShooterState.IDLE)) {
+        if (gamepad2.xWasPressed()) {
             ballnumber = 1;
-            shooterState = ShooterState.IDLE_WITH_FLYWHEEL;
-        } else {
-            shooterState = ShooterState.IDLE;
+            if (shooterState == ShooterState.IDLE) {
+                shooterState = ShooterState.IDLE_WITH_FLYWHEEL;
+            } else {
+                shooterState = ShooterState.IDLE;
+                ballnumber = 0;
+            }
+
         }
         if (gamepad1.aWasPressed()) {
             shooterOn = !shooterOn;
@@ -348,6 +352,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 purpleServo.setPosition(purpleDownPos);
                 stage = 1;
                 ballnumber = 0;
+                shooterState = ShooterState.IDLE;
             }
         }
     }
@@ -383,6 +388,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 purpleServo.setPosition(purpleDownPos);
                 stage = 1;
                 ballnumber = 0;
+                shooterState = ShooterState.IDLE;
             }
         }
     }
@@ -416,6 +422,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 greenServo.setPosition(greenDownPos);
                 stage = 1;
                 ballnumber = 0;
+                shooterState = ShooterState.IDLE;
             }
         }
     }
@@ -426,14 +433,23 @@ public class TELEOP_MAIN extends LinearOpMode {
         int redX = -71;
         int redY = 71;
         double angle;
-        double kP = (1.0/36.0);
-        double kD = 0;
+        double kP;
+        double kD;
         // spin drive with p controller
-        double x = blueX - pos.x;
-        double y = blueY - pos.y;
+        double x = redX - pos.x;
+        double y = redY - pos.y;
         angle = Math.atan2(y,x);
-         double error = Math.toDegrees(angle) - pos.h;
-         double derivativeError = (error - previousError) / deltaTime;
+        double error;
+//        if (Math.toDegrees(angle) > 20) {
+            error = Math.toDegrees(angle) - pos.h;
+            kP = (1.0/36.0);
+            kD = 0;
+//        } else {
+//            error = ty;
+//            kP = 0;
+//            kD = 0;
+//        }
+        double derivativeError = (error - previousError) / deltaTime;
         double wheelpower = ((error * kP) + (kD * derivativeError));
         previousError = error;
         leftFrontDrive.setPower(wheelpower);
@@ -527,6 +543,13 @@ public class TELEOP_MAIN extends LinearOpMode {
         double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
         double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
+
+//        if (gamepad1.yWasPressed()) {
+//            limelight.start();
+//        }
+//        if (gamepad1.yWasReleased()) {
+//            limelight.pause();
+//        }
         if (gamepad1.y){
             rotate();
         } else {
