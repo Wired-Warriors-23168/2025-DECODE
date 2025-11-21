@@ -109,7 +109,7 @@ public class AUTO_RED_2 extends LinearOpMode {
 
         // Establishing the direction and mode for the motors
         flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        feeder.setDirection(DcMotorSimple.Direction.REVERSE);
+        feeder.setDirection(DcMotorSimple.Direction.FORWARD);
 //        ((DcMotorEx) flywheel).setMotorEnable();
 //        ((DcMotorEx) feeder).setMotorEnable();
 
