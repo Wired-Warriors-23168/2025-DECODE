@@ -17,7 +17,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 @Disabled
 @Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
-public class TELEOP_MAIN_BACKUP extends LinearOpMode {
+public class TELEOP_MAIN_Hartland extends LinearOpMode {
 
     private DcMotorSimple flywheel;
     private DcMotorSimple feeder;

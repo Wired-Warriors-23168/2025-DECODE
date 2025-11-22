@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Math.abs;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,10 +17,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
-
+@Disabled
 @Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
-public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
+public class TELEOP_MAIN_temp extends LinearOpMode {
 
     private DcMotorEx flywheel;
     private DcMotor feeder;
@@ -35,17 +35,14 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    public static double bankVelocity = 1200;
-    public static double farVelocity = 1400;
-    public static double maxVelocity = 1675;
-    public static  double targetVelocity;
+    private static double bankVelocity = 760;
+    private static double farVelocity = 1260;
+    private static double maxVelocity = 1760;
+    private double targetVelocity;
     public static PIDFCoefficients flywheelPID = new PIDFCoefficients(400,40,0,0);
-//    PIDFCoefficients flywheelPID;
-
     public static final String ALLIANCE_KEY = "Alliance";
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
     public double allianceLEDColor;
-
     double previousError = 0;
     double deltaTime;
     public ElapsedTime deltaTimer = new ElapsedTime();
@@ -77,11 +74,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
-//        flywheelPID = flywheel.getPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         // All the configuration for the OTOS is done in this helper method, check it out!
         configureOtos();
-
         deltaTimer.reset();
         lastTime = deltaTimer.seconds();
 
@@ -97,7 +92,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
         teamLED.setPosition(0.400);  //green, ready to go
 
-        // Set up channels for display in FTCDashboard
+//        // Set up channels for display in FTCDashboard
 //        FtcDashboard dashboard = FtcDashboard.getInstance();
 //        telemetry = dashboard.getTelemetry();
 
@@ -114,6 +109,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 // Get the latest position, which includes the x and y coordinates, plus the
                 // heading angle
                 SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
+
 
                 //Set alliance-specific settings
                 if(colorAlliance=="BLUE"){
@@ -136,6 +132,8 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                     rotate();
                 }
 
+
+
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
                 telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
@@ -145,18 +143,14 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
                 telemetry.addData("X coordinate", pos.x);
                 telemetry.addData("Y coordinate", pos.y);
                 telemetry.addData("Heading angle", pos.h);
-                telemetry.addData("Flywheel P", flywheelPID.p);
-                telemetry.addData("Flywheel I", flywheelPID.i);
-                telemetry.addData("Flywheel D", flywheelPID.d);
-                telemetry.addData("Flywheel F", flywheelPID.f);
                 telemetry.update();
 
-//                /////////////////////////////////////////////////////////////////////////////////
-//                // Send a value to the dashboard for graphing
-//                TelemetryPacket packet = new TelemetryPacket();
+                /////////////////////////////////////////////////////////////////////////////////
+                // Send a value to the dashboard for graphing
+
 //                packet.put("Flywheel Actual Velocity", flywheel.getVelocity()); // Robot-specific data
 //                packet.put("Flywheel Target Velocity", targetVelocity); // Robot-specific data
-//                dashboard.sendTelemetryPacket(packet); // Always send the packet
+////                dashboard.sendTelemetryPacket(packet); // Always send the packet
 //                telemetry.addData("Flywheel Actual Velocity", flywheel.getVelocity());
 //                telemetry.addData("Flywheel Target Velocity", targetVelocity);
 //                telemetry.update();
@@ -172,7 +166,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     /**
      * Controls for the drivetrain. The robot uses a mecanum drivetrain.
      * Forward and back is on the left stick. Strafing is on the left stick.  Turning is on the right stick.
-     *Code and explanation are at: <a href="https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html">...</a>
+     *Code and explanation are at: https://gm0.org/en/latest/docs/software/tutorials/mecanum-drive.html
      */
     private void splitStickArcadeDrive() {
         double x;
@@ -200,6 +194,7 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
     }
 
+
     /**
      * Manual control for the Core Hex powered feeder and the agitator servo in the hopper
      */
@@ -219,46 +214,11 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 //        }
 //    }
 
-    /** NEW BUTTON PROPOSAL:
-     * Y = close launch (closest to the goal from driver's perspective
-     * B = medium launch
-     * A = far launch (furthest from the goal from driver's perspective)
-     * left_bumper = manually run feeder
-     * right_bumper = manually reverse feeder
-     * dpad up = manual max flywheel velocity (for testing)
-     * dpad right = manual med flywheel velocity (for testing)
-     * dpad down = manual bank flywheel velocity (for testing)
+    /**
+     * This if/else statement contains the controls for the flywheel, both manual and auto.
+     * Circle and Square will spin up ONLY the flywheel to the target velocity set.
+     * The bumpers will activate the flywheel, Core Hex feeder, and servo to cycle a series of balls.
      */
-    //    private void setFlywheelVelocity() {
-//        if (gamepad1.yWasPressed()){                //Auto shoot close (bank)
-//            bankShotAuto();
-//            targetVelocity = bankVelocity;
-//        } else if (gamepad1.bWasPressed()){          //Auto shoot mid
-//            farPowerAuto();
-//            targetVelocity = farVelocity;
-//        } else if (gamepad1.aWasPressed()){          //Auto shoot far
-//            maxShotAuto();
-//            targetVelocity = maxVelocity;
-//        } else if (gamepad1.yWasReleased()||gamepad1.bWasReleased()||gamepad1.aWasReleased()){          //Reset LED to alliance color
-//            teamLED.setPosition(allianceLEDColor);
-//        } else if (gamepad1.dpad_down) {            //Manual flywheel close (bank) for testing
-//            ((DcMotorEx) flywheel).setVelocity(bankVelocity);
-//            targetVelocity = bankVelocity;
-//            teamLED.setPosition(1.0);
-//        } else if (gamepad1.dpad_right) {           //Manual flywheel mid for testing
-//            ((DcMotorEx) flywheel).setVelocity(farVelocity);
-//            targetVelocity = farVelocity;
-//            teamLED.setPosition(1.0);
-//        } else if (gamepad1.dpad_up) {              //Manual flywheel far for testing
-//            ((DcMotorEx) flywheel).setVelocity(maxVelocity);
-//            targetVelocity = maxVelocity;
-//            teamLED.setPosition(1.0);
-//        } else {                                    //Set everything back to zero
-//            (flywheel).setPower(0);
-//            feeder.setPower(0);
-//            teamLED.setPosition(allianceLEDColor);
-//        }
-//    }
     private void setFlywheelVelocity() {
         if (gamepad1.options) {
             flywheel.setPower(-0.5);
@@ -290,9 +250,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
      * The agitator will spin until the bumper is released.
      */
     private void farPowerAuto() {
-        ((DcMotorEx) flywheel).setVelocity(farVelocity);
+        flywheel.setVelocity(farVelocity);
         if (flywheel.getVelocity() >= farVelocity - 50) {
-            feeder.setPower(1);
+            feeder.setPower(0.5);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
@@ -300,9 +260,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         }
     }
     private void bankShotAuto() {
-        ((DcMotorEx) flywheel).setVelocity(bankVelocity);
-        if (flywheel.getVelocity()>= bankVelocity - 50) {
-            feeder.setPower(1);
+        (flywheel).setPower(bankVelocity);
+        if (flywheel.getVelocity() >= bankVelocity - 50) {
+            feeder.setPower(0.5);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
@@ -310,16 +270,15 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         }
     }
     private void maxShotAuto() {
-        ((DcMotorEx) flywheel).setVelocity(maxVelocity);
+        (flywheel).setPower(maxVelocity);
         if (flywheel.getVelocity()>= maxVelocity - 50) {
-            feeder.setPower(1);
+            feeder.setPower(0.5);
             teamLED.setPosition(0.500); //green
         } else {
             feeder.setPower(0);
             teamLED.setPosition(allianceLEDColor);
         }
     }
-
 
     /**
      * rotate() calculates the heading to the alliance goal using ATAN2
@@ -335,21 +294,21 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 //        int redX = -71;
 //        int redY = 71;
         double angle;
-        double kP = (1.6);
-//        double kP = (1.0/36.0);
+        double kP = (0.8);
+//        double kP = (1.0/36.0);  //Stiffles' gain
         double kD = 0;
         // spin drive with p controller
 //        double x = blueX - pos.x;
 //        double y = blueY - pos.y;
         double x = goalX - pos.x;
         double y = goalY - pos.y;
-        angle = Math.atan2(y,x)+0.10;
+        angle = Math.atan2(y,x);
         double error = angle - pos.h;
         double derivativeError = (error - previousError) / deltaTime;
         double wheelpower = ((error * kP) + (kD * derivativeError));
         previousError = error;
-        leftFrontDrive.setPower(-wheelpower);
-        leftBackDrive.setPower(-wheelpower);
+        leftFrontDrive.setPower(-wheelpower);   //changed to (-) for Noodle's wiring
+        leftBackDrive.setPower(-wheelpower);    //changed to (-) for Noodle's wiring
         rightFrontDrive.setPower(wheelpower);
         rightBackDrive.setPower(wheelpower);
         telemetry.addData("wheel power", wheelpower);
@@ -360,13 +319,6 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
     }
 
-    /**
-     * The OTOS configuration code is from the SensorSparkFunOTOS sample code.
-     * There are several comments in the sample that have been removed here which
-     * show how to configure the sensor.
-     */
-
-
     private void configureOtos() {
         telemetry.addLine("Configuring OTOS...");
         telemetry.update();
@@ -375,8 +327,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         // poseOTOS.setLinearUnit(DistanceUnit.METER);
         poseOTOS.setLinearUnit(DistanceUnit.INCH);
         poseOTOS.setAngularUnit(AngleUnit.RADIANS);
+        // poseOTOS.setAngularUnit(AngleUnit.DEGREES);
 
-        // Sensor position offset
+        // Sensor position offset from RR tuning
         SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 0.65625, 0);
         poseOTOS.setOffset(offset);
 

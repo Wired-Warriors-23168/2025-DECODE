@@ -40,7 +40,9 @@ import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -66,7 +68,7 @@ public class AUTO_RED_1 extends LinearOpMode {
     // Declare OpMode members.
     private SparkFunOTOS otos;
 
-    private DcMotorSimple flywheel;
+    private DcMotorEx flywheel;
     private DcMotorSimple feeder;
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
@@ -86,30 +88,38 @@ public class AUTO_RED_1 extends LinearOpMode {
     double launchWaitTime;
     ElapsedTime timer;
     ElapsedTime waitTimer;
+    public static double bankVelocity = 1200;
+    public static double farVelocity = 1400;
+    public static double maxVelocity = 1675;
+    public static  double targetVelocity;
+    public static PIDFCoefficients flywheelPID = new PIDFCoefficients(400,40,0,0);
+    //    PIDFCoefficients flywheelPID;
+
     public static final String ALLIANCE_KEY = "Alliance";
     public String colorAlliance = "RED";
+    public double allianceLEDColor;
 
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(-62.5, 35, Math.toRadians(90));
-    //    Pose2d beginPose = new Pose2d(-62.125, 38.875, Math.toRadians(90));       //Update to sit inside the goal triangle and touch the launch line
-
+    Pose2d beginPose = new Pose2d(-61.0625, 39, Math.toRadians(90));
+//    Pose2d beginPose = new Pose2d(-62.125, -38.875, Math.toRadians(-90));       //Update to sit inside the goal triangle and touch the launch line
 
     @Override
     public void runOpMode() {
 
         //Set Hardware Map
-        flywheel = hardwareMap.get(DcMotorSimple.class, "motor-flywheel");
+        flywheel = hardwareMap.get(DcMotorEx.class, "motor-flywheel");
         feeder = hardwareMap.get(DcMotorSimple.class, "motor-feeder");
         otos = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         teamLED = hardwareMap.get(Servo.class, "led-light");
 
-
         //initDevices(); // Initialize all motors, servos, sensors
 
         // Establishing the direction and mode for the motors
-        flywheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheel.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,flywheelPID);
+//        flywheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         feeder.setDirection(DcMotorSimple.Direction.FORWARD);
 //        ((DcMotorEx) flywheel).setMotorEnable();
 //        ((DcMotorEx) feeder).setMotorEnable();
@@ -123,9 +133,9 @@ public class AUTO_RED_1 extends LinearOpMode {
         teamLED.setPosition(0.5);//green
 
         //Set all actuator target positions
-        flywheelPowerBank = 0.57;    //the bankshot shooting power
-        flywheelPowerMid = 0.9;     //the middle shooting power
-        flywheelPowerFar = 1.0;     //the far shooting power
+//        flywheelPowerBank = 0.57;    //the bankshot shooting power
+//        flywheelPowerMid = 0.9;     //the middle shooting power
+//        flywheelPowerFar = 1.0;     //the far shooting power
         feederPower = 0.6;          //the feeder power when activating
         feederLaunchTime = 8.0;     //the amount of time to rotate the feeder to launch an artifact (when not using RUN_TO_POSITION)
         feederRotations = 3;        //FUTURE USE the number of feeder rotations to launch an artifact (when using RUN_TO_POSITION)
@@ -152,22 +162,27 @@ public class AUTO_RED_1 extends LinearOpMode {
         if(isStopRequested()) return;
 
         if(colorAlliance=="BLUE"){
-            teamLED.setPosition(0.600); //blue
+            allianceLEDColor = 0.600; //BLUE
+            teamLED.setPosition(allianceLEDColor);
         }
         else{
-            teamLED.setPosition(0.283);//red
+            allianceLEDColor = 0.283; //RED
+            teamLED.setPosition(allianceLEDColor);
         }
 
-        flywheel.setPower(flywheelPowerBank);       //Set the flywheel to max power to start it up
+//        flywheel.setPower(bankVelocity);       //Set the flywheel to max power to start it up
+         ((DcMotorEx) flywheel).setVelocity(bankVelocity); //Set the flywheel to max power to start it up
+
 
         //Build the actions for our AUTO mode
         Actions.runBlocking(
                 drive.actionBuilder(beginPose)
 
                         // Move to bankshot firing position
+                        .waitSeconds(2)
                         .setReversed(false)
                         .setTangent(Math.toRadians(-45))
-                        .splineToLinearHeading(new Pose2d(-27,27,Math.toRadians(135)),Math.toRadians(-45))
+                        .splineToLinearHeading(new Pose2d(-27.5,27.5,Math.toRadians(135)),Math.toRadians(-45))
 
 //                        //launch an artifact with the feeder
                         .stopAndAdd(new SequentialAction(
@@ -186,7 +201,7 @@ public class AUTO_RED_1 extends LinearOpMode {
                         ))
                         .setReversed(false)
                         .setTangent(Math.toRadians(-45))
-                        .splineToLinearHeading(new Pose2d(10,11,Math.toRadians(90)),Math.toRadians(0))
+                        .splineToLinearHeading(new Pose2d(10,14,Math.toRadians(90)),Math.toRadians(0))
 
                         .build());
 
@@ -244,9 +259,14 @@ public class AUTO_RED_1 extends LinearOpMode {
                 timer = new ElapsedTime();
             }
 
-            feeder.setPower(feederPower);
-//            telemetry.addData("timer", "t: (%.1f)", timer);
-//            telemetry.update();
+//            ((DcMotorEx) flywheel).setVelocity(bankVelocity);
+            if (flywheel.getVelocity()>= bankVelocity - 40) {
+                feeder.setPower(1);
+                teamLED.setPosition(0.500); //green
+            } else {
+                feeder.setPower(0);
+                teamLED.setPosition(allianceLEDColor);
+            }
 
             return timer.seconds() < launchTime;
         }
