@@ -575,12 +575,12 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-62.5, -34.8, Math.toRadians(180)); //UPDATE THIS FOR NEW STARTING POSITION
+        Pose2d beginPose = new Pose2d(-60.75, -38.75, Math.toRadians(180)); //NEW STARTING POSITION
 
         //Set AUTO waypoints
-        Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(158));  //pose to read the obelisk
+        Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(145));  //pose to read the obelisk
         double shootHeading = -135;
-        Pose2d shootPose = new Pose2d(-30,-30,Math.toRadians(shootHeading));    //pose to shoot the pattern
+        Pose2d shootPose = new Pose2d(-20,-20,Math.toRadians(shootHeading));    //pose to shoot the pattern
         Pose2d intakePose1 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from first row
 //        Pose2d intakePose2 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from second row
         Pose2d endPose = new Pose2d(12,-18,Math.toRadians(90));      //pose at end of AUTO
@@ -611,9 +611,12 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         TrajectoryActionBuilder trjObelisk = drive.actionBuilder(beginPose)
                 //Spline to the obelisk-reading pose, then transition to the shooting pose (hopefully we read the obelisk in this time)
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(158)),Math.toRadians(0))
-                .fresh()
-                .turnTo(-135);
+                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
+//                .waitSeconds(2)
+//                .turnTo(Math.toRadians(-135))
+                .setTangent(Math.toRadians(45))
+                .splineToLinearHeading(new Pose2d(-20,-20,Math.toRadians(-135)),Math.toRadians(45))
+                .waitSeconds(2);
 
 //        Action trjShoot = trjObelisk.endTrajectory().fresh()
 //                .turnTo(shootHeading)
@@ -621,41 +624,43 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         TrajectoryActionBuilder trjShoot = drive.actionBuilder(obeliskPose)
                 //Turn to the shooting pose
-                .turnTo(-135);
+                .turnTo(Math.toRadians(-135))
+                .waitSeconds(2);
 
         TrajectoryActionBuilder trjIntakeAndShoot = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
-                .fresh()
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(-135)),Math.toRadians(0))
-
+//                .fresh()
+                .setTangent(Math.toRadians(45))
+                .splineToLinearHeading(new Pose2d(-12.25,-30.25,Math.toRadians(-90)),Math.toRadians(-90))
+                .waitSeconds(2)
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .fresh()
+//                .fresh()
                 .lineToY(-36,
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(20.0))
-                .waitSeconds(1)
+                        new TranslationalVelConstraint(10))
+                .waitSeconds(2)
 
                 //Move forward slowly to intake the second artifact and wait for sorting
-                .fresh()
+//                .fresh()
                 .lineToY(-41,
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(20.0))
-                .waitSeconds(1)
+                        new TranslationalVelConstraint(10))
+                .waitSeconds(2)
 
                 //Move forward slowly to intake the third artifact and wait for sorting
-                .fresh()
+//                .fresh()
                 .lineToY(-46,
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(20.0))
-                .waitSeconds(1)
+                        new TranslationalVelConstraint(10))
+                .waitSeconds(2)
 
                 //Spline to the shooting pose, back up to full speed
-                .fresh()
+//                .fresh()
                 .setTangent(Math.toRadians(180))
                 .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(-135)),Math.toRadians(45),
                         // override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0))
+                .waitSeconds(2)
                 ;
 
 //        TrajectoryActionBuilder trjMove1 = drive.actionBuilder(intakePose1).fresh()
@@ -710,26 +715,28 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        new ParallelAction(
-                                purpleSideLED.colorAlliance(),     //set purple-side LED to alliance color
-//                                greenSideLED.colorAlliance(),     //set green-side LED to alliance color
-                                flywheel.setFlywheelClose()         //turn on flywheel
-                        ),
-                        new ParallelAction(                 //move to obelisk position and read the pattern
-                                trjObelisk.build(),
-                                limelight.readPattern()
-                        ),
+//                        new ParallelAction(
+//                                purpleSideLED.colorAlliance(),     //set purple-side LED to alliance color
+////                                greenSideLED.colorAlliance(),     //set green-side LED to alliance color
+//                                flywheel.setFlywheelClose()         //turn on flywheel
+//                        ),
+//                        new ParallelAction(                 //move to obelisk position and read the pattern
+//                                trjObelisk.build(),
+//                                limelight.readPattern()
+//                        ),
 //                        trjShoot.build(),                   //turn to the goal (currently part of the obelisk trajectory)
-                        shooters.shootPattern(),            //shoot the pattern
-                        new ParallelAction(
-                                intake.intakeOn(),          //turn on the intake
-                                sort.sortArtifact(),        //sort artifacts in parallel
-                                trjIntakeAndShoot.build()   //move to the start of the first row of artifacts, then slowly move forward one-by-one
-                        ),
+                        trjObelisk.build(),
 
-                        intake.intakeOff(),                 //turn off intake
-                        shooters.shootPattern(),            //shoot the pattern
-                        flywheel.setFlywheelStop(),         //stop the flywheel
+//                        shooters.shootPattern(),            //shoot the pattern
+//                        new ParallelAction(
+//                                intake.intakeOn(),          //turn on the intake
+//                                sort.sortArtifact(),        //sort artifacts in parallel
+//                                trjIntakeAndShoot.build()   //move to the start of the first row of artifacts, then slowly move forward one-by-one
+//                        ),
+                        trjIntakeAndShoot.build(),
+//                        intake.intakeOff(),                 //turn off intake
+//                        shooters.shootPattern(),            //shoot the pattern
+//                        flywheel.setFlywheelStop(),         //stop the flywheel
                         trjEndPose.build()                  //drive to end pose
                 )
         );

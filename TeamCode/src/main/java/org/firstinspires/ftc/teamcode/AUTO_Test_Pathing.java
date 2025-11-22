@@ -10,6 +10,7 @@ import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
+import com.acmerobotics.roadrunner.TranslationalVelConstraint;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -167,7 +168,7 @@ public class AUTO_Test_Pathing extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-62.5, -35, Math.toRadians(180));
+        Pose2d beginPose = new Pose2d(-60.75, -38.75, Math.toRadians(180));
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
@@ -221,49 +222,74 @@ public class AUTO_Test_Pathing extends LinearOpMode {
                         drive.actionBuilder(beginPose)
 
                                 // Move to close firing position
-                                .setReversed(false)
-                                .setTangent(Math.toRadians(0))  //the heading the bot will take when leaving this position
-                                .splineToLinearHeading(new Pose2d(-27,-27,Math.toRadians(135)),Math.toRadians(-45))  //the target X,Y position, the target heading where the bot stops, and the heading the bot will approach that target heading from
+                                .setTangent(Math.toRadians(0))
+                                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
+                                .waitSeconds(1)
+//                .turnTo(Math.toRadians(-135))
+                                .setTangent(Math.toRadians(45))
+                                .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45))
+                                .waitSeconds(1)
+
+                                .setTangent(Math.toRadians(45))
+                                .splineToLinearHeading(new Pose2d(-22.25,-20.25,Math.toRadians(-90)),Math.toRadians(-90))
+                                .waitSeconds(1)
+                                .lineToY(-26,
+                                        // override velocity constraint - slow down the move
+                                        new TranslationalVelConstraint(20.0))
+                                .waitSeconds(1)
+                                .lineToY(-31,
+                                        // override velocity constraint - slow down the move
+                                        new TranslationalVelConstraint(20.0))
+                                .waitSeconds(1)
+                                .lineToY(-36,
+                                        // override velocity constraint - slow down the move
+                                        new TranslationalVelConstraint(20.0))
+                                .waitSeconds(1)
+
+                                .setTangent(Math.toRadians(180))
+                                .splineToLinearHeading(new Pose2d(-10,-10,Math.toRadians(-135)),Math.toRadians(45),
+                                        // override velocity constraint - slow down the move
+                                        new TranslationalVelConstraint(50))
                                 .build());
 
-                //Read the limelight and determine pattern
-                LLResult result = limelight.getLatestResult();
-//                if (result != null && result.isValid()) {
-//                    tx = result.getTx();
-//                    ty = result.getTy();
+//                //Read the limelight and determine pattern
+//                LLResult result = limelight.getLatestResult();
+////                if (result != null && result.isValid()) {
+////                    tx = result.getTx();
+////                    ty = result.getTy();
+////                }
+//                List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+//                for (LLResultTypes.FiducialResult fiducial : fiducials) {
+//                    if (fiducial != null) {
+//                        tagID = fiducial.getFiducialId();
+//                    }
 //                }
-                List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
-                for (LLResultTypes.FiducialResult fiducial : fiducials) {
-                    if (fiducial != null) {
-                        tagID = fiducial.getFiducialId();
-                    }
-                }
-
-                if (tagID != 0  && !seenobelisk) {
-                    seenobelisk = true;
-                    patternID = tagID; // save pattern
-                    sleep(50);
-                    tagID = 0;
-                    limelight.pipelineSwitch(teamPipeline);
-                }
-
-
-                //Roadrunner - turn to goal, shoot, then drive to park position
-                Actions.runBlocking(
-                        drive.actionBuilder(beginPose)
-
-                                // Turn to fact goal
-                                .turnTo(Math.toRadians(-135))
-                                //shoot the pattern
-                                .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,2000))
-                                //Move to the park position
-                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
-                                .splineToLinearHeading(new Pose2d(35.8, 25, Math.toRadians(90)),Math.toRadians(0))
 //
-//                                .lineToY(56)
-//                                .lineToY(25)
-//                                .strafeTo(new Vector2d(shootX, shootY))
-                                .build());
+//                if (tagID != 0  && !seenobelisk) {
+//                    seenobelisk = true;
+//                    patternID = tagID; // save pattern
+//                    sleep(50);
+//                    tagID = 0;
+//                    limelight.pipelineSwitch(teamPipeline);
+//                }
+//
+//
+//                //Roadrunner - turn to goal, shoot, then drive to park position
+//                Actions.runBlocking(
+//                        drive.actionBuilder(beginPose)
+//
+//                                // Turn to fact goal
+//                                .turnTo(Math.toRadians(-135))
+//                                //shoot the pattern
+//                                .stopAndAdd(new patternLaunchAction(patternID, purpleServo,purpleShootPos,purpleDownPos,greenServo,greenShootPos,greenDownPos,2000))
+//                                //Move to the park position
+//                                .setTangent(Math.toRadians(45))  //the heading the bot will take when leaving this position
+//                                .splineToLinearHeading(new Pose2d(35.8, 25, Math.toRadians(90)),Math.toRadians(0))
+////
+////                                .lineToY(56)
+////                                .lineToY(25)
+////                                .strafeTo(new Vector2d(shootX, shootY))
+//                                .build());
 
 
                 flywheel.setVelocity(0); //stop the flywheel

@@ -119,13 +119,13 @@ public class AUTO_BLUE_1_NEWTEST extends LinearOpMode {
     //TODO *********** Set the starting pose for the robot based on the alliance start position,
     // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
     // RADIANS by multiplying the value in DEGREES by Math.PI/180
-    Pose2d beginPose = new Pose2d(-62.5, -34.8, Math.toRadians(180)); //UPDATE THIS FOR NEW STARTING POSITION
+    Pose2d beginPose = new Pose2d(-61, -38.5, Math.toRadians(180)); //UPDATE THIS FOR NEW STARTING POSITION
 
     //Set AUTO waypoints
     Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(158));  //pose to read the obelisk
-    double shootHeading = -135;
+    double shootHeading = Math.toRadians(-135);
     Pose2d shootPose = new Pose2d(-30,-30,Math.toRadians(shootHeading));    //pose to shoot the pattern
-    Pose2d intakePose1 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from first row
+    Pose2d intakePose1 = new Pose2d(-12,-30,Math.toRadians(-90));  //pose to intake artifacts from first row
     Pose2d intakePose2 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from second row
     Pose2d endPose = new Pose2d(12,-18,Math.toRadians(90));      //pose at end of AUTO
     double firstArtifact = -36;     //Y-position of the first artifact in the row
