@@ -32,9 +32,9 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES_backup extends LinearOpMode {
     // Declare variables
     // Set as "static" and not "final" in order to be able to tune parameters in FTCDashboard
     // Setting our velocity targets. These values are in ticks per second!
-    public static double bankVelocity = 760;
-    public static double farVelocity = 1260;
-    public static double maxVelocity = 1760;
+    public static double bankVelocity = 1200;
+    public static double farVelocity = 1400;
+    public static double maxVelocity = 1675;
     public static  double targetVelocity;
     public static PIDFCoefficients flywheelPID = new PIDFCoefficients(400,40,0,0);
 //    PIDFCoefficients flywheelPID;
@@ -224,19 +224,19 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES_backup extends LinearOpMode {
     private void setFlywheelVelocity() {
         if (gamepad1.options) {
             flywheel.setPower(-0.5);
-        } else if (gamepad1.x) {
+        } else if (gamepad1.left_trigger >=0.1) {
             flywheel.setVelocity(farVelocity);
             targetVelocity = farVelocity;
-        }else if (gamepad1.right_trigger >0.1){
+        }else if (gamepad1.left_bumper){
             bankShotAuto();
-        }else if (gamepad1.left_trigger >0.1){
+        }else if (gamepad1.b){
             farPowerAuto();
-        }else if (gamepad1.right_bumper){
+        }else if (gamepad1.x){
             maxShotAuto();
-        } else if (gamepad1.b) {
+        } else if (gamepad1.right_trigger >=0.1) {
             flywheel.setVelocity(bankVelocity);
             targetVelocity = bankVelocity;
-        } else if (gamepad1.left_bumper) {
+        } else if (gamepad1.right_bumper) {
             flywheel.setVelocity(maxVelocity);
             targetVelocity = maxVelocity;
         } else {

@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -45,6 +46,16 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
     public Object colorAlliance = blackboard.get(ALLIANCE_KEY);
     public double allianceLEDColor;
 
+    double previousError = 0;
+    double deltaTime;
+    public ElapsedTime deltaTimer = new ElapsedTime();
+    public double lastTime = 0.0;       // Create a variable to hold the last recorded time
+
+    public double blueGoalY = -71;      //Y coordinate of the blue alliance goal corner
+    public double redGoalY = 71;        //Y coordinate of the red alliance goal corner
+    public double goalY;                //Y goal coordinate
+    public double goalX = -71;          //X coordinate of the goal corner (same for both alliances)
+
     @Override
     public void runOpMode() {
         flywheel = hardwareMap.get(DcMotorEx.class, "motor-flywheel");
@@ -71,12 +82,17 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
         // All the configuration for the OTOS is done in this helper method, check it out!
         configureOtos();
 
+        deltaTimer.reset();
+        lastTime = deltaTimer.seconds();
+
         //Set alliance-specific settings
         if(colorAlliance=="BLUE"){
             allianceLEDColor = 0.600; // blue
+            goalY = blueGoalY;
         }
         else{
             allianceLEDColor = 0.283; // red
+            goalY = redGoalY;
         }
 
         teamLED.setPosition(0.400);  //green, ready to go
@@ -87,18 +103,38 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
 
         waitForStart();
         if (opModeIsActive()) {
-            teamLED.setPosition(allianceLEDColor);  //turn on the LED to the alliance color
+            double currentTime = deltaTimer.seconds();
+            deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
 
             while (opModeIsActive()) {
+                //Create new FTCDashboard packet
+                TelemetryPacket packet = new TelemetryPacket();
 
                 // Get the latest position, which includes the x and y coordinates, plus the
                 // heading angle
                 SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
 
+                //Set alliance-specific settings
+                if(colorAlliance=="BLUE"){
+                    teamLED.setPosition(0.600); //set team LED to blue
+                    goalY = blueGoalY;          //blue goal corner Y coordinate
+                }
+                else{
+                    teamLED.setPosition(0.283); //set team LED to red
+                    goalY = redGoalY;           //red goal corner Y coordinate
+                }
+
                 // Calling our methods while the OpMode is running
                 splitStickArcadeDrive();
                 setFlywheelVelocity();
 //                manualFeederControl();
+
+                //Call the rotate function to aim the robot at the alliance goal
+                //NOTE: the bot should be pointed in the general direction of the goal for this to work best
+                if (gamepad2.right_trigger >=0.1 ){
+                    rotate();
+                }
 
                 /////////////////////////////////////////////////////////////////////////////////
                 //Set up the telemetry to the driver hub
@@ -282,6 +318,46 @@ public class TELEOP_MAIN_MAXWELLS_CHANGES extends LinearOpMode {
             feeder.setPower(0);
             teamLED.setPosition(allianceLEDColor);
         }
+    }
+
+
+    /**
+     * rotate() calculates the heading to the alliance goal using ATAN2
+     * The included PD controller turns the bot by calculating the difference between the
+     * goal heading "angle" and the actual field heading of the bot pos.h.
+     * THIS CODE CAME FROM THE 7TH-8TH GRADE BOT PROGRAMMERS AND WAS MODIFIED FOR NOODLES
+     */
+
+    private void rotate() {
+        SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
+//        int blueX = -71;
+//        int blueY = -71;
+//        int redX = -71;
+//        int redY = 71;
+        double angle;
+        double kP = (1.6);
+//        double kP = (1.0/36.0);
+        double kD = 0;
+        // spin drive with p controller
+//        double x = blueX - pos.x;
+//        double y = blueY - pos.y;
+        double x = goalX - pos.x;
+        double y = goalY - pos.y;
+        angle = Math.atan2(y,x)+0.10;
+        double error = angle - pos.h;
+        double derivativeError = (error - previousError) / deltaTime;
+        double wheelpower = ((error * kP) + (kD * derivativeError));
+        previousError = error;
+        leftFrontDrive.setPower(-wheelpower);
+        leftBackDrive.setPower(-wheelpower);
+        rightFrontDrive.setPower(wheelpower);
+        rightBackDrive.setPower(wheelpower);
+        telemetry.addData("wheel power", wheelpower);
+        telemetry.addData("angle", angle);
+        telemetry.addData("pos x", pos.x);
+        telemetry.addData("pos y", pos.y);
+        telemetry.addData("pos h", pos.h);
+
     }
 
     /**
