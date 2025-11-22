@@ -51,7 +51,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
  * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
  */
-@Disabled
 @TeleOp(name="Basic: Linear OpMode", group="Linear OpMode")
 //@Disabled
 public class motortesting extends LinearOpMode {
@@ -72,6 +71,8 @@ public class motortesting extends LinearOpMode {
         testmotor = hardwareMap.get(DcMotorEx.class, "test");
 
         testmotor.setDirection(DcMotor.Direction.REVERSE);
+        testmotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        testmotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
         // Note: The settings here assume direct drive on left and right wheels.  Gear Reduction or 90 Deg drives may require direction flips
