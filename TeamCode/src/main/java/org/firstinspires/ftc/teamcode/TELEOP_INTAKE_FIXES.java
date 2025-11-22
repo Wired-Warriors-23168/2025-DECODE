@@ -1,17 +1,17 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -25,7 +25,7 @@ import java.util.List;
 
 @Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
-public class TELEOP_MAIN extends LinearOpMode {
+public class TELEOP_INTAKE_FIXES extends LinearOpMode {
 
     private DcMotorEx flywheel;
     private Limelight3A limelight;
@@ -54,6 +54,10 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double closeVelocity = 1200;
     private double idleVelocity = 0;
     private double targetVelocity = 600;
+    private double intakeRevs = 2.5;
+    private double sortDelay = 650;
+    private double sortTime;
+
     private boolean shooterOn = false;
     public double txLimelight;
     public double tyLimelight;
@@ -61,21 +65,16 @@ public class TELEOP_MAIN extends LinearOpMode {
     double ty = 0;
     int tagID;
     double deltaTime;
+    double revolutions;
 
     private DcMotor intake;
     private Servo selector;
     private Servo purpleHoldFlap;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
-    private CRServo conveyorG;
-    private CRServo conveyorP;
     private double sortOffset = 55.0/300.0;
     private double neutralPos = 140.0/300.0;
     private boolean onewaysort = false;
-    private int sortToggle = 0;
-    private double revolutions;
-    private double intakeRevs = 2.5;
-    private double sortTime = 0;
     private double startPos;
     private DcMotor lift;
 
@@ -88,7 +87,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     // Create a variable to hold the last recorded time
     public double lastTime = 0.0;
-
+    
     public int stage = 1;
 
     private DcMotor leftFrontDrive;
@@ -96,6 +95,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
     SparkFunOTOS poseOTOS;
+    int sortToggle;
 
     private static double limitDrivePower =1.0;  //Mutliplier to limit the drive wheel power for training
     public static final String ALLIANCE_KEY = "Alliance";
@@ -138,15 +138,12 @@ public class TELEOP_MAIN extends LinearOpMode {
         selector = hardwareMap.get(Servo.class, "servo-selector");
         colorSensorA = hardwareMap.get(ColorSensor.class, "sensor-color-a");
         colorSensorB = hardwareMap.get(ColorSensor.class, "sensor-color-b");
-        conveyorG = hardwareMap.get(CRServo.class, "servo-conveyor-green");
-        conveyorP = hardwareMap.get(CRServo.class, "servo-conveyor-purple");
-
 
         // Establishing the direction and mode for the motors
+        intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake.setDirection(DcMotor.Direction.REVERSE);
         selector.setDirection(Servo.Direction.FORWARD);
-        conveyorG.setDirection(CRServo.Direction.FORWARD);
-        conveyorP.setDirection(CRServo.Direction.FORWARD);
         selector.setDirection(Servo.Direction.FORWARD);
 
         lift = hardwareMap.get(DcMotor.class, "motor-lift");
@@ -292,6 +289,10 @@ public class TELEOP_MAIN extends LinearOpMode {
                 if (Math.abs(ty) < 5) {
                     Pattern23(); // Purple purple green
                 }
+            }
+            else if(gamepad2.dpad_down){
+                purpleServo.setPosition(purpleShootPos);
+                greenServo.setPosition(greenShootPos);
             }
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
             purpleServo.setPosition(purpleShootPos);
@@ -495,11 +496,11 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
         else if(sumGreenPurpleness > 50){
             selector.setPosition(neutralPos - sortOffset);
-            sortTime = 1000 + deltaTimer.milliseconds();
+            sortTime = sortDelay + deltaTimer.milliseconds();
         }
         else if (sumGreenPurpleness < -50 ) {
-            selector.setPosition(neutralPos + sortOffset);
-            sortTime = 1000 + deltaTimer.milliseconds();
+           selector.setPosition(neutralPos + sortOffset);
+            sortTime = sortDelay + deltaTimer.milliseconds();
         }
         else if (sortTime <= deltaTimer.milliseconds()) {
             selector.setPosition(neutralPos);
@@ -535,6 +536,13 @@ public class TELEOP_MAIN extends LinearOpMode {
         double x;
         double y;
         double rx;
+        double slowDown;
+        if (gamepad1.right_trigger>0.1){
+            slowDown = 2;
+        }
+        else{
+            slowDown =1;
+        }
 
         x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
         y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
@@ -544,10 +552,10 @@ public class TELEOP_MAIN extends LinearOpMode {
         // This ensures all the powers maintain the same ratio,
         // but only if at least one is out of the range [-1, 1]
         double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-        double frontLeftPower = -limitDrivePower * (y + x + rx) / denominator;
-        double backLeftPower = -limitDrivePower * (y - x + rx) / denominator;
-        double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
-        double backRightPower = limitDrivePower * (y + x - rx) / denominator;
+        double frontLeftPower = -limitDrivePower * ( (y + x + rx) / slowDown) / denominator;
+        double backLeftPower = -limitDrivePower * ( (y - x + rx) / slowDown) / denominator;
+        double frontRightPower = limitDrivePower * ( (y - x - rx) / slowDown) / denominator;
+        double backRightPower = limitDrivePower * ( (y + x - rx) /slowDown) / denominator;
 
         if (gamepad2.y){
             rotate();
