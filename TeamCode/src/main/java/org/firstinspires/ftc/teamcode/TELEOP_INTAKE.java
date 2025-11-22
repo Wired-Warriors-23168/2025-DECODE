@@ -20,7 +20,7 @@ public class TELEOP_INTAKE extends LinearOpMode {
     private Servo selector;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
-
+    private double startPos;
     private double sortOffset = 55.0/300.0;
     private double neutralPos = 140.0/300.0;
     private boolean onewaysort = false;
@@ -59,22 +59,28 @@ public class TELEOP_INTAKE extends LinearOpMode {
     }
     public void intakeSort(boolean auto) {
         sortArtifact();
+
         revolutions = intake.getCurrentPosition()/288.0;
         intake.getCurrentPosition();
 
-        if(gamepad2.right_bumper){
+        if(gamepad2.right_trigger > 0.2){
             intake.setPower(-1);
             selector.setPosition(neutralPos);
-        }
-        if((gamepad2.right_trigger > 0.2 || auto)&& revolutions < intakeRevs){
-            intake.setPower(1);
-        } else {
+        } else if (intake.getPower() <= -1 ) {
             intake.setPower(0);
-            intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
+        if (auto) {
+            intake.setPower(1);
+        }
+        else if(gamepad2.rightBumperWasPressed()){
+            startPos = intake.getCurrentPosition();
+            intake.setPower(1);
+        } else if (intake.getCurrentPosition() > startPos + (intakeRevs * 288.0)) {
+            intake.setPower(0);
         }
         telemetry.addData("sort time", sortTime);
         telemetry.addData("delta timer", deltaTimer.milliseconds());
+        telemetry.addData("Start Pos", startPos);
     }
 
     public void sortArtifact() {

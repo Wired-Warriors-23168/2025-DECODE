@@ -55,7 +55,7 @@ public class TELEOP_INTAKE_FIXES extends LinearOpMode {
     private double idleVelocity = 0;
     private double targetVelocity = 600;
     private double intakeRevs = 2.5;
-    private double sortDelay = 500;
+    private double sortDelay = 650;
     private double sortTime;
 
     private boolean shooterOn = false;
@@ -72,11 +72,10 @@ public class TELEOP_INTAKE_FIXES extends LinearOpMode {
     private Servo purpleHoldFlap;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
-    private CRServo conveyorG;
-    private CRServo conveyorP;
     private double sortOffset = 55.0/300.0;
     private double neutralPos = 140.0/300.0;
     private boolean onewaysort = false;
+    private double startPos;
     private DcMotor lift;
 
 
@@ -139,17 +138,12 @@ public class TELEOP_INTAKE_FIXES extends LinearOpMode {
         selector = hardwareMap.get(Servo.class, "servo-selector");
         colorSensorA = hardwareMap.get(ColorSensor.class, "sensor-color-a");
         colorSensorB = hardwareMap.get(ColorSensor.class, "sensor-color-b");
-        conveyorG = hardwareMap.get(CRServo.class, "servo-conveyor-green");
-        conveyorP = hardwareMap.get(CRServo.class, "servo-conveyor-purple");
-
 
         // Establishing the direction and mode for the motors
         intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         intake.setDirection(DcMotor.Direction.REVERSE);
         selector.setDirection(Servo.Direction.FORWARD);
-        conveyorG.setDirection(CRServo.Direction.FORWARD);
-        conveyorP.setDirection(CRServo.Direction.FORWARD);
         selector.setDirection(Servo.Direction.FORWARD);
 
         lift = hardwareMap.get(DcMotor.class, "motor-lift");
@@ -459,20 +453,28 @@ public class TELEOP_INTAKE_FIXES extends LinearOpMode {
     }
     public void intakeSort(boolean auto) {
         sortArtifact();
+
         revolutions = intake.getCurrentPosition()/288.0;
         intake.getCurrentPosition();
 
-        if(gamepad2.right_bumper){
+        if(gamepad2.right_trigger > 0.2){
             intake.setPower(-1);
             selector.setPosition(neutralPos);
-        }
-        if((gamepad2.right_trigger > 0.2 || auto)&& revolutions < intakeRevs){
-            intake.setPower(1);
-        } else {
+        } else if (intake.getPower() <= -1 ) {
             intake.setPower(0);
-            intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
+        if (auto) {
+            intake.setPower(1);
+        }
+        else if(gamepad2.rightBumperWasPressed()){
+            startPos = intake.getCurrentPosition();
+            intake.setPower(1);
+        } else if (intake.getCurrentPosition() > startPos + (intakeRevs * 288.0)) {
+            intake.setPower(0);
+        }
+        telemetry.addData("sort time", sortTime);
+        telemetry.addData("delta timer", deltaTimer.milliseconds());
+        telemetry.addData("Start Pos", startPos);
     }
 
     public void sortArtifact() {
