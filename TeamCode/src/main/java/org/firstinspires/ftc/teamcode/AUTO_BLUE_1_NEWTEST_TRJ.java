@@ -428,7 +428,10 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 else {
                     selector.setPosition(neutralPos);
                 }
-                return false;
+                telemetry.addData("selector pos",selector.getPosition());
+                telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
+
+                return false; // run to 8.82s for 25 max speed
             }
             public float greenPurplenessA(){
                 int  greenA = colorSensorA.green();
@@ -631,7 +634,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 //Spline to the first artifact row
 //                .fresh()
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-12.25,-30.25,Math.toRadians(-90)),Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(-18.25,-24.25,Math.toRadians(-90)),Math.toRadians(-90))
                 .waitSeconds(2)
                 //Move forward slowly to intake the first artifact and wait for sorting
 //                .fresh()
@@ -715,24 +718,24 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-//                        new ParallelAction(
-//                                purpleSideLED.colorAlliance(),     //set purple-side LED to alliance color
-////                                greenSideLED.colorAlliance(),     //set green-side LED to alliance color
-//                                flywheel.setFlywheelClose()         //turn on flywheel
-//                        ),
-//                        new ParallelAction(                 //move to obelisk position and read the pattern
-//                                trjObelisk.build(),
-//                                limelight.readPattern()
-//                        ),
+                        new ParallelAction(
+                                purpleSideLED.colorAlliance(),     //set purple-side LED to alliance color
+//                                greenSideLED.colorAlliance(),     //set green-side LED to alliance color
+                                flywheel.setFlywheelClose()         //turn on flywheel
+                        ),
+                        new ParallelAction(                 //move to obelisk position and read the pattern
+                                trjObelisk.build(),
+                                limelight.readPattern()
+                        ),
 //                        trjShoot.build(),                   //turn to the goal (currently part of the obelisk trajectory)
-                        trjObelisk.build(),
+//                        trjObelisk.build(),
 
-//                        shooters.shootPattern(),            //shoot the pattern
-//                        new ParallelAction(
-//                                intake.intakeOn(),          //turn on the intake
-//                                sort.sortArtifact(),        //sort artifacts in parallel
-//                                trjIntakeAndShoot.build()   //move to the start of the first row of artifacts, then slowly move forward one-by-one
-//                        ),
+                        shooters.shootPattern(),            //shoot the pattern
+                        new ParallelAction(
+                                intake.intakeOn(),          //turn on the intake
+                                sort.sortArtifact(),        //sort artifacts in parallel
+                                trjIntakeAndShoot.build()   //move to the start of the first row of artifacts, then slowly move forward one-by-one
+                        ),
                         trjIntakeAndShoot.build(),
 //                        intake.intakeOff(),                 //turn off intake
 //                        shooters.shootPattern(),            //shoot the pattern
