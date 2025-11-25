@@ -24,7 +24,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 @Config //Required to be able to tune parameters in FTCDashboard
 @Autonomous(name="AUTO_Test_Pathing_Brendan", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
-public class AUTO_Test_Pathing_Brenden extends LinearOpMode {
+public class AUTO_Test_Pathing_Brendan extends LinearOpMode {
     /////////////////////////////////////////////////////////////////////////
     // Declare variables
     /////////////////////////////////////////////////////////////////////////
