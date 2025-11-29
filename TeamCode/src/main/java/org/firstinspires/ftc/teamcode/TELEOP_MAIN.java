@@ -135,10 +135,10 @@ public class TELEOP_MAIN extends LinearOpMode {
         rightBackDrive = hardwareMap.get(DcMotor.class, "right-back-drive");
 
         // Establishing the direction and mode for the motors
-        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
         intake = hardwareMap.get(DcMotor.class, "motor-intake");
         selector = hardwareMap.get(Servo.class, "servo-selector");
