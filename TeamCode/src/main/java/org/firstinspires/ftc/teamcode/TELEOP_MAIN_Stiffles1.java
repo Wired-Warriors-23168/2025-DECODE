@@ -1,22 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -28,7 +26,7 @@ import java.util.List;
 
 @Config //Required to be able to tune parameters in FTCDashboard
 @TeleOp
-public class TELEOP_MAIN extends LinearOpMode {
+public class TELEOP_MAIN_Stiffles1 extends LinearOpMode {
 
     private DcMotorEx flywheel;
     private Limelight3A limelight;
@@ -84,7 +82,6 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double sortTime = 0;
     private double startPos;
     private DcMotor lift;
-    public double limWheelPower = 0.75; //drive wheel power limit
 
 
 
@@ -135,10 +132,10 @@ public class TELEOP_MAIN extends LinearOpMode {
         rightBackDrive = hardwareMap.get(DcMotor.class, "right-back-drive");
 
         // Establishing the direction and mode for the motors
-        leftFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        leftBackDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
-        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
         intake = hardwareMap.get(DcMotor.class, "motor-intake");
         selector = hardwareMap.get(Servo.class, "servo-selector");
@@ -478,7 +475,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
 
             double derivativeError = (error - previousError) / deltaTime;
-            double wheelpower = limWheelPower*((error * kP) + (kD * derivativeError));
+            double wheelpower = ((error * kP) + (kD * derivativeError));
             previousError = error;
             leftFrontDrive.setPower(wheelpower);
             leftBackDrive.setPower(wheelpower);

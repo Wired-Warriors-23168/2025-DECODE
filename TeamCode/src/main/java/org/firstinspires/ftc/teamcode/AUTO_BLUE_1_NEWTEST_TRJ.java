@@ -110,14 +110,15 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
     private int teamPipeline = 0; // blue auton
     private int patternID = 0;
     long servoLaunchTime = 250; //ms
-    long shootWaitTime = 2000; //ms
-    long sortActionTime = 15;//sec
+    long shootWaitTime = 1000; //ms
+    long shootSecondWaitTime = 2000; //ms
+    long sortActionTime = 10;//sec
     private double greenShootPos = 0.1667;  //was 0.2467
     private double purpleShootPos = 0.17;  //was 0.0933
     private double greenDownPos = 0.32;
     private double purpleDownPos = 0.02;
     private double greenHoldPos = 0.27;
-    private double purpleHoldPos = 0.07;
+    private double purpleHoldPos = 0.08;
     private double farVelocity = 1360;
     private double closeVelocity = 1200;
     private double idleVelocity = 600;
@@ -289,7 +290,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
-                    sleep(shootWaitTime);
+                    sleep(shootSecondWaitTime);
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
@@ -310,7 +311,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
-                    sleep(shootWaitTime);
+                    sleep(shootSecondWaitTime);
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
@@ -762,7 +763,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 .setTangent(Math.toRadians(45))
                 .splineToLinearHeading(new Pose2d(-20.75,-18.25,Math.toRadians(-90)),Math.toRadians(-90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(-20.75,-40,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(-20.75,-38,Math.toRadians(-90)),Math.toRadians(-90),
                         // override velocity constraint - slow down the move
                         new TranslationalVelConstraint(3),
                         new ProfileAccelConstraint(-10.0, 10.0))
@@ -791,7 +792,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 //Spline to the end pose
                 .fresh()
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(12,-18,Math.toRadians(90)),Math.toRadians(0),
+                .splineToLinearHeading(new Pose2d(12,-19,Math.toRadians(90)),Math.toRadians(0),
                         // only override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0)
                 );
