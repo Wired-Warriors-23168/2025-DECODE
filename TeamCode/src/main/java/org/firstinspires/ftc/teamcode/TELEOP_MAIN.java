@@ -84,7 +84,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double sortTime = 0;
     private double startPos;
     private DcMotor lift;
-    public double limWheelPower = 0.75; //drive wheel power limit
+    public double limWheelPower = 0.6; //drive wheel power limit
 
 
 
