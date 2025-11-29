@@ -54,12 +54,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import java.util.Arrays;
 import java.util.List;
@@ -80,9 +77,9 @@ import java.util.List;
  */
 //@Disabled
 @Config
-@Autonomous(name="AUTO_BLUE_1_NEWTEST_TRJ", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+@Autonomous(name="AUTO_BLUE_1_TRJ_WORKING_SPLINE", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Disabled
-public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
+public class AUTO_BLUE_1_TRJ_WORKING_SPLINE extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -96,8 +93,6 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
     private Servo purpleServo;
     private Servo greenServo;
     private Limelight3A limelight;
-    private DistanceSensor purpleDistanceSensor;
-    private DistanceSensor greenDistanceSensor;
 
 
     /////////////////////////////////////////////////////////////////////////
@@ -141,59 +136,57 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
      * Create all the actions for AUTO in RoadRunner
      */
 
-//    /**
-//     * Actions for the green shooter platform
-//     * Cycle the Green Shooter platform from shoot to down
-//     * Place the green shooter platform in the Hold position
-//     */
-//    public class GreenShooter {
-//        private Servo greenServo;
-//
-//        public GreenShooter(HardwareMap hardwareMap) {
-//            greenServo = hardwareMap.get(Servo.class, "greenServo");
-//            greenServo.setDirection(Servo.Direction.FORWARD);
-//        }
-//
-//        public class ShootGreen implements Action {
-//
-//            @Override
-//            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                    return false;
-//            }
-//        }
-//        public Action shootGreen(){
-//            return new ShootGreen();
-//        }
-//
-//        public class HoldGreen implements Action {
-//
-//            @Override
-//            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                greenServo.setPosition(greenHoldPos);
-//                return false;
-//            }
-//        }
-//        public Action holdGreen(){
-//            return new HoldGreen();
-//        }
-//    }
+    /**
+     * Actions for the green shooter platform
+     * Cycle the Green Shooter platform from shoot to down
+     * Place the green shooter platform in the Hold position
+     */
+    public class GreenShooter {
+        private Servo greenServo;
+
+        public GreenShooter(HardwareMap hardwareMap) {
+            greenServo = hardwareMap.get(Servo.class, "greenServo");
+            greenServo.setDirection(Servo.Direction.FORWARD);
+        }
+
+        public class ShootGreen implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                    return false;
+            }
+        }
+        public Action shootGreen(){
+            return new ShootGreen();
+        }
+
+        public class HoldGreen implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                greenServo.setPosition(greenHoldPos);
+                return false;
+            }
+        }
+        public Action holdGreen(){
+            return new HoldGreen();
+        }
+    }
 
     /**
-     * Actions for the LEDs on either side
+     * Actions for the LED on the purple side
      * Set Alliance Color
-     * Set Purple and Green when called (both sides, not individual)
+     * Set Purple when artifact present
      * Set White when obelisk pattern is read
      */
-    public class TeamLEDs {
+    public class PurpleSideLED {
         private Servo teamLED;
-//        private Servo teamLEDGreen;
 
-        public TeamLEDs(HardwareMap hardwareMap) {
+        public PurpleSideLED(HardwareMap hardwareMap) {
             teamLED = hardwareMap.get(Servo.class, "led-light");
-//            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
         }
 
         public class ColorAlliance implements Action {
@@ -202,11 +195,9 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if(colorAlliance=="BLUE"){
                   teamLED.setPosition(0.600); //blue
-//                    teamLEDGreen.setPosition(0.600); //blue
              }
              else{
                   teamLED.setPosition(0.283);//red
-//                    teamLEDGreen.setPosition(0.283);//red
              }
                 return false;
             }
@@ -220,24 +211,22 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 teamLED.setPosition(1.0); //white
-//                teamLEDGreen.setPosition(1.0); //white
-
                 return false;
             }
         public Action colorPatternRead(){ return new ColorPatternRead(); }
 
-        public class ColorSides implements Action {
+        public class ColorPurple implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 teamLED.setPosition(0.715); //purple
-//                teamLEDGreen.setPosition(0.500); //green
                 return false;
             }
         }
-        public Action colorSides(){ return new ColorSides(); }
+        public Action colorPurple(){ return new ColorPurple(); }
         }
 
     }
+
 
     /**
      * Actions for the shooters
@@ -252,8 +241,6 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             purpleServo = hardwareMap.get(Servo.class, "purpleServo");
             purpleServo.setDirection(Servo.Direction.FORWARD);
             greenServo = hardwareMap.get(Servo.class, "greenServo");
-            teamLED = hardwareMap.get(Servo.class, "led-light");
-//            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
             greenServo.setDirection(Servo.Direction.FORWARD);
         }
 
@@ -263,80 +250,39 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 //Shoot the correct pattern
                 if (patternID==21){ //GPP
-                    shootGreen();
-                    shootPurple();
-                    shootPurple();
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+
                 } else if (patternID==22){  //PGP
-                    shootPurple();
-                    shootGreen();
-                    shootPurple();
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
                 } else if (patternID==23){  //PPG
-                    shootPurple();
-                    shootPurple();
-                    shootGreen();
-                }
-
-//                if (patternID==21){ //GPP
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//
-//                } else if (patternID==22){  //PGP
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                } else if (patternID==23){  //PPG
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                }
-
-                return false;
-            }
-            public boolean shootGreen() {
-                teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
-                if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
-                    teamLED.setPosition(0.400); //green
-//                    teamLEDGreen.setPosition(0.400); //green
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
                     greenServo.setPosition(greenShootPos);
                     sleep(servoLaunchTime);
                     greenServo.setPosition(greenDownPos);
                 }
-                teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
-                return shootGreen();
-            }
-            public boolean shootPurple() {
-                teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
-                if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
-                    teamLED.setPosition(0.715); //purple
-                    purpleServo.setPosition(purpleShootPos);
-                    sleep(servoLaunchTime);
-                    purpleServo.setPosition(purpleDownPos);
-                }
-                teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
-                return shootPurple();
+
+                return false;
             }
         }
         public Action shootPattern(){
@@ -392,9 +338,6 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 //                    sleep(50);
                     tagID = 0;
 //                    limelight.pipelineSwitch(teamPipeline);
-                    //Set team LEDs so the status can be seen
-                    teamLED.setPosition(1.0);//white
-//                    teamLEDGreen.setPosition(1.0);//white
                 }
                 //Update telemetry to show obelisk was read
                 telemetry.addData("Pattern ID", patternID);
@@ -472,10 +415,6 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             selector = hardwareMap.get(Servo.class, "servo-selector");
             colorSensorA = hardwareMap.get(ColorSensor.class, "sensor-color-a");
             colorSensorB = hardwareMap.get(ColorSensor.class, "sensor-color-b");
-            greenServo = hardwareMap.get(Servo.class, "greenServo");
-            purpleServo = hardwareMap.get(Servo.class, "purpleServo");
-            purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
-            greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
             selector.setDirection(Servo.Direction.FORWARD);
         }
 
@@ -488,19 +427,6 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 }
 
                 if (sortTimer.seconds()<=15) {
-
-                    if(greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
-                        greenServo.setPosition(greenHoldPos);
-                    }
-                    else{
-                        greenServo.setPosition(greenDownPos);
-                    }
-                    if(purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
-                        purpleServo.setPosition(purpleHoldPos);
-                    }
-                    else {
-                        purpleServo.setPosition(purpleDownPos);
-                    }
 
                     sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
                     if (sumGreenPurpleness > 50) {
@@ -624,16 +550,9 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
         teamLED = hardwareMap.get(Servo.class, "led-light");
-//            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
-        purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
-        greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
 
         //initDevices(); // Initialize all motors, servos, sensors
-
-        //Set the LEDs to yellow in INIT mode after hold
-        teamLED.setPosition(0.388);//yellow
-//        teamLEDGreen.setPosition(0.388);//white
 
         // Establishing the direction and mode for the motors
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -649,9 +568,8 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         greenServo.setPosition(greenHoldPos);
         purpleServo.setPosition(purpleHoldPos);
 
-        //Set the green side LEDs to white in INIT mode after hold
-        teamLED.setPosition(0.388);//yellow
-//        teamLEDGreen.setPosition(1.0);//white
+        //Set the LED to green in INIT mode
+        teamLED.setPosition(0.4);//green
 
         telemetry.setMsTransmissionInterval(11);
 
@@ -663,7 +581,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         Sort sort = new Sort(hardwareMap);
         Flywheel flywheel = new Flywheel(hardwareMap);
         Shooters shooters = new Shooters(hardwareMap);
-        TeamLEDs teamLEDs = new TeamLEDs(hardwareMap);
+        PurpleSideLED purpleSideLED = new PurpleSideLED(hardwareMap);
 //        FieldPosition fieldPosition = new FieldPosition(hardwareMap);
 
         telemetry.addData("Status", "Initialized");
@@ -714,47 +632,86 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(-10.0, 25.0);
 
 
-        //Leave starting position, drive nad turn to obelisk to read pattern and continue to aiming at goal
-        TrajectoryActionBuilder trjObelisk = drive.actionBuilder(beginPose)
-                .waitSeconds(2) //Wait to spin-up flywheel
 
+        TrajectoryActionBuilder trjObelisk = drive.actionBuilder(beginPose)
                 //Spline to the obelisk-reading pose, then transition to the shooting pose (hopefully we read the obelisk in this time)
                 .setTangent(Math.toRadians(0))
                 .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
+//                .turnTo(Math.toRadians(-135))
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45));
+                .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45))
+                .waitSeconds(2);
 
-        //Spline to start of first row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
-        TrajectoryActionBuilder trjIntakeAndShoot1 = drive.actionBuilder(shootPose)
+//        Action trjShoot = trjObelisk.endTrajectory().fresh()
+//                .turnTo(shootHeading)
+//                .build();
+
+        TrajectoryActionBuilder trjShoot = drive.actionBuilder(obeliskPose)
+                //Turn to the shooting pose
+                .turnTo(Math.toRadians(-135))
+                .waitSeconds(2);
+
+        TrajectoryActionBuilder trjIntakeAndShoot = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
+//                .fresh()
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-20.75,-18.25,Math.toRadians(-90)),Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(-20.75,-18.25,Math.toRadians(-90)),Math.toRadians(-90),
+                        // override velocity constraint - slow down the move
+                        new TranslationalVelConstraint(10))
+                .waitSeconds(2)
                 //Move forward slowly to intake the first artifact and wait for sorting
                 .splineToLinearHeading(new Pose2d(-20.75,-40,Math.toRadians(-90)),Math.toRadians(-90),
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(3),
-                        new ProfileAccelConstraint(-10.0, 10.0))
+                        new TranslationalVelConstraint(3))
+//                .lineToY(-25.5,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(10))
+//                .waitSeconds(1)
+//
+//                //Move forward slowly to intake the second artifact and wait for sorting
+//                .lineToY(-30,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(10))
+//                .waitSeconds(1)
+//
+//                //Move forward slowly to intake the third artifact and wait for sorting
+//                .lineToY(-46,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(10))
+//                .waitSeconds(1)
 
                 //Spline to the shooting pose, back up to full speed
+//                .fresh()
                 .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-16,-10,Math.toRadians(-135)),Math.toRadians(45));
+                .splineToLinearHeading(new Pose2d(-16,-10,Math.toRadians(-135)),Math.toRadians(45),
+                        // override velocity constraint - set back to full
+                        new TranslationalVelConstraint(50.0))
+                .waitSeconds(2)
+                ;
 
-        //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
-        TrajectoryActionBuilder trjIntakeAndShoot2 = drive.actionBuilder(shootPose)
-                //Spline to the first artifact row
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(4.75,-18.25,Math.toRadians(-90)),Math.toRadians(-90))
-                //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(4.75,-40,Math.toRadians(-90)),Math.toRadians(-90),
-                        // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(3),
-                        new ProfileAccelConstraint(-10.0, 10.0))
-
-                //Spline to the shooting pose, back up to full speed
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-16,-10,Math.toRadians(-135)),Math.toRadians(45));
-
-        //Drive to end position
+//        TrajectoryActionBuilder trjMove1 = drive.actionBuilder(intakePose1).fresh()
+//                .lineToY(firstArtifact,
+//                        // override velocity constraint - slow down the move
+//                new TranslationalVelConstraint(20.0)
+//                );
+//
+//        TrajectoryActionBuilder trjMove2 = drive.actionBuilder(intakePose1).fresh()
+//                .lineToY(secondArtifact,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(20.0)
+//                );
+//
+//        TrajectoryActionBuilder trjMove3 = drive.actionBuilder(intakePose1).fresh()
+//                .lineToY(thirdArtifact,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(20.0)
+//                );
+//
+//        TrajectoryActionBuilder trjShootPose = drive.actionBuilder(intakePose1).fresh()
+//                .splineToLinearHeading(shootPose,Math.toRadians(0),
+//                        // override velocity constraint - set back to full
+//                        new TranslationalVelConstraint(50.0)
+//                );
         TrajectoryActionBuilder trjEndPose = drive.actionBuilder(shootPose)
                 //Spline to the end pose
                 .fresh()
@@ -763,7 +720,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                         // only override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0)
                 );
-        //Call end position as end of the trajectory
+
         Action trajectoryActionCloseout = trjEndPose.endTrajectory().fresh()
                 .build();
 
@@ -776,32 +733,41 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         if(isStopRequested()) return;
 
+//        //TODO add actions for the LEDs
+//        if(colorAlliance=="BLUE"){
+//            teamLED.setPosition(0.600); //blue
+//        }
+//        else{
+//            teamLED.setPosition(0.283);//red
+//        }
+
+        //flywheel.setVelocity(closeVelocity);
 
         Actions.runBlocking(
                 new SequentialAction(
                         new ParallelAction(
-                                teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                                purpleSideLED.colorAlliance(),     //set purple-side LED to alliance color
+//                                greenSideLED.colorAlliance(),     //set green-side LED to alliance color
                                 flywheel.setFlywheelClose()         //turn on flywheel
                         ),
                         new ParallelAction(                 //move to obelisk position and read the pattern
                                 trjObelisk.build(),
                                 limelight.readPattern()
                         ),
+//                        trjShoot.build(),                   //turn to the goal (currently part of the obelisk trajectory)
+//                        trjObelisk.build(),
+
                         shooters.shootPattern(),            //shoot the pattern
                         intake.intakeOn(),                  //turn on the intake
                         new ParallelAction(
+//                                intake.intakeOn(),          //turn on the intake
                                 sort.sortArtifact(),        //sort artifacts in parallel
-                                trjIntakeAndShoot1.build()   //move to the start of the FIRST row of artifacts, then slowly move forward
+                                trjIntakeAndShoot.build()   //move to the start of the first row of artifacts, then slowly move forward one-by-one
                         ),
+//                        sort.sortArtifact()
+//                        trjIntakeAndShoot.build(),
                         intake.intakeOff(),                 //turn off intake
                         shooters.shootPattern(),            //shoot the pattern
-                        teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-//                        new ParallelAction(
-//                                sort.sortArtifact(),        //sort artifacts in parallel
-//                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-//                        ),
-//                        intake.intakeOff(),                 //turn off intake
-//                        shooters.shootPattern(),            //shoot the pattern
                         flywheel.setFlywheelStop(),         //stop the flywheel
                         trjEndPose.build(),                 //drive to end pose
                         trajectoryActionCloseout            //STOP
