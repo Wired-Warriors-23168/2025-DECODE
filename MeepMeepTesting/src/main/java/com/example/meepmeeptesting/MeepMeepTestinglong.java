@@ -19,18 +19,18 @@ public class MeepMeepTestinglong {
                 .setConstraints(85, 75, Math.toRadians(180), Math.toRadians(180), 17.5)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(62.25, -14.25, Math.toRadians(180)))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(62, -14.5, Math.toRadians(180)))
                 .setTangent(Math.toRadians(0))
 //                                .splineToConstantHeading(new Vector2d(-42,-18),Math.toRadians(90))
-                .splineToLinearHeading(new Pose2d(55,-18,Math.toRadians(-115)),Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(55,-18,Math.toRadians(-160)),Math.toRadians(180))
 //                        .waitSeconds(1)
 //                .turnTo(Math.toRadians(-135))
 //                .setTangent(Math.toRadians(45))
 //                .splineToLinearHeading(new Pose2d(-20,-20,Math.toRadians(-135)),Math.toRadians(45))
 //                        .waitSeconds(1)
 
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(37,-30.25,Math.toRadians(-90)),Math.toRadians(-90))
+                .setTangent(Math.toRadians(-135))
+                .splineToLinearHeading(new Pose2d(20.75,-30.25,Math.toRadians(-90)),Math.toRadians(-90))
                 .lineToY(-36,
                         // override velocity constraint - slow down the move
                         new TranslationalVelConstraint(20.0))
