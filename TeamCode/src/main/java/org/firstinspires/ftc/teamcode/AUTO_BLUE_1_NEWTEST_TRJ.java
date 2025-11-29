@@ -93,6 +93,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
     private DcMotor rightFrontDrive;
     private DcMotor rightBackDrive;
     private Servo teamLED;
+    private Servo teamLEDGreen;
     private Servo purpleServo;
     private Servo greenServo;
     private Limelight3A limelight;
@@ -192,11 +193,11 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
      */
     public class TeamLEDs {
         private Servo teamLED;
-//        private Servo teamLEDGreen;
+        private Servo teamLEDGreen;
 
         public TeamLEDs(HardwareMap hardwareMap) {
             teamLED = hardwareMap.get(Servo.class, "led-light");
-//            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
+            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
         }
 
         public class ColorAlliance implements Action {
@@ -205,11 +206,11 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 if(colorAlliance=="BLUE"){
                   teamLED.setPosition(0.600); //blue
-//                    teamLEDGreen.setPosition(0.600); //blue
+                    teamLEDGreen.setPosition(0.600); //blue
              }
              else{
                   teamLED.setPosition(0.283);//red
-//                    teamLEDGreen.setPosition(0.283);//red
+                    teamLEDGreen.setPosition(0.283);//red
              }
                 return false;
             }
@@ -223,7 +224,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 teamLED.setPosition(1.0); //white
-//                teamLEDGreen.setPosition(1.0); //white
+                teamLEDGreen.setPosition(1.0); //white
 
                 return false;
             }
@@ -233,7 +234,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 teamLED.setPosition(0.715); //purple
-//                teamLEDGreen.setPosition(0.500); //green
+                teamLEDGreen.setPosition(0.500); //green
                 return false;
             }
         }
@@ -257,7 +258,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             purpleServo.setDirection(Servo.Direction.FORWARD);
             greenServo = hardwareMap.get(Servo.class, "greenServo");
             teamLED = hardwareMap.get(Servo.class, "led-light");
-//            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
+            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
             greenServo.setDirection(Servo.Direction.FORWARD);
         }
 
@@ -329,16 +330,16 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 }
 
                 teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
+                    teamLEDGreen.setPosition(1.0); //white
                 if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
                     teamLED.setPosition(0.400); //green
-//                    teamLEDGreen.setPosition(0.400); //green
+                    teamLEDGreen.setPosition(0.400); //green
                     greenServo.setPosition(greenShootPos);
                     sleep(servoLaunchTime);
                     greenServo.setPosition(greenDownPos);
                 }
                 teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
+                    teamLEDGreen.setPosition(1.0); //white
 //                return shootGreen();
 //                if(greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
 //                    return false;
@@ -352,7 +353,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                     shootTimer = new ElapsedTime();
                 }
                 teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
+                    teamLEDGreen.setPosition(1.0); //white
                 if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
                     teamLED.setPosition(0.715); //purple
                     purpleServo.setPosition(purpleShootPos);
@@ -360,7 +361,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                     purpleServo.setPosition(purpleDownPos);
                 }
                 teamLED.setPosition(1.0); //white
-//                    teamLEDGreen.setPosition(1.0); //white
+                    teamLEDGreen.setPosition(1.0); //white
 //                return shootPurple();
 //                if(purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
 //                    return false;
@@ -425,7 +426,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 //                    limelight.pipelineSwitch(teamPipeline);
                     //Set team LEDs so the status can be seen
                     teamLED.setPosition(1.0);//white
-//                    teamLEDGreen.setPosition(1.0);//white
+                    teamLEDGreen.setPosition(1.0);//white
                 }
                 //Update telemetry to show obelisk was read
                 telemetry.addData("Pattern ID", patternID);
@@ -655,7 +656,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
         teamLED = hardwareMap.get(Servo.class, "led-light");
-//            teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
+        teamLEDGreen = hardwareMap.get(Servo.class, "led-light-green");
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
         greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
@@ -664,7 +665,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         //Set the LEDs to yellow in INIT mode after hold
         teamLED.setPosition(0.388);//yellow
-//        teamLEDGreen.setPosition(0.388);//white
+        teamLEDGreen.setPosition(0.388);//white
 
         // Establishing the direction and mode for the motors
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -682,7 +683,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         //Set the green side LEDs to white in INIT mode after hold
         teamLED.setPosition(0.388);//yellow
-//        teamLEDGreen.setPosition(1.0);//white
+        teamLEDGreen.setPosition(1.0);//white
 
         telemetry.setMsTransmissionInterval(11);
 
