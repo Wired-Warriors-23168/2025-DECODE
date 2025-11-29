@@ -13,7 +13,10 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -39,7 +42,8 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double startServoTime = 0;
     private boolean seenobelisk = false;
 
-    private int teamPipeline = 0; // blue auton
+    private int teamPipeline = 1; // 0 blue 1 red
+    private int teamID = 24; // 20 blue 24 red
     private int patternID = 0;
     private int ballnumber = 0;
     private double greenShootPos = 0.1667;  //was 0.2467
@@ -48,23 +52,25 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double purpleDownPos = 0.02;
     private double greenHoldPos = 0.27;
     private double purpleHoldPos = 0.07;
-    private double purpleFLapHoldPos = 0.0;
-    private double purpleFLapDownPos = 0.3;
-    private double farVelocity = 1450;
+    private double purpleTargetPos;
+    private double greenTargetPos;
+    private double farVelocity = 1400;
     private double closeVelocity = 1200;
     private double idleVelocity = 0;
     private double targetVelocity = 600;
+//    private PIDFCoefficients flywheelpid = new PIDFCoefficients(550, 0.0, 0.0, 0.0);
     private boolean shooterOn = false;
     public double txLimelight;
     public double tyLimelight;
     double tx = 0;
     double ty = 0;
+    private double kP = 0.028;
+   private double kD = 0;
     int tagID;
     double deltaTime;
 
     private DcMotor intake;
     private Servo selector;
-    private Servo purpleHoldFlap;
     private ColorSensor colorSensorA;
     private ColorSensor colorSensorB;
     private CRServo conveyorG;
@@ -73,7 +79,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double neutralPos = 140.0/300.0;
     private boolean onewaysort = false;
     private int sortToggle = 0;
-    private double revolutions;
+    private double sortDelay = 500;
     private double intakeRevs = 2.5;
     private double sortTime = 0;
     private double startPos;
@@ -107,18 +113,17 @@ public class TELEOP_MAIN extends LinearOpMode {
         limelight = hardwareMap.get(Limelight3A.class,"limelight");
         greenServo = hardwareMap.get(Servo.class, "greenServo");
         purpleServo = hardwareMap.get(Servo.class, "purpleServo");
-        purpleHoldFlap = hardwareMap.get(Servo.class, "purpleHoldFlap");
         poseOTOS = hardwareMap.get(SparkFunOTOS.class, "sensor-otos");
         purpleDistanceSensor = hardwareMap.get(DistanceSensor.class, "purpleDistanceSensor");
         greenDistanceSensor = hardwareMap.get(DistanceSensor.class, "greenDistanceSensor");
 
  //       flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, shooterpid);
+ //       +
+        //       flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, flywheelpid);
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
-        purpleHoldFlap.setDirection(Servo.Direction.FORWARD);
 
         limelight.start();
         limelight.pipelineSwitch(2);
@@ -177,7 +182,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 aimBot();
                 intakeSort(false);
                 drivetrain();
-                lift();
+//                lift();
 
                 FtcDashboard dashboard = FtcDashboard.getInstance();
                 TelemetryPacket packet = new TelemetryPacket();
@@ -214,16 +219,14 @@ public class TELEOP_MAIN extends LinearOpMode {
             case IDLE:
                 flywheel.setVelocity(idleVelocity);
                 if(greenBallDetected()){
-                    greenServo.setPosition(greenHoldPos);
-                }
-                else{
-                    greenServo.setPosition(greenDownPos);
+                    greenTargetPos = greenHoldPos;
+                } else {
+                    greenTargetPos = greenDownPos;
                 }
                 if(purpleBallDetected()){
-                    purpleServo.setPosition(purpleHoldPos);
-                }
-                else {
-                    purpleServo.setPosition(purpleDownPos);
+                    purpleTargetPos = purpleHoldPos;
+                } else {
+                    purpleTargetPos = purpleDownPos;
                 }
                 break;
             case WAITING_FOR_FLYWHEEL:
@@ -236,18 +239,14 @@ public class TELEOP_MAIN extends LinearOpMode {
             case IDLE_WITH_FLYWHEEL:
                 flywheel.setVelocity(targetVelocity);
                 if(greenBallDetected()){
-                    greenServo.setPosition(greenHoldPos);
-                }
-                else{
-                    greenServo.setPosition(greenDownPos);
+                    greenTargetPos = greenHoldPos;
+                } else {
+                    greenTargetPos = greenDownPos;
                 }
                 if(purpleBallDetected()){
-                    purpleServo.setPosition(purpleHoldPos);
-                    purpleHoldFlap.setPosition(purpleFLapHoldPos);
-                }
-                else{
-                    purpleServo.setPosition(purpleDownPos);
-                    purpleHoldFlap.setPosition(purpleFLapDownPos);
+                    purpleTargetPos = purpleHoldPos;
+                } else {
+                    purpleTargetPos = purpleDownPos;
                 }
                 break;
         }
@@ -280,15 +279,15 @@ public class TELEOP_MAIN extends LinearOpMode {
 
         if (gamepad2.y) {  //&& result.isValid()+
 
-            if (patternID == 22 && tagID == 20) {
+            if (patternID == 22 && tagID == teamID) {
                 if (Math.abs(ty) < 5) {
                     Pattern22(); // Purple green purple
                 }
-            } else if (patternID == 21 && tagID == 20) {
+            } else if (patternID == 21 && tagID == teamID) {
                 if (Math.abs(ty) < 5) {
                     Pattern21(); // Green purple purple
                 }
-            } else if (patternID == 23 && tagID == 20) {
+            } else if (patternID == 23 && tagID == teamID) {
                 if (Math.abs(ty) < 5) {
                     Pattern23(); // Purple purple green
                 }
@@ -296,15 +295,25 @@ public class TELEOP_MAIN extends LinearOpMode {
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
             purpleServo.setPosition(purpleShootPos);
             sleep(250);
-            purpleServo.setPosition(purpleDownPos);
         } else if (gamepad2.dpadLeftWasPressed()) {      // Forced shooting: Green
             greenServo.setPosition(greenShootPos);
             sleep(250);
-            greenServo.setPosition(greenDownPos);
         }
-        if (gamepad2.x) {
+        if (!gamepad2.dpad_left){
+            greenServo.setPosition(greenTargetPos);
+        }
+        if (!gamepad2.dpad_right) {
+            purpleServo.setPosition(purpleTargetPos);
+        }
+        if (gamepad2.xWasPressed()) {
             ballnumber = 1;
-            shooterState = ShooterState.IDLE_WITH_FLYWHEEL;
+            if (shooterState == ShooterState.IDLE) {
+                shooterState = ShooterState.IDLE_WITH_FLYWHEEL;
+            } else {
+                shooterState = ShooterState.IDLE;
+                ballnumber = 0;
+            }
+
         }
         if (gamepad1.aWasPressed()) {
             shooterOn = !shooterOn;
@@ -313,6 +322,19 @@ public class TELEOP_MAIN extends LinearOpMode {
             targetVelocity = closeVelocity;
         } else if (gamepad2.bWasPressed()) {
             targetVelocity = farVelocity;
+        }
+        if (gamepad1.dpad_up) {
+            kP += 0.001;
+            sleep(250);
+        } else if (gamepad1.dpad_down) {
+            kP -= 0.001;
+            sleep(250);
+        } else if (gamepad1.dpad_right) {
+            kD += 0.00005;
+            sleep(250);
+        } else if (gamepad1.dpad_left) {
+            kD -= 0.00005;
+            sleep(250);
         }
         telemetry.addData("timer start", startServoTime);
         telemetry.addData("Shooter On", shooterOn);
@@ -324,6 +346,8 @@ public class TELEOP_MAIN extends LinearOpMode {
         telemetry.addData("Flywheel Power", flywheel.getPower());
         telemetry.addData("Target X", tx);
         telemetry.addData("Target Y", ty);
+        telemetry.addData("kD", kD);
+        telemetry.addData("kP", kP);
     }
     private void Pattern22() {
         if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -355,6 +379,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 purpleServo.setPosition(purpleDownPos);
                 stage = 1;
                 ballnumber = 0;
+                shooterState = ShooterState.IDLE;
             }
         }
     }
@@ -390,6 +415,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 purpleServo.setPosition(purpleDownPos);
                 stage = 1;
                 ballnumber = 0;
+                shooterState = ShooterState.IDLE;
             }
         }
     }
@@ -423,6 +449,7 @@ public class TELEOP_MAIN extends LinearOpMode {
                 greenServo.setPosition(greenDownPos);
                 stage = 1;
                 ballnumber = 0;
+                shooterState = ShooterState.IDLE;
             }
         }
     }
@@ -433,27 +460,38 @@ public class TELEOP_MAIN extends LinearOpMode {
         int redX = -71;
         int redY = 71;
         double angle;
-        double kP = (1.0/36.0);
-        double kD = 0;
+
         // spin drive with p controller
-        double x = blueX - pos.x;
-        double y = blueY - pos.y;
-        angle = Math.atan2(x,y);
-         double error = angle - pos.h;
-         double derivativeError = (error - previousError) / deltaTime;
-        double wheelpower = ((error * kP) + (kD * derivativeError));
-        previousError = error;
-        leftFrontDrive.setPower(wheelpower);
-        leftBackDrive.setPower(wheelpower);
-        rightFrontDrive.setPower(wheelpower);
-        rightBackDrive.setPower(wheelpower);
-        telemetry.addData("wheel power", wheelpower);
+        double x = redX - pos.x;
+        double y = redY - pos.y;
+        angle = Math.atan2(y, x);
+        double error;
+        if (Math.toDegrees(angle) > 20) {
+            error = Math.toDegrees(angle) - pos.h;
+            kP = (1.0 / 36.0);
+            kD = 0;
+        } else {
+            error = ty;
+//            kP = 0;
+//            kD = 0;
+        }
+
+            double derivativeError = (error - previousError) / deltaTime;
+            double wheelpower = ((error * kP) + (kD * derivativeError));
+            previousError = error;
+            leftFrontDrive.setPower(wheelpower);
+            leftBackDrive.setPower(wheelpower);
+            rightFrontDrive.setPower(wheelpower);
+            rightBackDrive.setPower(wheelpower);
+            telemetry.addData("wheel power", wheelpower);
+            telemetry.addData("pos x", pos.x);
+            telemetry.addData("pos y", pos.y);
+            telemetry.addData("pos h", pos.h);
 
     }
     public void intakeSort(boolean auto) {
         sortArtifact();
 
-        revolutions = intake.getCurrentPosition()/288.0;
         intake.getCurrentPosition();
 
         if(gamepad2.right_trigger > 0.2){
@@ -471,9 +509,6 @@ public class TELEOP_MAIN extends LinearOpMode {
         } else if (intake.getCurrentPosition() > startPos + (intakeRevs * 288.0)) {
             intake.setPower(0);
         }
-        telemetry.addData("sort time", sortTime);
-        telemetry.addData("delta timer", deltaTimer.milliseconds());
-        telemetry.addData("Start Pos", startPos);
     }
 
     public void sortArtifact() {
@@ -495,11 +530,11 @@ public class TELEOP_MAIN extends LinearOpMode {
         }
         else if(sumGreenPurpleness > 50){
             selector.setPosition(neutralPos - sortOffset);
-            sortTime = 1000 + deltaTimer.milliseconds();
+            sortTime = sortDelay + deltaTimer.milliseconds();
         }
         else if (sumGreenPurpleness < -50 ) {
             selector.setPosition(neutralPos + sortOffset);
-            sortTime = 1000 + deltaTimer.milliseconds();
+            sortTime = sortDelay + deltaTimer.milliseconds();
         }
         else if (sortTime <= deltaTimer.milliseconds()) {
             selector.setPosition(neutralPos);
@@ -518,19 +553,19 @@ public class TELEOP_MAIN extends LinearOpMode {
         return greenB - purpleB;
     }
 
-    private void lift() {
-        if (runtime.time() > 100) {
-
-            telemetry.addData("expected lift position", lift.getTargetPosition());
-            telemetry.addData("lift position", lift.getCurrentPosition());
-
-            if (gamepad1.start) {
-                lift.setTargetPosition(extensionposition);
-            } else if (gamepad1.back) {
-                lift.setTargetPosition(packagedposition);
-            }
-        }
-    }
+//    private void lift() {
+//        if (runtime.time() > 100) {
+//
+//            telemetry.addData("expected lift position", lift.getTargetPosition());
+//            telemetry.addData("lift position", lift.getCurrentPosition());
+//
+//            if (gamepad1.start) {
+//                lift.setTargetPosition(extensionposition);
+//            } else if (gamepad1.back) {
+//                lift.setTargetPosition(packagedposition);
+//            }
+//        }
+//    }
     private void drivetrain() {
         double x;
         double y;
@@ -549,13 +584,23 @@ public class TELEOP_MAIN extends LinearOpMode {
         double frontRightPower = limitDrivePower * (y - x - rx) / denominator;
         double backRightPower = limitDrivePower * (y + x - rx) / denominator;
 
-        if (gamepad2.y){
+
+//        if (gamepad1.yWasPressed()) {
+//            limelight.start();
+//        }
+//        if (gamepad1.yWasReleased()) {
+//            limelight.pause();
+//        }
+        if (gamepad1.y){
             rotate();
         } else {
             leftFrontDrive.setPower(frontLeftPower);
             leftBackDrive.setPower(backLeftPower);
             rightFrontDrive.setPower(frontRightPower);
             rightBackDrive.setPower(backRightPower);
+        }
+        if (gamepad1.start) {
+            poseOTOS.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
         }
 
         SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
