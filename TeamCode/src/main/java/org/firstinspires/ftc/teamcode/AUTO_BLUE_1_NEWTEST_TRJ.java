@@ -109,7 +109,9 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
     private int teamPipeline = 0; // blue auton
     private int patternID = 0;
-    long servoLaunchTime = 1500; //ms
+    long servoLaunchTime = 250; //ms
+    long shootWaitTime = 2000; //ms
+    long sortActionTime = 15;//sec
     private double greenShootPos = 0.1667;  //was 0.2467
     private double purpleShootPos = 0.17;  //was 0.0933
     private double greenDownPos = 0.32;
@@ -117,7 +119,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
     private double greenHoldPos = 0.27;
     private double purpleHoldPos = 0.07;
     private double farVelocity = 1360;
-    private double closeVelocity = 1360;
+    private double closeVelocity = 1200;
     private double idleVelocity = 600;
     private double targetVelocity = 600;
     private double sortOffset = 55.0/300.0;
@@ -247,6 +249,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
     public class Shooters {
         private Servo greenServo;
         private Servo purpleServo;
+        ElapsedTime shootTimer;
 
         public Shooters(HardwareMap hardwareMap) {
             purpleServo = hardwareMap.get(Servo.class, "purpleServo");
@@ -262,56 +265,68 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
                 //Shoot the correct pattern
-                if (patternID==21){ //GPP
-                    shootGreen();
-                    shootPurple();
-                    shootPurple();
-                } else if (patternID==22){  //PGP
-                    shootPurple();
-                    shootGreen();
-                    shootPurple();
-                } else if (patternID==23){  //PPG
-                    shootPurple();
-                    shootPurple();
-                    shootGreen();
-                }
-
 //                if (patternID==21){ //GPP
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//
+//                    shootGreen();
+//                    shootPurple();
+//                    shootPurple();
 //                } else if (patternID==22){  //PGP
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
+//                    shootPurple();
+//                    shootGreen();
+//                    shootPurple();
 //                } else if (patternID==23){  //PPG
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    purpleServo.setPosition(purpleShootPos);
-//                    sleep(servoLaunchTime);
-//                    purpleServo.setPosition(purpleDownPos);
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
+//                    shootPurple();
+//                    sleep(shootWaitTime);
+//                    shootPurple();
+//                    sleep(shootWaitTime);
+//                    shootGreen();
 //                }
+//
+                if (patternID==21){ //GPP
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                    sleep(shootWaitTime);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                    sleep(shootWaitTime);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+
+                } else if (patternID==22){  //PGP
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                    sleep(shootWaitTime);
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                    sleep(shootWaitTime);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                } else if (patternID==23){  //PPG
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                    sleep(shootWaitTime);
+                    purpleServo.setPosition(purpleShootPos);
+                    sleep(servoLaunchTime);
+                    purpleServo.setPosition(purpleDownPos);
+                    sleep(shootWaitTime);
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                }
 
                 return false;
             }
             public boolean shootGreen() {
+                if (shootTimer == null) {
+                    shootTimer = new ElapsedTime();
+                }
+
                 teamLED.setPosition(1.0); //white
 //                    teamLEDGreen.setPosition(1.0); //white
                 if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
@@ -323,9 +338,18 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 }
                 teamLED.setPosition(1.0); //white
 //                    teamLEDGreen.setPosition(1.0); //white
-                return shootGreen();
+//                return shootGreen();
+//                if(greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
+//                    return false;
+//                } else{
+//                    return true;
+//                }
+                return shootTimer.seconds()<=3;
             }
             public boolean shootPurple() {
+                if (shootTimer == null) {
+                    shootTimer = new ElapsedTime();
+                }
                 teamLED.setPosition(1.0); //white
 //                    teamLEDGreen.setPosition(1.0); //white
                 if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
@@ -336,7 +360,13 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 }
                 teamLED.setPosition(1.0); //white
 //                    teamLEDGreen.setPosition(1.0); //white
-                return shootPurple();
+//                return shootPurple();
+//                if(purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
+//                    return false;
+//                } else{
+//                    return true;
+//                }
+                return shootTimer.seconds()<=3;
             }
         }
         public Action shootPattern(){
@@ -487,7 +517,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                     sortTimer = new ElapsedTime();
                 }
 
-                if (sortTimer.seconds()<=15) {
+                if (sortTimer.seconds()<=sortActionTime) {
 
                     if(greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
                         greenServo.setPosition(greenHoldPos);
@@ -517,7 +547,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                     telemetry.addData("sumGreenPurpleness", sumGreenPurpleness);
                     telemetry.update();
                 }
-                return sortTimer.seconds()<=15;  // run to 8.82s for 25 max speed
+                return sortTimer.seconds()<=sortActionTime;  // run to 8.82s for 25 max speed
 //                return false; // run to 8.82s for 25 max speed
             }
             public float greenPurplenessA(){
@@ -716,11 +746,13 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         //Leave starting position, drive nad turn to obelisk to read pattern and continue to aiming at goal
         TrajectoryActionBuilder trjObelisk = drive.actionBuilder(beginPose)
-                .waitSeconds(2) //Wait to spin-up flywheel
+//                .waitSeconds(2) //Wait to spin-up flywheel
 
                 //Spline to the obelisk-reading pose, then transition to the shooting pose (hopefully we read the obelisk in this time)
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
+                .splineToLinearHeading(new Pose2d(-42,-18,Math.toRadians(145)),Math.toRadians(45))
+//                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
+
                 .setTangent(Math.toRadians(45))
                 .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45));
 
