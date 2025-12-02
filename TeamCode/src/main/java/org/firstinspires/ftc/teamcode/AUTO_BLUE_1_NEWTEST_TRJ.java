@@ -114,16 +114,17 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
     long shootWaitTime = 1000; //ms
     long shootSecondWaitTime = 2000; //ms
     long sortActionTime = 10;//sec
-    private double greenShootPos = 0.1667;  //was 0.2467
-    private double purpleShootPos = 0.17;  //was 0.0933
+    private double greenShootPos = 0.15;  //was 0.2467
+    private double purpleShootPos = 0.22;  //was 0.0933
     private double greenDownPos = 0.32;
     private double purpleDownPos = 0.02;
-    private double greenHoldPos = 0.27;
-    private double purpleHoldPos = 0.08;
+    private double greenHoldPos = 0.25;
+    private double purpleHoldPos = 0.10;
     private double farVelocity = 1360;
-    private double closeVelocity = 1200;
+    private double closeVelocity = 1260;
     private double idleVelocity = 600;
     private double targetVelocity = 600;
+    //    private PIDFCoefficients flywheelpid = new PIDFCoefficients(550, 0.0, 0.0, 0.0);
     private double sortOffset = 55.0/300.0;
     private double neutralPos = 140.0/300.0;
     int tagID;
@@ -512,9 +513,9 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         }
 
         public class SortArtifact implements Action {
+
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-
                 if (sortTimer == null) {
                     sortTimer = new ElapsedTime();
                 }
@@ -582,6 +583,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
         public Flywheel(HardwareMap hardwareMap) {
             flywheel = hardwareMap.get(DcMotorEx.class, "motor-flywheel");
             flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            //       flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, flywheelpid);
             flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         }
 
@@ -740,7 +742,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
         //Setting the base velocity and angular velocity constraints
         VelConstraint baseVelConstraint = new MinVelConstraint(Arrays.asList(
-                new TranslationalVelConstraint(50.0),
+                new TranslationalVelConstraint(40.0),
                 new AngularVelConstraint(Math.PI / 2)
         ));
         AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(-10.0, 25.0);
@@ -752,36 +754,39 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
 
                 //Spline to the obelisk-reading pose, then transition to the shooting pose (hopefully we read the obelisk in this time)
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(-42,-18,Math.toRadians(145)),Math.toRadians(45))
+                .splineToLinearHeading(new Pose2d(-42,-18,Math.toRadians(165)),Math.toRadians(0))
 //                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
 
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45));
+                .setTangent(Math.toRadians(0))
+                .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45))
+                .waitSeconds(2); //Wait to spin-up flywheel
+
+
 
         //Spline to start of first row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
         TrajectoryActionBuilder trjIntakeAndShoot1 = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-20.75,-18.25,Math.toRadians(-90)),Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(-25.75,-16.25,Math.toRadians(-90)),Math.toRadians(-90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(-20.75,-38,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(-25.75,-30,Math.toRadians(-90)),Math.toRadians(-90),
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(3),
+                        new TranslationalVelConstraint(2),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
                 .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-16,-10,Math.toRadians(-135)),Math.toRadians(45));
+                .splineToLinearHeading(new Pose2d(-16,-6,Math.toRadians(-135)),Math.toRadians(45));
 
         //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
         TrajectoryActionBuilder trjIntakeAndShoot2 = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(4.75,-18.25,Math.toRadians(-90)),Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(-0.25,-14.75,Math.toRadians(-90)),Math.toRadians(-90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(4.75,-40,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(-0.25,-28,Math.toRadians(-90)),Math.toRadians(-90),
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(3),
+                        new TranslationalVelConstraint(2),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
@@ -793,7 +798,7 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                 //Spline to the end pose
                 .fresh()
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(12,-19,Math.toRadians(90)),Math.toRadians(0),
+                .splineToLinearHeading(new Pose2d(12,-20,Math.toRadians(90)),Math.toRadians(0),
                         // only override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0)
                 );
@@ -830,12 +835,13 @@ public class AUTO_BLUE_1_NEWTEST_TRJ extends LinearOpMode {
                         intake.intakeOff(),                 //turn off intake
                         shooters.shootPattern(),            //shoot the pattern
                         teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-//                        new ParallelAction(
-//                                sort.sortArtifact(),        //sort artifacts in parallel
-//                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-//                        ),
-//                        intake.intakeOff(),                 //turn off intake
-//                        shooters.shootPattern(),            //shoot the pattern
+                        new ParallelAction(
+                                sort.sortArtifact(),        //sort artifacts in parallel
+                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+                        ),
+                        intake.intakeOff(),                 //turn off intake
+                        shooters.shootPattern(),            //shoot the pattern
+                        teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                         flywheel.setFlywheelStop(),         //stop the flywheel
                         trjEndPose.build(),                 //drive to end pose
                         trajectoryActionCloseout            //STOP
