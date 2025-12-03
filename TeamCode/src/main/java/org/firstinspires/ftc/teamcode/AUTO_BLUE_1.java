@@ -56,6 +56,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -121,15 +122,18 @@ public class AUTO_BLUE_1 extends LinearOpMode {
     private double greenHoldPos = 0.25;
     private double purpleHoldPos = 0.10;
     private double farVelocity = 1360;
-    private double closeVelocity = 1260;
+    private double closeVelocity = 1340;
     private double idleVelocity = 600;
     private double targetVelocity = 600;
-    //    private PIDFCoefficients flywheelpid = new PIDFCoefficients(550, 0.0, 0.0, 0.0);
+        private PIDFCoefficients flywheelpid = new PIDFCoefficients(550, 0.0, 0.0, 0.0);
     private double sortOffset = 55.0/300.0;
     private double neutralPos = 140.0/300.0;
     int tagID;
     double deltaTime;
     public static final String ALLIANCE_KEY = "Alliance";
+//    public static final String POSE_X_KEY = 0;
+//    public static final String POSE_Y_KEY = "Alliance";
+//    public static final String POSE_H_KEY = "Alliance";
     public String colorAlliance = "BLUE";
 
 
@@ -550,8 +554,15 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                     telemetry.addData("sumGreenPurpleness", sumGreenPurpleness);
                     telemetry.update();
                 }
-                return sortTimer.seconds()<=sortActionTime;  // run to 8.82s for 25 max speed
+                if (sortTimer.seconds()<=sortActionTime){
+                    return true;
+                } else{
+                    sortTimer.reset();
+                    return false;
+                }
+//                return sortTimer.seconds()<=sortActionTime;  // run to 8.82s for 25 max speed
 //                return false; // run to 8.82s for 25 max speed
+
             }
             public float greenPurplenessA(){
                 int  greenA = colorSensorA.green();
@@ -583,7 +594,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         public Flywheel(HardwareMap hardwareMap) {
             flywheel = hardwareMap.get(DcMotorEx.class, "motor-flywheel");
             flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            //       flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, flywheelpid);
+            flywheel.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, flywheelpid);
             flywheel.setDirection(DcMotorEx.Direction.REVERSE);
         }
 
@@ -713,9 +724,9 @@ public class AUTO_BLUE_1 extends LinearOpMode {
         Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(145));  //pose to read the obelisk
         double shootHeading = -135;
         Pose2d shootPose = new Pose2d(-20,-20,Math.toRadians(shootHeading));    //pose to shoot the pattern
-        Pose2d intakePose1 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from first row
+        Pose2d intakePose1 = new Pose2d(-30,-32,Math.toRadians(-135));  //pose to intake artifacts from first row
 //        Pose2d intakePose2 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from second row
-        Pose2d endPose = new Pose2d(12,-18,Math.toRadians(90));      //pose at end of AUTO
+        Pose2d endPose = new Pose2d(12,-17,Math.toRadians(90));      //pose at end of AUTO
         double firstArtifact = -36;     //Y-position of the first artifact in the row
         double secondArtifact = -41;    //Y-position of the second artifact in the row
         double thirdArtifact = -46;     //Y-position of the third artifact in the row
@@ -769,9 +780,9 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                 .setTangent(Math.toRadians(45))
                 .splineToLinearHeading(new Pose2d(-25.75,-16.25,Math.toRadians(-90)),Math.toRadians(-90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(-25.75,-30,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(-25.75,-32,Math.toRadians(-90)),Math.toRadians(-90),
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(2),
+                        new TranslationalVelConstraint(2.5),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
@@ -786,7 +797,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                 //Move forward slowly to intake the first artifact and wait for sorting
                 .splineToLinearHeading(new Pose2d(-0.25,-28,Math.toRadians(-90)),Math.toRadians(-90),
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(2),
+                        new TranslationalVelConstraint(2.5),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
@@ -818,15 +829,13 @@ public class AUTO_BLUE_1 extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
-                        new ParallelAction(
-                                teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                                flywheel.setFlywheelClose()         //turn on flywheel
-                        ),
+                        flywheel.setFlywheelClose(),         //turn on flywheel
                         new ParallelAction(                 //move to obelisk position and read the pattern
                                 trjObelisk.build(),
                                 limelight.readPattern()
                         ),
                         shooters.shootPattern(),            //shoot the pattern
+                        teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                         intake.intakeOn(),                  //turn on the intake
                         new ParallelAction(
                                 sort.sortArtifact(),        //sort artifacts in parallel
@@ -835,6 +844,7 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                         intake.intakeOff(),                 //turn off intake
                         shooters.shootPattern(),            //shoot the pattern
                         teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                        intake.intakeOn(),
                         new ParallelAction(
                                 sort.sortArtifact(),        //sort artifacts in parallel
                                 trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
@@ -847,6 +857,17 @@ public class AUTO_BLUE_1 extends LinearOpMode {
                         trajectoryActionCloseout            //STOP
                 )
         );
+
+        //Store the alliance color to memory for use in TELEOP
+        blackboard.put(ALLIANCE_KEY, colorAlliance);
+        SparkFunOTOS.Pose2D pos = otos.getPosition();
+        blackboard.put("POSE_X_KEY",pos.x);
+        blackboard.put("POSE_Y_KEY",pos.y);
+        blackboard.put("POSE_H_KEY",pos.h);
+
+        telemetry.addLine();
+        telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
+        telemetry.update();
     }
 
 }
