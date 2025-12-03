@@ -156,7 +156,7 @@ public class AUTO_Test_Pathing_Brendan extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-60.75, -38.75, Math.toRadians(180));
+        Pose2d beginPose = new Pose2d(63, -10, Math.toRadians(180));
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
@@ -208,37 +208,19 @@ public class AUTO_Test_Pathing_Brendan extends LinearOpMode {
                 //drive to the obelisk read location
                 Actions.runBlocking(
                         drive.actionBuilder(beginPose)
-
-                                // Move to close firing position
-                                .setTangent(Math.toRadians(0))
-                                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
-                                .waitSeconds(1)
-//                .turnTo(Math.toRadians(-135))
-                                .setTangent(Math.toRadians(45))
-                                .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45))
-                                .waitSeconds(1)
-
-                                .setTangent(Math.toRadians(45))
-                                .splineToLinearHeading(new Pose2d(-22.25,-20.25,Math.toRadians(-90)),Math.toRadians(-90))
-                                .waitSeconds(1)
-                                .lineToY(-26,
-                                        // override velocity constraint - slow down the move
-                                        new TranslationalVelConstraint(20.0))
-                                .waitSeconds(1)
-                                .lineToY(-31,
-                                        // override velocity constraint - slow down the move
-                                        new TranslationalVelConstraint(20.0))
-                                .waitSeconds(1)
-                                .lineToY(-36,
-                                        // override velocity constraint - slow down the move
-                                        new TranslationalVelConstraint(20.0))
-                                .waitSeconds(1)
-
-                                .setTangent(Math.toRadians(180))
-                                .splineToLinearHeading(new Pose2d(-10,-10,Math.toRadians(-135)),Math.toRadians(45),
-                                        // override velocity constraint - slow down the move
-                                        new TranslationalVelConstraint(50))
-                                .build());
+                                .turnTo(Math.toRadians(-155.32))
+                        .waitSeconds(1)
+                        .splineToLinearHeading(new Pose2d(35.3, -25, Math.toRadians(-90)), Math.toRadians(-90))
+                        .lineToY(-35.5)
+                        .waitSeconds(1)
+                        .lineToY(-40.5)
+                        .waitSeconds(1)
+                        .lineToY(-45.5)
+                        .setTangent(90)
+                        .splineToLinearHeading(new Pose2d(63, -10, Math.toRadians(-155.32)),Math.toRadians(0))
+                        .setTangent(180)
+                        .splineToLinearHeading(new Pose2d(12, -23, Math.toRadians(-90)),Math.toRadians(-90))
+                        .build());
 
 //                //Read the limelight and determine pattern
 //                LLResult result = limelight.getLatestResult();
