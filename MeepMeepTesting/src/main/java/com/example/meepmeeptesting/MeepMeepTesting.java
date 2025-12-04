@@ -20,34 +20,34 @@ public class MeepMeepTesting {
                 .setConstraints(85, 75, Math.toRadians(180), Math.toRadians(180), 17.5)
                 .build();
 
-        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-60.75, -38.75, Math.toRadians(180)))
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
+        myBot.runAction(myBot.getDrive().actionBuilder(new Pose2d(-58.5, -45, Math.toRadians(144)))
+                .setTangent(Math.toRadians(65))
+                .splineToSplineHeading(new Pose2d(-16,-16,Math.toRadians(-135)),Math.toRadians(0))
                         .waitSeconds(1)
 //                .turnTo(Math.toRadians(-135))
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-20,-20,Math.toRadians(-135)),Math.toRadians(45))
-                        .waitSeconds(1)
-
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-12.25,-30.25,Math.toRadians(-90)),Math.toRadians(-90))
-                .lineToY(-36,
-                        // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(20.0))
-                .waitSeconds(1)
-                .lineToY(-41,
-                        // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(20.0))
-                .waitSeconds(1)
-                .lineToY(-46,
-                        // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(20.0))
-                .waitSeconds(1)
-
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(-135)),Math.toRadians(45),
-                        // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(50))
+//                .setTangent(Math.toRadians(45))
+//                .splineToLinearHeading(new Pose2d(-20,-20,Math.toRadians(-135)),Math.toRadians(45))
+//                        .waitSeconds(1)
+//
+//                .setTangent(Math.toRadians(45))
+//                .splineToLinearHeading(new Pose2d(-12.25,-30.25,Math.toRadians(-90)),Math.toRadians(-90))
+//                .lineToY(-36,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(20.0))
+//                .waitSeconds(1)
+//                .lineToY(-41,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(20.0))
+//                .waitSeconds(1)
+//                .lineToY(-46,
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(20.0))
+//                .waitSeconds(1)
+//
+//                .setTangent(Math.toRadians(180))
+//                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(-135)),Math.toRadians(45),
+//                        // override velocity constraint - slow down the move
+//                        new TranslationalVelConstraint(50))
 
                 .build());
 

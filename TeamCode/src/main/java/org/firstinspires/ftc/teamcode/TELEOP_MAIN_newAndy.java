@@ -109,7 +109,7 @@ public class TELEOP_MAIN_newAndy extends LinearOpMode {
     public double allianceLEDColor;
 
     //READ THE BLACKBOARD DATA
-    public String colorAlliance = (String) blackboard.get("ALLIANCE_KEY");
+    public boolean isAllianceBlue = (Boolean) blackboard.get("ALLIANCE_KEY");
     public double readPosX = (Double) blackboard.get("POSE_X_KEY");
     public double readPosY = (Double) blackboard.get("POSE_Y_KEY");
     public double readPosH = (Double) blackboard.get("POSE_H_KEY");
@@ -214,7 +214,7 @@ public class TELEOP_MAIN_newAndy extends LinearOpMode {
             }
 
             //SET THE ALLIANCE COLOR
-            if(colorAlliance=="BLUE"){
+            if(isAllianceBlue){
                 allianceLEDColor = 0.600; //BLUE
                 teamLED.setPosition(allianceLEDColor);
                 teamLEDGreen.setPosition(allianceLEDColor);
@@ -504,9 +504,11 @@ public class TELEOP_MAIN_newAndy extends LinearOpMode {
         double angle;
 
         // spin drive with p controller
-        double x = redX - pos.x;
-        double y = redY - pos.y;
-        angle = Math.atan2(y, x);
+        if (isAllianceBlue){
+            angle = Math.atan2(blueY - pos.y, blueX - pos.x);
+        } else {
+            angle = Math.atan2(redY - pos.y, redX - pos.x);
+        }
         double error;
         if (Math.toDegrees(angle) > 20) {
             error = Math.toDegrees(angle) - pos.h;
@@ -682,7 +684,7 @@ public class TELEOP_MAIN_newAndy extends LinearOpMode {
         // clockwise (negative rotation) from the robot's orientation, the offset
         // would be {-5, 10, -90}. These can be any value, even the angle can be
         // tweaked slightly to compensate for imperfect mounting (eg. 1.3 degrees).
-        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(-4,0,0);
+        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(-4.5,0,0);
         poseOTOS.setOffset(offset);
 
         // Here we can set the linear and angular scalars, which can compensate for
