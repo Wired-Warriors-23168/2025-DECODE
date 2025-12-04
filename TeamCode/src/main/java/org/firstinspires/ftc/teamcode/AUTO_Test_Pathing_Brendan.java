@@ -157,6 +157,7 @@ public class AUTO_Test_Pathing_Brendan extends LinearOpMode {
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
         Pose2d beginPose = new Pose2d(63, -10, Math.toRadians(180));
+//        Pose2d beginPose = new Pose2d(62, -14.5, Math.toRadians(180)); //NEW STARTING POSITION
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         //SparkFunOTOSDrive drive = new SparkFunOTOSDrive(hardwareMap, beginPose);
@@ -210,14 +211,18 @@ public class AUTO_Test_Pathing_Brendan extends LinearOpMode {
                         drive.actionBuilder(beginPose)
                                 .turnTo(Math.toRadians(-155.32))
                         .waitSeconds(1)
-                        .splineToLinearHeading(new Pose2d(35.3, -25, Math.toRadians(-90)), Math.toRadians(-90))
+                        .splineToLinearHeading(new Pose2d(35.3, -25, Math.toRadians(-90)), Math.toRadians(-90)) //55,-12
+//                                .splineToLinearHeading(new Pose2d(25.75,-38,Math.toRadians(-90)),Math.toRadians(-90),
+//                                        // override velocity constraint - slow down the move
+//                                        new TranslationalVelConstraint(3),
+//                                        new ProfileAccelConstraint(-10.0, 10.0))
                         .lineToY(-35.5)
                         .waitSeconds(1)
                         .lineToY(-40.5)
                         .waitSeconds(1)
                         .lineToY(-45.5)
                         .setTangent(90)
-                        .splineToLinearHeading(new Pose2d(63, -10, Math.toRadians(-155.32)),Math.toRadians(0))
+                        .splineToLinearHeading(new Pose2d(63, -10, Math.toRadians(-155.32)),Math.toRadians(0)) //52,-8
                         .setTangent(180)
                         .splineToLinearHeading(new Pose2d(12, -23, Math.toRadians(-90)),Math.toRadians(-90))
                         .build());
