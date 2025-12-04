@@ -83,7 +83,7 @@ import java.util.List;
  */
 //@Disabled
 @Config
-@Autonomous(name="AUTO_BLUE_1_TEST", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+@Autonomous(name="AUTO_BLUE_1_TEST", group="AUTO", preselectTeleOp = "TELEOP_MAIN_OLD")
 @Disabled
 public class AUTO_BLUE_1_TEST extends LinearOpMode {
 

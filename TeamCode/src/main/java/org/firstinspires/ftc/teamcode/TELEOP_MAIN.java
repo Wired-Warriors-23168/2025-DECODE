@@ -1,29 +1,21 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
-import java.util.List;
 
 
 @Config //Required to be able to tune parameters in FTCDashboard
@@ -108,8 +100,15 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     private static double limitDrivePower =1.0;  //Mutliplier to limit the drive wheel power for training
     public static final String ALLIANCE_KEY = "Alliance";
-    public String colorAlliance = "BLUE";
+//    public String colorAlliance = "BLUE";
     public double allianceLEDColor;
+
+    //READ THE BLACKBOARD DATA
+    public boolean isAllianceBlue = (Boolean) blackboard.get("ALLIANCE_KEY");
+    public double readPosX = (Double) blackboard.get("POSE_X_KEY");
+    public double readPosY = (Double) blackboard.get("POSE_Y_KEY");
+    public double readPosH = (Double) blackboard.get("POSE_H_KEY");
+    public int readPatternID = (Integer) blackboard.get("PATTERN_ID_KEY");
 
     @Override
     public void runOpMode() {
@@ -176,20 +175,11 @@ public class TELEOP_MAIN extends LinearOpMode {
         lastTime = deltaTimer.seconds();
 
         //Set the LED to green in INIT mode
-        teamLED.setPosition(0.4);//green
-        teamLEDGreen.setPosition(0.4);//green
+        teamLED.setPosition(0.5);//green
+        teamLEDGreen.setPosition(0.5);//green
 
         waitForStart();
-        if(colorAlliance=="BLUE"){
-            allianceLEDColor = 0.600; //BLUE
-            teamLED.setPosition(allianceLEDColor);
-            teamLEDGreen.setPosition(allianceLEDColor);
-        }
-        else{
-            allianceLEDColor = 0.283; //RED
-            teamLED.setPosition(allianceLEDColor);
-            teamLEDGreen.setPosition(allianceLEDColor);
-        }
+
         if (opModeIsActive()) {
             double currentTime = deltaTimer.seconds();
             deltaTime = currentTime - lastTime;
@@ -206,39 +196,51 @@ public class TELEOP_MAIN extends LinearOpMode {
                 drivetrain();
 //                lift();
 
-                FtcDashboard dashboard = FtcDashboard.getInstance();
-                TelemetryPacket packet = new TelemetryPacket();
-                dashboard.sendTelemetryPacket(packet); // Always send the packet
-                packet.fieldOverlay()
-                        .setFill("blue")
-                        .fillRect(-20, -20, 40, 40);
+//                FtcDashboard dashboard = FtcDashboard.getInstance();
+//                TelemetryPacket packet = new TelemetryPacket();
+//                dashboard.sendTelemetryPacket(packet); // Always send the packet
+//                packet.fieldOverlay()
+//                        .setFill("blue")
+//                        .fillRect(-20, -20, 40, 40);
 
                 telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
                 telemetry.addData("time", runtime.time());
                 telemetry.update();
             }
+
+            //SET THE ALLIANCE COLOR
+            if(isAllianceBlue){
+                allianceLEDColor = 0.600; //BLUE
+                teamLED.setPosition(allianceLEDColor);
+                teamLEDGreen.setPosition(allianceLEDColor);
+            }
+            else{
+                allianceLEDColor = 0.283; //RED
+                teamLED.setPosition(allianceLEDColor);
+                teamLEDGreen.setPosition(allianceLEDColor);
+            }
         }
     }
     private boolean purpleBallDetected() {
-        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3) {
-            teamLED.setPosition(0.715); //purple
+        if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 6) {
+            teamLED.setPosition(0.722); //purple
             telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
             telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         } else {
             teamLED.setPosition(allianceLEDColor); //alliance color
         }
-        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3;
+        return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 6;
 
     }
     private boolean greenBallDetected() {
-        if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3) {
-            teamLED.setPosition(0.500); //green
+        if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 6) {
+            teamLEDGreen.setPosition(0.515); //green
             telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
             telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         } else{
             teamLEDGreen.setPosition(allianceLEDColor); //alliance color
         }
-        return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3;
+        return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 6;
 
     }
     private void aimBot() {
@@ -290,20 +292,27 @@ public class TELEOP_MAIN extends LinearOpMode {
             tx = result.getTx();
             ty = result.getTy();
         }
-        List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
-        for (LLResultTypes.FiducialResult fiducial : fiducials) {
-            if (fiducial != null) {
-                tagID = fiducial.getFiducialId();
-            }
-        }
+//        List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
+//        for (LLResultTypes.FiducialResult fiducial : fiducials) {
+//            if (fiducial != null) {
+//                tagID = fiducial.getFiducialId();
+//            }
+//        }
 
-        if (tagID != 0  && !seenobelisk) {
-            seenobelisk = true;
-            patternID = tagID; // save pattern
-            sleep(50);
-            tagID = 0;
-            limelight.pipelineSwitch(teamPipeline);
-        }
+//        //TODO - remove the other LL pattern read code if patternID read from blackboard works
+//        patternID = readPatternID;
+//        tagID = readPatternID;
+//        seenobelisk = true;
+//        limelight.pipelineSwitch(teamPipeline);
+//
+//        if (tagID != 0  && !seenobelisk) {
+//            seenobelisk = true;
+//            patternID = tagID; // save pattern
+//            sleep(50);
+//            tagID = 0;
+//            limelight.pipelineSwitch(teamPipeline);
+//            limelight.pause(); //TODO MAKE SURE THIS WORKS - pause the LL to avoid overloading the data stream
+//        }
 
         if (gamepad2.y) {  //&& result.isValid()+
 
@@ -490,9 +499,11 @@ public class TELEOP_MAIN extends LinearOpMode {
         double angle;
 
         // spin drive with p controller
-        double x = redX - pos.x;
-        double y = redY - pos.y;
-        angle = Math.atan2(y, x);
+        if (isAllianceBlue){
+            angle = Math.atan2(blueY - pos.y, blueX - pos.x);
+        } else {
+            angle = Math.atan2(redY - pos.y, redX - pos.x);
+        }
         double error;
         if (Math.toDegrees(angle) > 20) {
             error = Math.toDegrees(angle) - pos.h;
@@ -619,9 +630,12 @@ public class TELEOP_MAIN extends LinearOpMode {
 //        if (gamepad1.yWasReleased()) {
 //            limelight.pause();
 //        }
-        if (gamepad1.y){
+        if (gamepad1.yWasPressed()){ //TODO CHANGE LOG
+            limelight.start();  //restart the limelight
             rotate();
-        } else {
+        } else if (gamepad1.yWasReleased()){
+            limelight.pause(); //pause the limelight so it doesn't stream data
+        }else {
             leftFrontDrive.setPower(frontLeftPower);
             leftBackDrive.setPower(backLeftPower);
             rightFrontDrive.setPower(frontRightPower);
@@ -665,7 +679,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         // clockwise (negative rotation) from the robot's orientation, the offset
         // would be {-5, 10, -90}. These can be any value, even the angle can be
         // tweaked slightly to compensate for imperfect mounting (eg. 1.3 degrees).
-        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 0, 0);
+        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(-4.5,0,0);
         poseOTOS.setOffset(offset);
 
         // Here we can set the linear and angular scalars, which can compensate for
@@ -707,7 +721,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         // the origin. If your robot does not start at the origin, or you have
         // another source of location information (eg. vision odometry), you can set
         // the OTOS location to match and it will continue to track from there.
-        SparkFunOTOS.Pose2D currentPosition = new SparkFunOTOS.Pose2D(0, 0, 0);
+        SparkFunOTOS.Pose2D currentPosition = new SparkFunOTOS.Pose2D(readPosX, readPosY, readPosH);
         poseOTOS.setPosition(currentPosition);
 
         // Get the hardware and firmware version
