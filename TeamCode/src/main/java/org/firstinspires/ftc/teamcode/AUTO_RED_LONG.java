@@ -930,15 +930,15 @@ Actions.runBlocking(
                                             intake.intakeOff(),                 //turn off intake
                                             shooters.shootPattern(),            //shoot the pattern
                                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                                            flywheel.setFlywheelClose(),
-                                            intake.intakeOn(),
-                                            trjIntakeAndShoot2.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                            flywheel.setFlywheelClose(),
+//                                            intake.intakeOn(),
+//                                            trjIntakeAndShoot2.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
 //                                        new ParallelAction(
 //                                                sort.sortArtifact(),        //sort artifacts in parallel
 //                                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
 //                                        ),
-                                            intake.intakeOff(),                 //turn off intake
-                                            shooters.shootPattern(),            //shoot the pattern
+//                                            intake.intakeOff(),                 //turn off intake
+//                                            shooters.shootPattern(),            //shoot the pattern
                                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                                             flywheel.setFlywheelStop(),         //stop the flywheel
                                             trjEndPose.build(),                 //drive to end pose
@@ -971,19 +971,19 @@ Actions.runBlocking(
                                             intake.intakeOff(),                 //turn off intake
                                             shooters.shootPattern(),            //shoot the pattern
                                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                                            flywheel.setFlywheelClose(),
-                                            intake.intakeOn(),
-                                            trjIntakeAndEnd.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                            flywheel.setFlywheelClose(),
+//                                            intake.intakeOn(),
+//                                            trjIntakeAndEnd.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
 //                                        new ParallelAction(
 //                                                sort.sortArtifact(),        //sort artifacts in parallel
 //                                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
 //                                        ),
-                                            intake.intakeOff(),                 //turn off intake
+//                                            intake.intakeOff(),                 //turn off intake
 //                                            shooters.shootPattern(),            //shoot the pattern
                                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                                             flywheel.setFlywheelStop(),         //stop the flywheel
-//                                            trjEndPose.build(),                 //drive to end pose
-                                            trajectoryActionCloseout            //STOP
+                                            trjEndPose.build(),                 //drive to end pose
+                                            trajectory22ActionCloseout            //STOP
                                     )
                             )
                     )
