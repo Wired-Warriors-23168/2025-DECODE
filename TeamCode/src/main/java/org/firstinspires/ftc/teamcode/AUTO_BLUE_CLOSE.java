@@ -114,7 +114,7 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
     private int patternID = 0;
     long servoLaunchTime = 250; //ms
     long shootWaitTime = 500; //ms
-    long shootSecondWaitTime = 1750; //ms
+    long shootSecondWaitTime = 2000; //ms
     long sortActionTime = 10;//sec
     private double greenShootPos = 0.15;  //was 0.2467
     private double purpleShootPos = 0.22;  //was 0.0933
@@ -160,45 +160,85 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
      * Create all the actions for AUTO in RoadRunner
      */
 
-//    /**
-//     * Actions for the green shooter platform
-//     * Cycle the Green Shooter platform from shoot to down
-//     * Place the green shooter platform in the Hold position
-//     */
-//    public class GreenShooter {
-//        private Servo greenServo;
-//
-//        public GreenShooter(HardwareMap hardwareMap) {
-//            greenServo = hardwareMap.get(Servo.class, "greenServo");
-//            greenServo.setDirection(Servo.Direction.FORWARD);
-//        }
-//
-//        public class ShootGreen implements Action {
-//
-//            @Override
-//            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                    return false;
-//            }
-//        }
-//        public Action shootGreen(){
-//            return new ShootGreen();
-//        }
-//
-//        public class HoldGreen implements Action {
-//
-//            @Override
-//            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                greenServo.setPosition(greenHoldPos);
-//                return false;
-//            }
-//        }
-//        public Action holdGreen(){
-//            return new HoldGreen();
-//        }
-//    }
+    /**
+     * Actions for the green shooter platform
+     * Cycle the Green Shooter platform from shoot to down
+     * Place the green shooter platform in the Hold position
+     */
+    public class GreenShooter {
+        private Servo greenServo;
+
+        public GreenShooter(HardwareMap hardwareMap) {
+            greenServo = hardwareMap.get(Servo.class, "greenServo");
+            greenServo.setDirection(Servo.Direction.FORWARD);
+        }
+
+        public class ShootGreen implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                    return false;
+            }
+        }
+        public Action shootGreen(){
+            return new ShootGreen();
+        }
+
+        public class HoldGreen implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                greenServo.setPosition(greenHoldPos);
+                return false;
+            }
+        }
+        public Action holdGreen(){
+            return new HoldGreen();
+        }
+    }
+
+    /**
+     * Actions for the green shooter platform
+     * Cycle the Green Shooter platform from shoot to down
+     * Place the green shooter platform in the Hold position
+     */
+    public class PurpleShooter {
+        private Servo purpleServo;
+
+        public PurpleShooter(HardwareMap hardwareMap) {
+            purpleServo = hardwareMap.get(Servo.class, "purpleServo");
+            purpleServo.setDirection(Servo.Direction.FORWARD);
+        }
+
+        public class ShootPurple implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                greenServo.setPosition(purpleShootPos);
+                sleep(servoLaunchTime);
+                purpleServo.setPosition(purpleDownPos);
+                return false;
+            }
+        }
+        public Action shootPurple(){
+            return new ShootPurple();
+        }
+
+        public class HoldPurple implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                purpleServo.setPosition(purpleHoldPos);
+                return false;
+            }
+        }
+        public Action holdPurple(){
+            return new HoldPurple();
+        }
+    }
 
     /**
      * Actions for the LEDs on either side
@@ -731,8 +771,8 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
         teamLEDGreen.setPosition(ledREADYStatus);//white
 
         //Initialize the mechanism Actions
-//        GreenShooter greenServo = new GreenShooter(hardwareMap);
-//        PurpleShooter purpleServo = new PurpleShooter(hardwareMap);
+        GreenShooter greenShooter = new GreenShooter(hardwareMap);
+        PurpleShooter purpleShooter = new PurpleShooter(hardwareMap);
         Limelight limelight = new Limelight(hardwareMap);
         Intake intake = new Intake(hardwareMap);
         Sort sort = new Sort(hardwareMap);
@@ -855,7 +895,7 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
                 //Spline to the end pose
                 .fresh()
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(0,-32,Math.toRadians(180)),Math.toRadians(0),
+                .splineToLinearHeading(new Pose2d(-24,-32,Math.toRadians(180)),Math.toRadians(0),
                         // only override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0)
                 );
@@ -877,6 +917,8 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
 
         Actions.runBlocking(
                 new SequentialAction(
+                        greenShooter.holdGreen(),
+                        purpleShooter.holdPurple(),
                         flywheel.setFlywheelClose(),         //turn on flywheel
                         new ParallelAction(                 //move to obelisk position and read the pattern
                                 trjObelisk.build(),
@@ -889,7 +931,9 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
 
             Actions.runBlocking(
                     new SequentialAction(
-                            flywheel.setFlywheelClose(),         //turn on flywheel
+                            greenShooter.holdGreen(),
+                            purpleShooter.holdPurple(),
+//                            flywheel.setFlywheelClose(),         //turn on flywheel
 //                            new ParallelAction(                 //move to obelisk position and read the pattern
 //                                    trjObelisk.build(),
 //                                    limelight.readPattern()
@@ -903,14 +947,14 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
                             ),
                             intake.intakeOff(),                 //turn off intake
                             shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),
-                            new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
-                            shooters.shootPattern(),            //shoot the pattern
+//                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                            intake.intakeOn(),
+//                            new ParallelAction(
+//                                    sort.sortArtifact(),        //sort artifacts in parallel
+//                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+//                            ),
+//                            intake.intakeOff(),                 //turn off intake
+//                            shooters.shootPattern(),            //shoot the pattern
                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                             flywheel.setFlywheelStop(),         //stop the flywheel
                             trjEndPose.build(),                 //drive to end pose
@@ -920,7 +964,9 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
         } else {
             Actions.runBlocking(
                     new SequentialAction(
-                            flywheel.setFlywheelClose(),         //turn on flywheel
+                            greenShooter.holdGreen(),
+                            purpleShooter.holdPurple(),
+//                            flywheel.setFlywheelClose(),         //turn on flywheel
 //                            new ParallelAction(                 //move to obelisk position and read the pattern
 //                                    trjObelisk.build(),
 //                                    limelight.readPattern()
@@ -934,18 +980,18 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
                             ),
                             intake.intakeOff(),                 //turn off intake
                             shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),
-                            new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
+//                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                            intake.intakeOn(),
+//                            new ParallelAction(
+//                                    sort.sortArtifact(),        //sort artifacts in parallel
+//                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+//                            ),
+//                            intake.intakeOff(),                 //turn off intake
 //                            shooters.shootPattern(),            //shoot the pattern
                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                             flywheel.setFlywheelStop(),         //stop the flywheel
-//                            trjEndPose.build(),                 //drive to end pose
-                            trajectoryActionCloseout            //STOP
+                            trjEndPose.build(),                 //drive to end pose
+                            trajectory22ActionCloseout            //STOP
                     )
             );
         }

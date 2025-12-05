@@ -205,9 +205,9 @@ public class TELEOP_MAIN extends LinearOpMode {
 //                        .setFill("blue")
 //                        .fillRect(-20, -20, 40, 40);
 
-                telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
-                telemetry.addData("time", runtime.time());
-                telemetry.update();
+//                telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
+//                telemetry.addData("time", runtime.time());
+//                telemetry.update();
             }
 
             //SET THE ALLIANCE COLOR
@@ -226,8 +226,8 @@ public class TELEOP_MAIN extends LinearOpMode {
     private boolean purpleBallDetected() {
         if (purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 6) {
             teamLED.setPosition(0.722); //purple
-            telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
-            telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
+//            telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
+//            telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         } else {
             teamLED.setPosition(allianceLEDColor); //alliance color
         }
@@ -237,8 +237,8 @@ public class TELEOP_MAIN extends LinearOpMode {
     private boolean greenBallDetected() {
         if (greenDistanceSensor.getDistance(DistanceUnit.INCH) < 6) {
             teamLEDGreen.setPosition(0.515); //green
-            telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
-            telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
+//            telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
+//            telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         } else{
             teamLEDGreen.setPosition(allianceLEDColor); //alliance color
         }
@@ -289,11 +289,11 @@ public class TELEOP_MAIN extends LinearOpMode {
 //        }
 
 
-        LLResult result = limelight.getLatestResult();
-        if (result != null && result.isValid()) {
-            tx = result.getTx();
-            ty = result.getTy();
-        }
+//        LLResult result = limelight.getLatestResult();
+//        if (result != null && result.isValid()) {
+//            tx = result.getTx();
+//            ty = result.getTy();
+//        }
 //        List<LLResultTypes.FiducialResult> fiducials = result.getFiducialResults();
 //        for (LLResultTypes.FiducialResult fiducial : fiducials) {
 //            if (fiducial != null) {
@@ -369,18 +369,18 @@ public class TELEOP_MAIN extends LinearOpMode {
             kD -= 0.00005;
             sleep(250);
         }
-        telemetry.addData("timer start", startServoTime);
-        telemetry.addData("Shooter On", shooterOn);
-        telemetry.addData("Pattern ID", patternID);
-        telemetry.addData("Ball Number", ballnumber);
-        telemetry.addData("Seen obelisk", seenobelisk);
-        telemetry.addData("Tag ID", tagID);
-        telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
-        telemetry.addData("Flywheel Power", flywheel.getPower());
-        telemetry.addData("Target X", tx);
-        telemetry.addData("Target Y", ty);
-        telemetry.addData("kD", kD);
-        telemetry.addData("kP", kP);
+//        telemetry.addData("timer start", startServoTime);
+//        telemetry.addData("Shooter On", shooterOn);
+//        telemetry.addData("Pattern ID", patternID);
+//        telemetry.addData("Ball Number", ballnumber);
+//        telemetry.addData("Seen obelisk", seenobelisk);
+//        telemetry.addData("Tag ID", tagID);
+//        telemetry.addData("Flywheel Velocity", ((DcMotorEx) flywheel).getVelocity());
+//        telemetry.addData("Flywheel Power", flywheel.getPower());
+//        telemetry.addData("Target X", tx);
+//        telemetry.addData("Target Y", ty);
+//        telemetry.addData("kD", kD);
+//        telemetry.addData("kP", kP);
     }
     private void Pattern22() {
         if (ballnumber == 1 && flywheel.getVelocity() > targetVelocity - 60) {
@@ -506,7 +506,8 @@ public class TELEOP_MAIN extends LinearOpMode {
             kP = (1.0 / 36.0);
             kD = 0;
         } else {
-            error = ty;
+//            error = ty;
+            error = 0;
 //            kP = 0;
 //            kD = 0;
         }
@@ -518,10 +519,10 @@ public class TELEOP_MAIN extends LinearOpMode {
             leftBackDrive.setPower(wheelpower);
             rightFrontDrive.setPower(wheelpower);
             rightBackDrive.setPower(wheelpower);
-            telemetry.addData("wheel power", wheelpower);
-            telemetry.addData("pos x", pos.x);
-            telemetry.addData("pos y", pos.y);
-            telemetry.addData("pos h", pos.h);
+//            telemetry.addData("wheel power", wheelpower);
+//            telemetry.addData("pos x", pos.x);
+//            telemetry.addData("pos y", pos.y);
+//            telemetry.addData("pos h", pos.h);
 
     }
     public void intakeSort(boolean auto) {
@@ -548,7 +549,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     public void sortArtifact() {
         float sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
-        telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
+//        telemetry.addData("sumGreenPurpleness",sumGreenPurpleness);
         if (gamepad2.backWasPressed()) {
             onewaysort = !onewaysort; // flip
         }
@@ -574,7 +575,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         else if (sortTime <= deltaTimer.milliseconds()) {
             selector.setPosition(neutralPos);
         }
-        telemetry.addData("selector pos",selector.getPosition());
+//        telemetry.addData("selector pos",selector.getPosition());
     }
 
     public float greenPurplenessA(){
@@ -637,10 +638,10 @@ public class TELEOP_MAIN extends LinearOpMode {
 //            limelight.pause();
 //        }
         if (gamepad1.yWasPressed()){ //TODO CHANGE LOG
-            limelight.start();  //restart the limelight
+//            limelight.start();  //restart the limelight
             rotate();
         } else if (gamepad1.yWasReleased()){
-            limelight.pause(); //pause the limelight so it doesn't stream data
+//            limelight.pause(); //pause the limelight so it doesn't stream data
         }else {
             leftFrontDrive.setPower(frontLeftPower * drivePower);
             leftBackDrive.setPower(backLeftPower * drivePower);
@@ -653,9 +654,9 @@ public class TELEOP_MAIN extends LinearOpMode {
 
         SparkFunOTOS.Pose2D pos = poseOTOS.getPosition();
 
-        telemetry.addData("X coordinate", pos.x);
-        telemetry.addData("Y coordinate", pos.y);
-        telemetry.addData("Heading angle", pos.h);
+//        telemetry.addData("X coordinate", pos.x);
+//        telemetry.addData("Y coordinate", pos.y);
+//        telemetry.addData("Heading angle", pos.h);
     }
 
 

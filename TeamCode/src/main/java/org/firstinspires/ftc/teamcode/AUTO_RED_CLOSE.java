@@ -114,7 +114,7 @@ public class AUTO_RED_CLOSE extends LinearOpMode {
     private int patternID = 0;
     long servoLaunchTime = 250; //ms
     long shootWaitTime = 500; //ms
-    long shootSecondWaitTime = 1750; //ms
+    long shootSecondWaitTime = 2000; //ms
     long sortActionTime = 10;//sec
     private double greenShootPos = 0.15;  //was 0.2467
     private double purpleShootPos = 0.22;  //was 0.0933
@@ -903,14 +903,14 @@ public class AUTO_RED_CLOSE extends LinearOpMode {
                             ),
                             intake.intakeOff(),                 //turn off intake
                             shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),
-                            new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
-                            shooters.shootPattern(),            //shoot the pattern
+//                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                            intake.intakeOn(),
+//                            new ParallelAction(
+//                                    sort.sortArtifact(),        //sort artifacts in parallel
+//                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+//                            ),
+//                            intake.intakeOff(),                 //turn off intake
+//                            shooters.shootPattern(),            //shoot the pattern
                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                             flywheel.setFlywheelStop(),         //stop the flywheel
                             trjEndPose.build(),                 //drive to end pose
@@ -934,18 +934,18 @@ public class AUTO_RED_CLOSE extends LinearOpMode {
                             ),
                             intake.intakeOff(),                 //turn off intake
                             shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),
-                            new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
+//                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                            intake.intakeOn(),
+//                            new ParallelAction(
+//                                    sort.sortArtifact(),        //sort artifacts in parallel
+//                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+//                            ),
+//                            intake.intakeOff(),                 //turn off intake
 //                            shooters.shootPattern(),            //shoot the pattern
                             teamLEDs.colorAlliance(),           //set team LEDs to alliance color
                             flywheel.setFlywheelStop(),         //stop the flywheel
-//                            trjEndPose.build(),                 //drive to end pose
-                            trajectoryActionCloseout            //STOP
+                            trjEndPose.build(),                 //drive to end pose
+                            trajectory22ActionCloseout            //STOP
                     )
             );
         }
