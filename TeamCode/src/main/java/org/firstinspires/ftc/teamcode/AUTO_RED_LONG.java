@@ -43,7 +43,6 @@ import com.acmerobotics.roadrunner.ProfileAccelConstraint;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
-import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.VelConstraint;
 import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.LLResult;
@@ -51,6 +50,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -82,9 +82,9 @@ import java.util.List;
  */
 //@Disabled
 @Config
-@Autonomous(name="AUTO_BLUE_CLOSE", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
-//@Disabled
-public class AUTO_BLUE_CLOSE extends LinearOpMode {
+@Autonomous(name="AUTO_RED_LONG", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+@Disabled
+public class AUTO_RED_LONG extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -115,7 +115,7 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
     long servoLaunchTime = 250; //ms
     long shootWaitTime = 500; //ms
     long shootSecondWaitTime = 1750; //ms
-    long sortActionTime = 10;//sec
+    long sortActionTime = 45;//sec
     private double greenShootPos = 0.15;  //was 0.2467
     private double purpleShootPos = 0.22;  //was 0.0933
     private double greenDownPos = 0.32;
@@ -135,8 +135,9 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
 //    public static final String POSE_X_KEY = 0;
 //    public static final String POSE_Y_KEY = "Alliance";
 //    public static final String POSE_H_KEY = "Alliance";
-    public String colorAlliance = "BLUE";
-    public boolean isAllianceBlue = true;
+    public String colorAlliance = "RED";
+    public boolean isAllianceBlue = false;
+
     public double ledINITStatus = 0.500;        //green
     public double ledREADYStatus= 1.0;                 //white
     public double ledGreenArtifact = 0.515;     //turquoise green
@@ -458,6 +459,7 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
 //                    limelight.pipelineSwitch(teamPipeline);
                     //Set team LEDs so the status can be seen
                     teamLED.setPosition(ledREADYStatus);//white
+                    teamLEDGreen.setPosition(ledREADYStatus);//white
                 }
                 //Update telemetry to show obelisk was read
                 telemetry.addData("Pattern ID", patternID);
@@ -468,7 +470,7 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
                 if (patternID == 0){    //keep actively looking for the pattern until it's seen
                     return true;
                 } else {
-                    blackboard.put("PATTERN_ID_KEY",patternID); //save the pattern to the blackboard for init in TELEOP
+                    blackboard.put("PATTERN_ID_KEY",patternID); //save teh pattern to the blackboard for init in TELEOP
                     limelight.stop();
                     return false;
                 }
@@ -530,6 +532,8 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
         private ColorSensor colorSensorA;
         private ColorSensor colorSensorB;
         private float sumGreenPurpleness;
+        private double sortCounter = 0;
+        private double sortOffset = 55.0/300.0;
         ElapsedTime sortTimer;
 
         public Sort(HardwareMap hardwareMap) {
@@ -569,26 +573,25 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
                     sumGreenPurpleness = greenPurplenessA() + greenPurplenessB();
                     if (sumGreenPurpleness > 50) {
                         selector.setPosition(neutralPos - sortOffset); //updated zero position for new print (shaft was turned...)
-                        //selector.setPosition(0.22);
                     } else if (sumGreenPurpleness < -50) {
                         selector.setPosition(neutralPos + sortOffset);  //updated zero position for new print (shaft was turned...)
-                        //Should work now
-                        //selector.setPosition(0.58);
                     } else {
                         selector.setPosition(neutralPos);
                     }
+
                     telemetry.addData("selector pos", selector.getPosition());
                     telemetry.addData("sumGreenPurpleness", sumGreenPurpleness);
+                    telemetry.addData("sort timer", sortTimer);
+                    telemetry.addData("Pattern ID", patternID);
                     telemetry.update();
                 }
-                if (sortTimer.seconds()<=sortActionTime){
+                if (sortTimer.seconds()<=sortActionTime){ //TODO update to stop after three balls sorted, check that counter makes sense first
                     return true;
                 } else{
                     sortTimer.reset();
                     return false;
                 }
-//                return sortTimer.seconds()<=sortActionTime;  // run to 8.82s for 25 max speed
-//                return false; // run to 8.82s for 25 max speed
+
 
             }
             public float greenPurplenessA(){
@@ -726,8 +729,9 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
         //Store the alliance color to memory for use in TELEOP
         blackboard.put(ALLIANCE_KEY, isAllianceBlue);
 
+
         //Set the green side LEDs to white in INIT mode after hold
-        teamLED.setPosition(ledINITStatus);
+//        teamLED.setPosition(ledINITStatus);
         teamLEDGreen.setPosition(ledREADYStatus);//white
 
         //Initialize the mechanism Actions
@@ -748,18 +752,18 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-60.75, -38.75, Math.toRadians(180)); //NEW STARTING POSITION
+        Pose2d beginPose = new Pose2d(62, 14.5, Math.toRadians(180)); //NEW STARTING POSITION
 
         //Set AUTO waypoints
-        Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(145));  //pose to read the obelisk
-        double shootHeading = -135;
-        Pose2d shootPose = new Pose2d(-20,-20,Math.toRadians(shootHeading));    //pose to shoot the pattern
-        Pose2d intakePose1 = new Pose2d(-12.5,-31,Math.toRadians(-90));  //pose to intake artifacts from first row
-//        Pose2d intakePose2 = new Pose2d(-12.5,-31,Math.toRadians(-90));  //pose to intake artifacts from second row
-        Pose2d endPose = new Pose2d(12,-17,Math.toRadians(90));      //pose at end of AUTO
-        double firstArtifact = -36;     //Y-position of the first artifact in the row
-        double secondArtifact = -41;    //Y-position of the second artifact in the row
-        double thirdArtifact = -46;     //Y-position of the third artifact in the row
+//        Pose2d obeliskPose = new Pose2d(62,-14.5,Math.toRadians(180));  //pose to read the obelisk
+//        double shootHeading = -160;
+        Pose2d shootPose = new Pose2d(55,12,Math.toRadians(157));    //pose to shoot the pattern
+//        Pose2d intakePose1 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from first row
+//        Pose2d intakePose2 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from second row
+//        Pose2d endPose = new Pose2d(12,-18,Math.toRadians(90));      //pose at end of AUTO
+//        double firstArtifact = -36;     //Y-position of the first artifact in the row
+//        double secondArtifact = -41;    //Y-position of the second artifact in the row
+//        double thirdArtifact = -46;     //Y-position of the third artifact in the row
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
@@ -783,87 +787,82 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
 
         //Setting the base velocity and angular velocity constraints
         VelConstraint baseVelConstraint = new MinVelConstraint(Arrays.asList(
-                new TranslationalVelConstraint(30),
+                new TranslationalVelConstraint(45.0),
                 new AngularVelConstraint(Math.PI / 2)
         ));
-        AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(-10.0, 10.0);
+        AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(-20.0, 25.0);
 
 
         //Leave starting position, drive nad turn to obelisk to read pattern and continue to aiming at goal
         TrajectoryActionBuilder trjObelisk = drive.actionBuilder(beginPose)
-//                .waitSeconds(2) //Wait to spin-up flywheel
+                .waitSeconds(1.5) //Wait to spin-up flywheel
 
                 //Spline to the obelisk-reading pose, then transition to the shooting pose (hopefully we read the obelisk in this time)
-                .setTangent(Math.toRadians(80))
-//                .splineToLinearHeading(new Pose2d(-42,-18,Math.toRadians(165)),Math.toRadians(0))
-                .splineToConstantHeading(new Vector2d(-12,-12),Math.toRadians(0))
-//                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
-
-                .setTangent(Math.toRadians(-135))
-                .splineToLinearHeading(new Pose2d(-14,-14,Math.toRadians(-135)),Math.toRadians(-135))
-                .waitSeconds(1); //Wait to spin-up flywheel
+                .setTangent(Math.toRadians(180))
+                .splineToLinearHeading(new Pose2d(55,12,Math.toRadians(157)),Math.toRadians(180));
 
 
 
         //Spline to start of first row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
-        TrajectoryActionBuilder trjIntakeAndShoot1 = drive.actionBuilder(new Pose2d(-14,-14,Math.toRadians(-135)))
+        TrajectoryActionBuilder trjIntakeAndShoot1 = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-12.5,-28,Math.toRadians(-90)),Math.toRadians(-90))
+                .setTangent(Math.toRadians(135))
+                .splineToLinearHeading(new Pose2d(35,29,Math.toRadians(90)),Math.toRadians(120))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(-12.5,-49,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(35,49,Math.toRadians(90)),Math.toRadians(90),
+                        // override velocity constraint - slow down the move
+                        new TranslationalVelConstraint(2.5),
+                        new ProfileAccelConstraint(-10.0, 10.0))
+
+                //Spline to the shooting pose, back up to full speed
+                .setTangent(Math.toRadians(-30))
+                .splineToLinearHeading(new Pose2d(55,12,Math.toRadians(157)),Math.toRadians(-30));
+
+        //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
+        TrajectoryActionBuilder trjIntakeAndShoot2 = drive.actionBuilder(new Pose2d(55,12,Math.toRadians(157)))
+                //Spline to the first artifact row
+                .setTangent(Math.toRadians(-180))
+                .splineToLinearHeading(new Pose2d(11,29,Math.toRadians(90)),Math.toRadians(120))
+                //Move forward slowly to intake the first artifact and wait for sorting
+                .splineToLinearHeading(new Pose2d(11,49,Math.toRadians(90)),Math.toRadians(90),
                         // override velocity constraint - slow down the move
                         new TranslationalVelConstraint(2.5),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
                 .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-14,-14,Math.toRadians(-135)),Math.toRadians(45));
+                .splineToLinearHeading(new Pose2d(-16,10,Math.toRadians(135)),Math.toRadians(-45));
 
         //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
-        TrajectoryActionBuilder trjIntakeAndShoot2 = drive.actionBuilder(shootPose)
+        TrajectoryActionBuilder trjIntakeAndEnd = drive.actionBuilder(new Pose2d(55,12,Math.toRadians(157)))
                 //Spline to the first artifact row
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(12.5,-29,Math.toRadians(-90)),Math.toRadians(-90))
+                .setTangent(Math.toRadians(-180))
+                .splineToLinearHeading(new Pose2d(11,29,Math.toRadians(90)),Math.toRadians(120))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(12.5,-49,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(11,49,Math.toRadians(90)),Math.toRadians(90),
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(3),
+                        new TranslationalVelConstraint(2.5),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-14,-14,Math.toRadians(-135)),Math.toRadians(45));
-
-        //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
-        TrajectoryActionBuilder trjIntakeAndEnd = drive.actionBuilder(shootPose)
-                //Spline to the first artifact row
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(11,-29,Math.toRadians(-90)),Math.toRadians(-90));
-//                //Move forward slowly to intake the first artifact and wait for sorting
-//                .splineToLinearHeading(new Pose2d(12,-49,Math.toRadians(-90)),Math.toRadians(-90),
-//                        // override velocity constraint - slow down the move
-//                        new TranslationalVelConstraint(2.5),
-//                        new ProfileAccelConstraint(-10.0, 10.0))
-//
-//                //Spline to the end pose, back up to full speed
-//                .setTangent(Math.toRadians(90))
-//                .splineToLinearHeading(new Pose2d(0,-32,Math.toRadians(-90)),Math.toRadians(0));
+                .setTangent(Math.toRadians(90))
+                .splineToLinearHeading(new Pose2d(11,32,Math.toRadians(90)),Math.toRadians(0));
 
         //Drive to end position
         TrajectoryActionBuilder trjEndPose = drive.actionBuilder(shootPose)
                 //Spline to the end pose
                 .fresh()
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(0,-32,Math.toRadians(180)),Math.toRadians(0),
+                .splineToLinearHeading(new Pose2d(24,32,Math.toRadians(180)),Math.toRadians(0),
                         // only override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0)
                 );
         //Call end position as end of the trajectory
         Action trajectory22ActionCloseout = trjEndPose.endTrajectory().fresh()
                 .build();
+
         //Call end position as end of the trajectory
-        Action trajectoryActionCloseout = trjIntakeAndEnd.endTrajectory().fresh()
+        Action trajectoryActionCloseout = trjEndPose.endTrajectory().fresh()
                 .build();
 
 
@@ -874,88 +873,132 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
         waitForStart();
 
         if(isStopRequested()) return;
+Actions.runBlocking(
+        limelight.readPattern()
+);
 
-        Actions.runBlocking(
-                new SequentialAction(
-                        flywheel.setFlywheelClose(),         //turn on flywheel
-                        new ParallelAction(                 //move to obelisk position and read the pattern
-                                trjObelisk.build(),
-                                limelight.readPattern()
-                        )
-                )
-        );
+//        Actions.runBlocking(
+//                new SequentialAction(
+//                        flywheel.setFlywheelClose(),         //turn on flywheel
+//                        new ParallelAction(                 //move to obelisk position and read the pattern
+//                                trjObelisk.build(),
+//                                limelight.readPattern()
+//                        ),
+//                        shooters.shootPattern(),            //shoot the pattern
+//                        teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                        intake.intakeOn(),                  //turn on the intake
+//                        new ParallelAction(
+//                                sort.sortArtifact(),        //sort artifacts in parallel
+//                                trjIntakeAndShoot1.build()   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                        ),
+//                        intake.intakeOff(),                 //turn off intake
+//                        shooters.shootPattern(),            //shoot the pattern
+//                        teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                        intake.intakeOn(),
+//                        new ParallelAction(
+//                                sort.sortArtifact(),        //sort artifacts in parallel
+//                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+//                        ),
+//                        intake.intakeOff(),                 //turn off intake
+//                        shooters.shootPattern(),            //shoot the pattern
+//                        teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                        flywheel.setFlywheelStop(),         //stop the flywheel
+//                        trjEndPose.build(),                 //drive to end pose
+//                        trajectoryActionCloseout            //STOP
+//                )
+//        );
 
         if (patternID==22) {
-
             Actions.runBlocking(
                     new SequentialAction(
-                            flywheel.setFlywheelClose(),         //turn on flywheel
-//                            new ParallelAction(                 //move to obelisk position and read the pattern
-//                                    trjObelisk.build(),
-//                                    limelight.readPattern()
-//                            ),
-                            shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),                  //turn on the intake
+                            flywheel.setFlywheelFar(),         //turn on flywheel
                             new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndShoot1.build()   //move to the start of the FIRST row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
-                            shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),
-                            new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
-                            shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            flywheel.setFlywheelStop(),         //stop the flywheel
-                            trjEndPose.build(),                 //drive to end pose
-                            trajectory22ActionCloseout            //STOP
+                                    sort.sortArtifact(),
+                                    new SequentialAction(
+                                            new ParallelAction(                 //move to obelisk position and read the pattern
+                                                    trjObelisk.build()
+//                                                limelight.readPattern()
+                                            ),
+                                            shooters.shootPattern(),            //shoot the pattern
+                                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                                            intake.intakeOn(),                  //turn on the intake
+                                            trjIntakeAndShoot1.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                        new ParallelAction(
+//                                                sort.sortArtifact(),        //sort artifacts in parallel
+//                                                trjIntakeAndShoot1.build()   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                        ),
+                                            intake.intakeOff(),                 //turn off intake
+                                            shooters.shootPattern(),            //shoot the pattern
+                                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                                            flywheel.setFlywheelClose(),
+                                            intake.intakeOn(),
+                                            trjIntakeAndShoot2.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                        new ParallelAction(
+//                                                sort.sortArtifact(),        //sort artifacts in parallel
+//                                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+//                                        ),
+                                            intake.intakeOff(),                 //turn off intake
+                                            shooters.shootPattern(),            //shoot the pattern
+                                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                                            flywheel.setFlywheelStop(),         //stop the flywheel
+                                            trjEndPose.build(),                 //drive to end pose
+                                            trajectory22ActionCloseout            //STOP
+                                    )
+                            )
                     )
+
+
             );
         } else {
             Actions.runBlocking(
                     new SequentialAction(
-                            flywheel.setFlywheelClose(),         //turn on flywheel
-//                            new ParallelAction(                 //move to obelisk position and read the pattern
-//                                    trjObelisk.build(),
-//                                    limelight.readPattern()
-//                            ),
-                            shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),                  //turn on the intake
+                            flywheel.setFlywheelFar(),         //turn on flywheel
                             new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndShoot1.build()   //move to the start of the FIRST row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
-                            shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            intake.intakeOn(),
-                            new ParallelAction(
-                                    sort.sortArtifact(),        //sort artifacts in parallel
-                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
-                            ),
-                            intake.intakeOff(),                 //turn off intake
-//                            shooters.shootPattern(),            //shoot the pattern
-                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
-                            flywheel.setFlywheelStop(),         //stop the flywheel
-//                            trjEndPose.build(),                 //drive to end pose
-                            trajectoryActionCloseout            //STOP
+                                    sort.sortArtifact(),
+                                    new SequentialAction(
+                                            new ParallelAction(                 //move to obelisk position and read the pattern
+                                                    trjObelisk.build()
+//                                                limelight.readPattern()
+                                            ),
+                                            shooters.shootPattern(),            //shoot the pattern
+                                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                                            intake.intakeOn(),                  //turn on the intake
+                                            trjIntakeAndShoot1.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                        new ParallelAction(
+//                                                sort.sortArtifact(),        //sort artifacts in parallel
+//                                                trjIntakeAndShoot1.build()   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                        ),
+                                            intake.intakeOff(),                 //turn off intake
+                                            shooters.shootPattern(),            //shoot the pattern
+                                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                                            flywheel.setFlywheelClose(),
+                                            intake.intakeOn(),
+                                            trjIntakeAndEnd.build(),   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                                        new ParallelAction(
+//                                                sort.sortArtifact(),        //sort artifacts in parallel
+//                                                trjIntakeAndShoot2.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+//                                        ),
+                                            intake.intakeOff(),                 //turn off intake
+//                                            shooters.shootPattern(),            //shoot the pattern
+                                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                                            flywheel.setFlywheelStop(),         //stop the flywheel
+//                                            trjEndPose.build(),                 //drive to end pose
+                                            trajectoryActionCloseout            //STOP
+                                    )
+                            )
                     )
+
+
             );
         }
-
         //Store the alliance color to memory for use in TELEOP
         blackboard.put(ALLIANCE_KEY, isAllianceBlue);
+        //Store the current pose for TELEOP initialization
         SparkFunOTOS.Pose2D pos = otos.getPosition();
         blackboard.put("POSE_X_KEY",pos.x);
         blackboard.put("POSE_Y_KEY",pos.y);
         blackboard.put("POSE_H_KEY",pos.h);
+
 
         telemetry.addLine();
         telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);

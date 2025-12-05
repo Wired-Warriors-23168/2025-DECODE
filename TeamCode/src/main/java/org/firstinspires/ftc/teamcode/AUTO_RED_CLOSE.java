@@ -82,9 +82,9 @@ import java.util.List;
  */
 //@Disabled
 @Config
-@Autonomous(name="AUTO_BLUE_CLOSE", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
+@Autonomous(name="AUTO_RED_CLOSE", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Disabled
-public class AUTO_BLUE_CLOSE extends LinearOpMode {
+public class AUTO_RED_CLOSE extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -135,8 +135,8 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
 //    public static final String POSE_X_KEY = 0;
 //    public static final String POSE_Y_KEY = "Alliance";
 //    public static final String POSE_H_KEY = "Alliance";
-    public String colorAlliance = "BLUE";
-    public boolean isAllianceBlue = true;
+    public String colorAlliance = "RED";
+    public boolean isAllianceBlue = false;
     public double ledINITStatus = 0.500;        //green
     public double ledREADYStatus= 1.0;                 //white
     public double ledGreenArtifact = 0.515;     //turquoise green
@@ -748,15 +748,15 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
         //TODO *********** Set the starting pose for the robot based on the alliance start position,
         // X and Y in INCHES from the center of the field, heading in RADIANS (or convert DEGREES to
         // RADIANS by multiplying the value in DEGREES by Math.PI/180
-        Pose2d beginPose = new Pose2d(-60.75, -38.75, Math.toRadians(180)); //NEW STARTING POSITION
+        Pose2d beginPose = new Pose2d(-60.75, 38.75, Math.toRadians(180)); //NEW STARTING POSITION
 
         //Set AUTO waypoints
-        Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(145));  //pose to read the obelisk
-        double shootHeading = -135;
-        Pose2d shootPose = new Pose2d(-20,-20,Math.toRadians(shootHeading));    //pose to shoot the pattern
-        Pose2d intakePose1 = new Pose2d(-12.5,-31,Math.toRadians(-90));  //pose to intake artifacts from first row
+        Pose2d obeliskPose = new Pose2d(-30,30,Math.toRadians(145));  //pose to read the obelisk
+        double shootHeading = 135;
+        Pose2d shootPose = new Pose2d(-20,20,Math.toRadians(shootHeading));    //pose to shoot the pattern
+        Pose2d intakePose1 = new Pose2d(-12.5,31,Math.toRadians(90));  //pose to intake artifacts from first row
 //        Pose2d intakePose2 = new Pose2d(-12.5,-31,Math.toRadians(-90));  //pose to intake artifacts from second row
-        Pose2d endPose = new Pose2d(12,-17,Math.toRadians(90));      //pose at end of AUTO
+        Pose2d endPose = new Pose2d(12,17,Math.toRadians(-90));      //pose at end of AUTO
         double firstArtifact = -36;     //Y-position of the first artifact in the row
         double secondArtifact = -41;    //Y-position of the second artifact in the row
         double thirdArtifact = -46;     //Y-position of the third artifact in the row
@@ -796,50 +796,50 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
                 //Spline to the obelisk-reading pose, then transition to the shooting pose (hopefully we read the obelisk in this time)
                 .setTangent(Math.toRadians(80))
 //                .splineToLinearHeading(new Pose2d(-42,-18,Math.toRadians(165)),Math.toRadians(0))
-                .splineToConstantHeading(new Vector2d(-12,-12),Math.toRadians(0))
+                .splineToConstantHeading(new Vector2d(-12,12),Math.toRadians(0))
 //                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
 
-                .setTangent(Math.toRadians(-135))
-                .splineToLinearHeading(new Pose2d(-14,-14,Math.toRadians(-135)),Math.toRadians(-135))
+                .setTangent(Math.toRadians(135))
+                .splineToLinearHeading(new Pose2d(-14,14,Math.toRadians(135)),Math.toRadians(135))
                 .waitSeconds(1); //Wait to spin-up flywheel
 
 
 
         //Spline to start of first row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
-        TrajectoryActionBuilder trjIntakeAndShoot1 = drive.actionBuilder(new Pose2d(-14,-14,Math.toRadians(-135)))
+        TrajectoryActionBuilder trjIntakeAndShoot1 = drive.actionBuilder(new Pose2d(14,14,Math.toRadians(135)))
                 //Spline to the first artifact row
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-12.5,-28,Math.toRadians(-90)),Math.toRadians(-90))
+                .splineToLinearHeading(new Pose2d(-12.5,28,Math.toRadians(90)),Math.toRadians(90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(-12.5,-49,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(-12.5,49,Math.toRadians(90)),Math.toRadians(90),
                         // override velocity constraint - slow down the move
                         new TranslationalVelConstraint(2.5),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
                 .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-14,-14,Math.toRadians(-135)),Math.toRadians(45));
+                .splineToLinearHeading(new Pose2d(-14,14,Math.toRadians(135)),Math.toRadians(-45));
 
         //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
         TrajectoryActionBuilder trjIntakeAndShoot2 = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(12.5,-29,Math.toRadians(-90)),Math.toRadians(-90))
+                .setTangent(Math.toRadians(-45))
+                .splineToLinearHeading(new Pose2d(12.5,29,Math.toRadians(90)),Math.toRadians(90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(12.5,-49,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(new Pose2d(12.5,49,Math.toRadians(90)),Math.toRadians(90),
                         // override velocity constraint - slow down the move
                         new TranslationalVelConstraint(3),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
                 .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-14,-14,Math.toRadians(-135)),Math.toRadians(45));
+                .splineToLinearHeading(new Pose2d(-14,14,Math.toRadians(135)),Math.toRadians(-45));
 
         //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
         TrajectoryActionBuilder trjIntakeAndEnd = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
-                .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(11,-29,Math.toRadians(-90)),Math.toRadians(-90));
+                .setTangent(Math.toRadians(-45))
+                .splineToLinearHeading(new Pose2d(11,29,Math.toRadians(90)),Math.toRadians(90));
 //                //Move forward slowly to intake the first artifact and wait for sorting
 //                .splineToLinearHeading(new Pose2d(12,-49,Math.toRadians(-90)),Math.toRadians(-90),
 //                        // override velocity constraint - slow down the move
@@ -855,7 +855,7 @@ public class AUTO_BLUE_CLOSE extends LinearOpMode {
                 //Spline to the end pose
                 .fresh()
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(0,-32,Math.toRadians(180)),Math.toRadians(0),
+                .splineToLinearHeading(new Pose2d(0,32,Math.toRadians(180)),Math.toRadians(0),
                         // only override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0)
                 );
