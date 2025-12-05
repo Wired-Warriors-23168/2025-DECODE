@@ -300,10 +300,10 @@ public class TELEOP_MAIN extends LinearOpMode {
 //        }
 
 //        //TODO - remove the other LL pattern read code if patternID read from blackboard works
-//        patternID = readPatternID;
-//        tagID = readPatternID;
-//        seenobelisk = true;
-//        limelight.pipelineSwitch(teamPipeline);
+        patternID = readPatternID;
+        tagID = readPatternID;
+        seenobelisk = true;
+        limelight.pipelineSwitch(teamPipeline);
 //
 //        if (tagID != 0  && !seenobelisk) {
 //            seenobelisk = true;
