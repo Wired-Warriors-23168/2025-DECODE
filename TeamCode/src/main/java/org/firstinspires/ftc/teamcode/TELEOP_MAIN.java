@@ -316,18 +316,12 @@ public class TELEOP_MAIN extends LinearOpMode {
 
         if (gamepad2.y) {  //&& result.isValid()+
 
-            if (patternID == 22 && tagID == teamID) {
-                if (Math.abs(ty) < 5) {
+            if (patternID == 22) {
                     Pattern22(); // Purple green purple
-                }
-            } else if (patternID == 21 && tagID == teamID) {
-                if (Math.abs(ty) < 5) {
+            } else if (patternID == 21) {
                     Pattern21(); // Green purple purple
-                }
-            } else if (patternID == 23 && tagID == teamID) {
-                if (Math.abs(ty) < 5) {
+            } else if (patternID == 23) {
                     Pattern23(); // Purple purple green
-                }
             }
         } else if (gamepad2.dpadRightWasPressed()) {             // Forced shooting: Purple
             purpleServo.setPosition(purpleShootPos);
