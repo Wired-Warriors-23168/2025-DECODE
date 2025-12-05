@@ -104,7 +104,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     public double allianceLEDColor;
 
     //READ THE BLACKBOARD DATA
-    public boolean isAllianceBlue = (Boolean) blackboard.get("ALLIANCE_KEY");
+    public boolean isAllianceBlue = (Boolean) blackboard.get(ALLIANCE_KEY);
     public double readPosX = (Double) blackboard.get("POSE_X_KEY");
     public double readPosY = (Double) blackboard.get("POSE_Y_KEY");
     public double readPosH = (Double) blackboard.get("POSE_H_KEY");
