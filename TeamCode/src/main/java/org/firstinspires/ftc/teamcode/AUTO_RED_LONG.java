@@ -114,7 +114,7 @@ public class AUTO_RED_LONG extends LinearOpMode {
     private int patternID = 0;
     long servoLaunchTime = 250; //ms
     long shootWaitTime = 500; //ms
-    long shootSecondWaitTime = 1750; //ms
+    long shootSecondWaitTime = 2000; //ms
     long sortActionTime = 45;//sec
     private double greenShootPos = 0.15;  //was 0.2467
     private double purpleShootPos = 0.22;  //was 0.0933
