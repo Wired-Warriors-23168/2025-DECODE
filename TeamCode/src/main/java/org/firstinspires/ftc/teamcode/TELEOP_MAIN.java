@@ -134,6 +134,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
 
+        limelight.stop();   //stop the LL after AUTO (we pass the pattern through now, and not using LL in rotate()
 //        limelight.start();
 //        limelight.pipelineSwitch(2);
 
@@ -155,6 +156,9 @@ public class TELEOP_MAIN extends LinearOpMode {
         conveyorG = hardwareMap.get(CRServo.class, "servo-conveyor-green");
         conveyorP = hardwareMap.get(CRServo.class, "servo-conveyor-purple");
 
+        //Set the LED to green in INIT mode
+        teamLED.setPosition(0.5);//green
+        teamLEDGreen.setPosition(0.5);//green
 
         // Establishing the direction and mode for the motors
         intake.setDirection(DcMotor.Direction.REVERSE);
@@ -176,9 +180,18 @@ public class TELEOP_MAIN extends LinearOpMode {
         deltaTimer.reset();
         lastTime = deltaTimer.seconds();
 
-        //Set the LED to green in INIT mode
-        teamLED.setPosition(0.5);//green
-        teamLEDGreen.setPosition(0.5);//green
+
+        //SET THE ALLIANCE COLOR
+        if(isAllianceBlue){
+            allianceLEDColor = 0.600; //BLUE
+            teamLED.setPosition(allianceLEDColor);
+            teamLEDGreen.setPosition(allianceLEDColor);
+        }
+        else{
+            allianceLEDColor = 0.283; //RED
+            teamLED.setPosition(allianceLEDColor);
+            teamLEDGreen.setPosition(allianceLEDColor);
+        }
 
         waitForStart();
 
@@ -208,17 +221,17 @@ public class TELEOP_MAIN extends LinearOpMode {
 //
             }
 
-            //SET THE ALLIANCE COLOR
-            if(isAllianceBlue){
-                allianceLEDColor = 0.600; //BLUE
-                teamLED.setPosition(allianceLEDColor);
-                teamLEDGreen.setPosition(allianceLEDColor);
-            }
-            else{
-                allianceLEDColor = 0.283; //RED
-                teamLED.setPosition(allianceLEDColor);
-                teamLEDGreen.setPosition(allianceLEDColor);
-            }
+//            //SET THE ALLIANCE COLOR
+//            if(isAllianceBlue){
+//                allianceLEDColor = 0.600; //BLUE
+//                teamLED.setPosition(allianceLEDColor);
+//                teamLEDGreen.setPosition(allianceLEDColor);
+//            }
+//            else{
+//                allianceLEDColor = 0.283; //RED
+//                teamLED.setPosition(allianceLEDColor);
+//                teamLEDGreen.setPosition(allianceLEDColor);
+//            }
         }
     }
     private boolean purpleBallDetected() {
