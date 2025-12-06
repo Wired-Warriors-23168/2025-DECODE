@@ -37,17 +37,22 @@ import com.acmerobotics.roadrunner.AccelConstraint;
 import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.AngularVelConstraint;
 import com.acmerobotics.roadrunner.MinVelConstraint;
+import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.ProfileAccelConstraint;
+import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.TranslationalVelConstraint;
+import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.VelConstraint;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -78,9 +83,9 @@ import java.util.List;
  */
 //@Disabled
 @Config
-@Autonomous(name="AUTO_BLUE_TELEOP_PREP", group="AUTO", preselectTeleOp = "TELEOP_MAIN_OLD")
+@Autonomous(name="AUTO_BLUE_CLOSE_3", group="AUTO", preselectTeleOp = "TELEOP_MAIN")
 //@Disabled
-public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
+public class AUTO_BLUE_CLOSE_3 extends LinearOpMode {
 
     // Declare OpMode members.
     private SparkFunOTOS otos;
@@ -94,6 +99,7 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
     private Servo teamLEDGreen;
     private Servo purpleServo;
     private Servo greenServo;
+    private CRServo purpleCRServo;
     private Limelight3A limelight;
     private DistanceSensor purpleDistanceSensor;
     private DistanceSensor greenDistanceSensor;
@@ -110,15 +116,16 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
     private int patternID = 0;
     long servoLaunchTime = 250; //ms
     long shootWaitTime = 1000; //ms
-    long shootSecondWaitTime = 2000; //ms
+    long shootSecondWaitTime = 3000; //ms
     long sortActionTime = 10;//sec
     private double greenShootPos = 0.15;  //was 0.2467
     private double purpleShootPos = 0.22;  //was 0.0933
     private double greenDownPos = 0.32;
     private double purpleDownPos = 0.02;
-    private double greenHoldPos = 0.25;
-    private double purpleHoldPos = 0.10;
-    private double farVelocity = 1360;
+    private double greenHoldPos = 0.27;
+    private double purpleHoldPos = 0.09;
+    private double purpleCRPower = 1.0; //the power setting for the purple continuous servo
+    private double farVelocity = 1460;
     private double closeVelocity = 1340;
     private double idleVelocity = 600;
     private double targetVelocity = 600;
@@ -133,6 +140,14 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 //    public static final String POSE_H_KEY = "Alliance";
     public String colorAlliance = "BLUE";
     public boolean isAllianceBlue = true;
+    public double ledINITStatus = 0.500;        //green
+    public double ledREADYStatus= 1.0;                 //white
+    public double ledGreenArtifact = 0.515;     //turquoise green
+    public double ledPurpleArtifact = 0.722;    //purple
+    public double ledBlueAlliance = 0.600;      //blue
+    public double ledRedAlliance = 0.283;       //red
+
+
 
 
     private ElapsedTime runtime = new ElapsedTime();
@@ -148,45 +163,85 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
      * Create all the actions for AUTO in RoadRunner
      */
 
-//    /**
-//     * Actions for the green shooter platform
-//     * Cycle the Green Shooter platform from shoot to down
-//     * Place the green shooter platform in the Hold position
-//     */
-//    public class GreenShooter {
-//        private Servo greenServo;
-//
-//        public GreenShooter(HardwareMap hardwareMap) {
-//            greenServo = hardwareMap.get(Servo.class, "greenServo");
-//            greenServo.setDirection(Servo.Direction.FORWARD);
-//        }
-//
-//        public class ShootGreen implements Action {
-//
-//            @Override
-//            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                    greenServo.setPosition(greenShootPos);
-//                    sleep(servoLaunchTime);
-//                    greenServo.setPosition(greenDownPos);
-//                    return false;
-//            }
-//        }
-//        public Action shootGreen(){
-//            return new ShootGreen();
-//        }
-//
-//        public class HoldGreen implements Action {
-//
-//            @Override
-//            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-//                greenServo.setPosition(greenHoldPos);
-//                return false;
-//            }
-//        }
-//        public Action holdGreen(){
-//            return new HoldGreen();
-//        }
-//    }
+    /**
+     * Actions for the green shooter platform
+     * Cycle the Green Shooter platform from shoot to down
+     * Place the green shooter platform in the Hold position
+     */
+    public class GreenShooter {
+        private Servo greenServo;
+
+        public GreenShooter(HardwareMap hardwareMap) {
+            greenServo = hardwareMap.get(Servo.class, "greenServo");
+            greenServo.setDirection(Servo.Direction.FORWARD);
+        }
+
+        public class ShootGreen implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                    greenServo.setPosition(greenShootPos);
+                    sleep(servoLaunchTime);
+                    greenServo.setPosition(greenDownPos);
+                    return false;
+            }
+        }
+        public Action shootGreen(){
+            return new ShootGreen();
+        }
+
+        public class HoldGreen implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                greenServo.setPosition(greenHoldPos);
+                return false;
+            }
+        }
+        public Action holdGreen(){
+            return new HoldGreen();
+        }
+    }
+
+    /**
+     * Actions for the green shooter platform
+     * Cycle the Green Shooter platform from shoot to down
+     * Place the green shooter platform in the Hold position
+     */
+    public class PurpleShooter {
+        private Servo purpleServo;
+
+        public PurpleShooter(HardwareMap hardwareMap) {
+            purpleServo = hardwareMap.get(Servo.class, "purpleServo");
+            purpleServo.setDirection(Servo.Direction.FORWARD);
+        }
+
+        public class ShootPurple implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                greenServo.setPosition(purpleShootPos);
+                sleep(servoLaunchTime);
+                purpleServo.setPosition(purpleDownPos);
+                return false;
+            }
+        }
+        public Action shootPurple(){
+            return new ShootPurple();
+        }
+
+        public class HoldPurple implements Action {
+
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                purpleServo.setPosition(purpleHoldPos);
+                return false;
+            }
+        }
+        public Action holdPurple(){
+            return new HoldPurple();
+        }
+    }
 
     /**
      * Actions for the LEDs on either side
@@ -207,13 +262,13 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                if(colorAlliance=="BLUE"){
-                  teamLED.setPosition(0.600); //blue
-                    teamLEDGreen.setPosition(0.600); //blue
+                if(isAllianceBlue){
+                  teamLED.setPosition(ledBlueAlliance); //blue
+                    teamLEDGreen.setPosition(ledBlueAlliance); //blue
              }
              else{
-                  teamLED.setPosition(0.283);//red
-                    teamLEDGreen.setPosition(0.283);//red
+                  teamLED.setPosition(ledRedAlliance);//red
+                    teamLEDGreen.setPosition(ledRedAlliance);//red
              }
                 return false;
             }
@@ -226,8 +281,8 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                teamLED.setPosition(1.0); //white
-                teamLEDGreen.setPosition(1.0); //white
+                teamLED.setPosition(ledREADYStatus); //white
+                teamLEDGreen.setPosition(ledREADYStatus); //white
 
                 return false;
             }
@@ -236,8 +291,8 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
         public class ColorSides implements Action {
             @Override
             public boolean run(@NonNull TelemetryPacket telemetryPacket) {
-                teamLED.setPosition(0.715); //purple
-                teamLEDGreen.setPosition(0.500); //green
+                teamLED.setPosition(ledPurpleArtifact); //purple
+                teamLEDGreen.setPosition(ledGreenArtifact); //green
                 return false;
             }
         }
@@ -287,9 +342,13 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 //                }
 //
                 if (patternID==21){ //GPP
+                    teamLED.setPosition(ledREADYStatus);
+                    teamLEDGreen.setPosition(ledGreenArtifact);
                     greenServo.setPosition(greenShootPos);
                     sleep(servoLaunchTime);
                     greenServo.setPosition(greenDownPos);
+                    teamLEDGreen.setPosition(ledREADYStatus);
+                    teamLED.setPosition(ledPurpleArtifact);
                     sleep(shootWaitTime);
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
@@ -298,20 +357,30 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
+                    teamLED.setPosition(ledREADYStatus);
 
                 } else if (patternID==22){  //PGP
+                    teamLEDGreen.setPosition(ledREADYStatus);
+                    teamLED.setPosition(ledPurpleArtifact);
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
+                    teamLED.setPosition(ledREADYStatus);
+                    teamLEDGreen.setPosition(ledGreenArtifact);
                     sleep(shootWaitTime);
                     greenServo.setPosition(greenShootPos);
                     sleep(servoLaunchTime);
                     greenServo.setPosition(greenDownPos);
+                    teamLEDGreen.setPosition(ledREADYStatus);
+                    teamLED.setPosition(ledPurpleArtifact);
                     sleep(shootWaitTime);
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
+                    teamLED.setPosition(ledREADYStatus);
                 } else if (patternID==23){  //PPG
+                    teamLEDGreen.setPosition(ledREADYStatus);
+                    teamLED.setPosition(ledPurpleArtifact);
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
@@ -319,10 +388,13 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
+                    teamLED.setPosition(ledREADYStatus);
+                    teamLEDGreen.setPosition(ledGreenArtifact);
                     sleep(shootWaitTime);
                     greenServo.setPosition(greenShootPos);
                     sleep(servoLaunchTime);
                     greenServo.setPosition(greenDownPos);
+                    teamLEDGreen.setPosition(ledREADYStatus);
                 }
 
                 return false;
@@ -335,14 +407,14 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
                 teamLED.setPosition(1.0); //white
                     teamLEDGreen.setPosition(1.0); //white
                 if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
-                    teamLED.setPosition(0.400); //green
-                    teamLEDGreen.setPosition(0.400); //green
+                    teamLED.setPosition(ledREADYStatus); //green
+                    teamLEDGreen.setPosition(ledREADYStatus); //green
                     greenServo.setPosition(greenShootPos);
                     sleep(servoLaunchTime);
                     greenServo.setPosition(greenDownPos);
                 }
-                teamLED.setPosition(1.0); //white
-                    teamLEDGreen.setPosition(1.0); //white
+                teamLED.setPosition(ledINITStatus); //white
+                    teamLEDGreen.setPosition(ledINITStatus); //white
 //                return shootGreen();
 //                if(greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
 //                    return false;
@@ -355,16 +427,16 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
                 if (shootTimer == null) {
                     shootTimer = new ElapsedTime();
                 }
-                teamLED.setPosition(1.0); //white
-                    teamLEDGreen.setPosition(1.0); //white
+                teamLED.setPosition(ledINITStatus); //white
+                    teamLEDGreen.setPosition(ledINITStatus); //white
                 if (flywheel.getVelocity()>= closeVelocity - 40 && flywheel.getVelocity()< closeVelocity + 40) {
-                    teamLED.setPosition(0.715); //purple
+                    teamLED.setPosition(ledPurpleArtifact); //purple
                     purpleServo.setPosition(purpleShootPos);
                     sleep(servoLaunchTime);
                     purpleServo.setPosition(purpleDownPos);
                 }
-                teamLED.setPosition(1.0); //white
-                    teamLEDGreen.setPosition(1.0); //white
+                teamLED.setPosition(ledINITStatus); //white
+                    teamLEDGreen.setPosition(ledINITStatus); //white
 //                return shootPurple();
 //                if(purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
 //                    return false;
@@ -428,8 +500,7 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
                     tagID = 0;
 //                    limelight.pipelineSwitch(teamPipeline);
                     //Set team LEDs so the status can be seen
-                    teamLED.setPosition(1.0);//white
-                    teamLEDGreen.setPosition(1.0);//white
+                    teamLED.setPosition(ledREADYStatus);//white
                 }
                 //Update telemetry to show obelisk was read
                 telemetry.addData("Pattern ID", patternID);
@@ -440,6 +511,7 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
                 if (patternID == 0){    //keep actively looking for the pattern until it's seen
                     return true;
                 } else {
+                    blackboard.put("PATTERN_ID_KEY",patternID); //save the pattern to the blackboard for init in TELEOP
                     limelight.stop();
                     return false;
                 }
@@ -524,13 +596,13 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 
                 if (sortTimer.seconds()<=sortActionTime) {
 
-                    if(greenDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
+                    if(greenDistanceSensor.getDistance(DistanceUnit.INCH) < 5){
                         greenServo.setPosition(greenHoldPos);
                     }
                     else{
                         greenServo.setPosition(greenDownPos);
                     }
-                    if(purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 3){
+                    if(purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 5){
                         purpleServo.setPosition(purpleHoldPos);
                     }
                     else {
@@ -579,6 +651,43 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
         }
     }
 
+
+    /**
+     * Actions for purple side continuous rotating servo
+     * Set power
+     * Power off
+     */
+
+    public class PurpleCRServo {
+        private CRServo purpleCRServo;
+
+        public PurpleCRServo(HardwareMap hardwareMap) {
+            purpleCRServo = hardwareMap.get(CRServo.class, "servo-conveyor-purple");
+            purpleCRServo.setDirection(CRServo.Direction.FORWARD);
+        }
+
+        public class SetOn implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                purpleCRServo.setPower(purpleCRPower);
+                return false;
+            }
+        }
+        public Action setOn() {
+                return new SetOn();
+            }
+        public class SetOff implements Action {
+            @Override
+            public boolean run(@NonNull TelemetryPacket telemetryPacket) {
+                purpleCRServo.setPower(0);
+                return false;
+            }
+        }
+        public Action setOff() {
+                return new SetOff();
+            }
+
+    }
 
     /**
      * Actions for flywheel
@@ -674,15 +783,15 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 
         //initDevices(); // Initialize all motors, servos, sensors
 
-        //Set the LEDs to yellow in INIT mode after hold
-        teamLED.setPosition(0.388);//yellow
-        teamLEDGreen.setPosition(0.388);//white
+        //Set both LEDs to alliance color to indicate INIT has started
+        teamLED.setPosition(ledINITStatus);
+        teamLEDGreen.setPosition(ledINITStatus);
 
         // Establishing the direction and mode for the motors
         flywheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheel.setDirection(DcMotorEx.Direction.REVERSE);
-//        greenServo.setDirection(Servo.Direction.FORWARD);
-//        purpleServo.setDirection(Servo.Direction.FORWARD);
+        greenServo.setDirection(Servo.Direction.FORWARD);
+        purpleServo.setDirection(Servo.Direction.FORWARD);
 
 //        limelight.start();
 //        limelight.pipelineSwitch(2);
@@ -692,21 +801,25 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
         greenServo.setPosition(greenHoldPos);
         purpleServo.setPosition(purpleHoldPos);
 
-        //Set the green side LEDs to white in INIT mode after hold
-        teamLED.setPosition(0.388);//yellow
-        teamLEDGreen.setPosition(1.0);//white
-
         telemetry.setMsTransmissionInterval(11);
 
+        //Store the alliance color to memory for use in TELEOP
+        blackboard.put(ALLIANCE_KEY, isAllianceBlue);
+
+        //Set the green side LEDs to white in INIT mode after hold
+        teamLED.setPosition(ledINITStatus);
+        teamLEDGreen.setPosition(ledREADYStatus);//white
+
         //Initialize the mechanism Actions
-//        GreenShooter greenServo = new GreenShooter(hardwareMap);
-//        PurpleShooter purpleServo = new PurpleShooter(hardwareMap);
+        GreenShooter greenShooter = new GreenShooter(hardwareMap);
+        PurpleShooter purpleShooter = new PurpleShooter(hardwareMap);
         Limelight limelight = new Limelight(hardwareMap);
         Intake intake = new Intake(hardwareMap);
         Sort sort = new Sort(hardwareMap);
         Flywheel flywheel = new Flywheel(hardwareMap);
         Shooters shooters = new Shooters(hardwareMap);
         TeamLEDs teamLEDs = new TeamLEDs(hardwareMap);
+        PurpleCRServo purpleCRServo = new PurpleCRServo(hardwareMap);
 //        FieldPosition fieldPosition = new FieldPosition(hardwareMap);
 
         telemetry.addData("Status", "Initialized");
@@ -719,15 +832,20 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
         Pose2d beginPose = new Pose2d(-60.75, -38.75, Math.toRadians(180)); //NEW STARTING POSITION
 
         //Set AUTO waypoints
-        Pose2d obeliskPose = new Pose2d(-30,-30,Math.toRadians(145));  //pose to read the obelisk
-        double shootHeading = -135;
-        Pose2d shootPose = new Pose2d(-20,-20,Math.toRadians(shootHeading));    //pose to shoot the pattern
-        Pose2d intakePose1 = new Pose2d(-30,-32,Math.toRadians(-135));  //pose to intake artifacts from first row
-//        Pose2d intakePose2 = new Pose2d(-30,-30,Math.toRadians(-135));  //pose to intake artifacts from second row
-        Pose2d endPose = new Pose2d(12,-17,Math.toRadians(90));      //pose at end of AUTO
-        double firstArtifact = -36;     //Y-position of the first artifact in the row
-        double secondArtifact = -41;    //Y-position of the second artifact in the row
-        double thirdArtifact = -46;     //Y-position of the third artifact in the row
+        Vector2d obeliskVector = new Vector2d(-12,-12);  //pose to read the obelisk
+        double obeliskHeading = Math.toRadians(155);  //heading to read the obelisk
+        Pose2d obeliskPose = new Pose2d(-42,-18,obeliskHeading); //pose to read the obelisk
+
+        Pose2d shootPose = new Pose2d(-14,-14,Math.toRadians(-135));    //pose to shoot the pattern
+
+        Pose2d intakePose1 = new Pose2d(-12.5,-28,Math.toRadians(-90));  //pose to start intake artifacts from first row
+        Pose2d intakePickup1 = new Pose2d(-12.5,-49,Math.toRadians(-90));  //pose to end intake artifacts from first row
+
+        Pose2d intakePose2 = new Pose2d(12.5,-29,Math.toRadians(-90));  //pose to start intake artifacts from second row
+        Pose2d intakePickup2 = new Pose2d(12.5,-49,Math.toRadians(-90));  //pose to end intake artifacts from second row
+
+        Pose2d endPose = new Pose2d(-33,-54,Math.toRadians(180));      //pose at end of AUTO
+
 
         //Instantiate the roadrunner Mecanum drive (via the OTOS localizer)
         MecanumDrive drive = new MecanumDrive(hardwareMap, beginPose);
@@ -735,26 +853,15 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 
         /**
          * BUILD TRAJECTORIES
-         * 1. move to obelisk position
-         * 2. Turn to goal
-         * 3. Drive to intake position
-         * 4. Move forward for first artifact
-         * 5. Move forward for second artifact
-         * 6. Move forward for third artifact
-         * 7. Move to shoot pose
-         * 8. Move to end pose
+         * https://rr.brott.dev/docs/v1-0/guides/centerstage-auto/
          */
-        //https://rr.brott.dev/docs/v1-0/guides/centerstage-auto/
-
-        //TODO learn how to use the .fresh() modifier so the trajectory starts where the last one ended
-        // https://github.com/acmerobotics/road-runner-quickstart/issues/376
 
         //Setting the base velocity and angular velocity constraints
         VelConstraint baseVelConstraint = new MinVelConstraint(Arrays.asList(
-                new TranslationalVelConstraint(40.0),
+                new TranslationalVelConstraint(30),
                 new AngularVelConstraint(Math.PI / 2)
         ));
-        AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(-10.0, 25.0);
+        AccelConstraint baseAccelConstraint = new ProfileAccelConstraint(-10.0, 10.0);
 
 
         //Leave starting position, drive nad turn to obelisk to read pattern and continue to aiming at goal
@@ -762,55 +869,73 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 //                .waitSeconds(2) //Wait to spin-up flywheel
 
                 //Spline to the obelisk-reading pose, then transition to the shooting pose (hopefully we read the obelisk in this time)
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(-42,-18,Math.toRadians(165)),Math.toRadians(0))
-//                .splineToLinearHeading(new Pose2d(-30,-30,Math.toRadians(145)),Math.toRadians(0))
+                .setTangent(Math.toRadians(80))
+                .splineToLinearHeading(obeliskPose,Math.toRadians(0))
+//                .splineToConstantHeading(obeliskVector,obeliskHeading)
 
                 .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(-20,-13,Math.toRadians(-135)),Math.toRadians(45))
-                .waitSeconds(2); //Wait to spin-up flywheel
-
+                .splineToLinearHeading(shootPose,Math.toRadians(45))
+                .waitSeconds(1); //Wait to spin-up flywheel
 
 
         //Spline to start of first row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
         TrajectoryActionBuilder trjIntakeAndShoot1 = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-25.75,-16.25,Math.toRadians(-90)),Math.toRadians(-90))
+                .splineToLinearHeading(intakePose1,Math.toRadians(-90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(-25.75,-32,Math.toRadians(-90)),Math.toRadians(-90),
+                .setTangent(Math.toRadians(-90))
+                .splineToLinearHeading(intakePickup1,Math.toRadians(-90),
                         // override velocity constraint - slow down the move
                         new TranslationalVelConstraint(2.5),
-                        new ProfileAccelConstraint(-10.0, 10.0))
+                        new ProfileAccelConstraint(-10.0, 10.0));
 
-                //Spline to the shooting pose, back up to full speed
-                .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-16,-6,Math.toRadians(-135)),Math.toRadians(45));
+//                //Spline to the shooting pose, back up to full speed
+//                .setTangent(Math.toRadians(180))
+//                .splineToLinearHeading(shootPose,Math.toRadians(45));
 
         //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
         TrajectoryActionBuilder trjIntakeAndShoot2 = drive.actionBuilder(shootPose)
                 //Spline to the first artifact row
                 .setTangent(Math.toRadians(45))
-                .splineToLinearHeading(new Pose2d(-0.25,-14.75,Math.toRadians(-90)),Math.toRadians(-90))
+                .splineToLinearHeading(intakePose2,Math.toRadians(-90))
                 //Move forward slowly to intake the first artifact and wait for sorting
-                .splineToLinearHeading(new Pose2d(-0.25,-28,Math.toRadians(-90)),Math.toRadians(-90),
+                .splineToLinearHeading(intakePickup2,Math.toRadians(-90),
                         // override velocity constraint - slow down the move
-                        new TranslationalVelConstraint(2.5),
+                        new TranslationalVelConstraint(3),
                         new ProfileAccelConstraint(-10.0, 10.0))
 
                 //Spline to the shooting pose, back up to full speed
                 .setTangent(Math.toRadians(180))
-                .splineToLinearHeading(new Pose2d(-16,-10,Math.toRadians(-135)),Math.toRadians(45));
+                .splineToLinearHeading(shootPose,Math.toRadians(45));
+
+        TrajectoryActionBuilder trjShootPose1 = drive.actionBuilder(intakePickup1)
+                //Spline to the shooting pose, back up to full speed
+                .setTangent(Math.toRadians(90))
+                .splineToLinearHeading(shootPose,Math.toRadians(45));
+
+        TrajectoryActionBuilder trjShootPose2 = drive.actionBuilder(intakePickup2)
+                //Spline to the shooting pose, back up to full speed
+                .setTangent(Math.toRadians(180))
+                .splineToLinearHeading(shootPose,Math.toRadians(45));
+
+        //Spline to start of second row of artifacts then move forward slowly to intake the artifacts, then return to the shooting pose
+        TrajectoryActionBuilder trjIntakeAndEnd = drive.actionBuilder(shootPose)
+                //Spline to the first artifact row
+                .setTangent(Math.toRadians(-45))
+                .splineToLinearHeading(endPose,Math.toRadians(-90));
+
 
         //Drive to end position
         TrajectoryActionBuilder trjEndPose = drive.actionBuilder(shootPose)
                 //Spline to the end pose
                 .fresh()
-                .setTangent(Math.toRadians(0))
-                .splineToLinearHeading(new Pose2d(12,-20,Math.toRadians(90)),Math.toRadians(0),
+                .setTangent(Math.toRadians(-135))
+                .splineToLinearHeading(endPose,Math.toRadians(-90),
                         // only override velocity constraint - set back to full
                         new TranslationalVelConstraint(50.0)
                 );
+
         //Call end position as end of the trajectory
         Action trajectoryActionCloseout = trjEndPose.endTrajectory().fresh()
                 .build();
@@ -824,15 +949,56 @@ public class AUTO_BLUE_TELEOP_PREP extends LinearOpMode {
 
         if(isStopRequested()) return;
 
-
+        Actions.runBlocking(
+                    new SequentialAction(
+                            greenShooter.holdGreen(),           //set the green shooter to hold position so artifact is ready to shoot after next move
+                            purpleShooter.holdPurple(),         //set the purple shooter to hold position so artifact is ready to shoot after next move
+                            purpleCRServo.setOn(),              //turn on the purple side CRServo to advance the second purple ball
+                            flywheel.setFlywheelClose(),         //turn on flywheel
+                            new ParallelAction(                 //move to obelisk position and read the pattern
+                                    trjObelisk.build(),
+                                    limelight.readPattern()
+                            ),
+                            shooters.shootPattern(),            //shoot the pattern
+                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+//                            intake.intakeOn(),                  //turn on the intake
+//                            new ParallelAction(
+//                                    sort.sortArtifact(),        //sort artifacts in parallel
+//                                    trjIntakeAndShoot1.build()   //move to the start of the FIRST row of artifacts, then slowly move forward
+//                            ),
+//                            greenShooter.holdGreen(),           //set the green shooter to hold position so artifact is ready to shoot after next move
+//                            purpleShooter.holdPurple(),         //set the purple shooter to hold position so artifact is ready to shoot after next move
+//                            trjShootPose1.build(),              //drive to shooting pose
+//                            intake.intakeOff(),                 //turn off intake
+//                            shooters.shootPattern(),            //shoot the pattern
+////                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+////                            intake.intakeOn(),
+////                            new ParallelAction(
+////                                    sort.sortArtifact(),        //sort artifacts in parallel
+////                                    trjIntakeAndEnd.build()   //move to the start of the SECOND row of artifacts, then slowly move forward
+////                            ),
+////                            intake.intakeOff(),                 //turn off intake
+////                            shooters.shootPattern(),            //shoot the pattern
+//                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                            teamLEDs.colorAlliance(),           //set team LEDs to alliance color
+                            purpleCRServo.setOff(),             //stop the purple side CRServo
+                            trjEndPose.build(),                 //drive to end pose
+                            flywheel.setFlywheelStop(),         //stop the flywheel
+                            trajectoryActionCloseout            //STOP
+                    )
+        );
 
 
         //Store the alliance color to memory for use in TELEOP
         blackboard.put(ALLIANCE_KEY, isAllianceBlue);
-        blackboard.put("POSE_X_KEY",0);
-        blackboard.put("POSE_Y_KEY",0);
-        blackboard.put("POSE_H_KEY",0);
-        blackboard.put("PATTERN_ID_KEY", 22);
+        SparkFunOTOS.Pose2D pos = otos.getPosition();
+        blackboard.put("POSE_X_KEY",pos.x);
+        blackboard.put("POSE_Y_KEY",pos.y);
+        blackboard.put("POSE_H_KEY",pos.h);
+
+        telemetry.addLine();
+        telemetry.addData("OTOS Data", "X: (%.1f), Y: (%.1f), H: (%.2f)", pos.x,pos.y,pos.h);
+        telemetry.update();
     }
 
 }

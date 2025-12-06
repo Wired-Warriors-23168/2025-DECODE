@@ -132,8 +132,8 @@ public class TELEOP_MAIN extends LinearOpMode {
         greenServo.setDirection(Servo.Direction.FORWARD);
         purpleServo.setDirection(Servo.Direction.FORWARD);
 
-        limelight.start();
-        limelight.pipelineSwitch(2);
+//        limelight.start();
+//        limelight.pipelineSwitch(2);
 
         leftFrontDrive = hardwareMap.get(DcMotor.class, "left-front-drive");
         leftBackDrive = hardwareMap.get(DcMotor.class, "left-back-drive");
@@ -195,17 +195,15 @@ public class TELEOP_MAIN extends LinearOpMode {
                 intakeSort(false);
                 drivetrain();
 //                lift();
+                conveyorP.setPower(1.0);    //turn on the purple side CRServo to brush in artifacts
 
-//                FtcDashboard dashboard = FtcDashboard.getInstance();
-//                TelemetryPacket packet = new TelemetryPacket();
-//                dashboard.sendTelemetryPacket(packet); // Always send the packet
-//                packet.fieldOverlay()
-//                        .setFill("blue")
-//                        .fillRect(-20, -20, 40, 40);
-
-//                telemetry.addData("Alliance", blackboard.get(ALLIANCE_KEY));
-//                telemetry.addData("time", runtime.time());
-//                telemetry.update();
+//                if (gamepad2.dpad_up){
+//                    conveyorP.setPower(1.0);
+//                }
+//                if (gamepad2.dpad_down) {
+//                    conveyorP.setPower(0.0);
+//                }
+//
             }
 
             //SET THE ALLIANCE COLOR
@@ -303,7 +301,7 @@ public class TELEOP_MAIN extends LinearOpMode {
         patternID = readPatternID;
         tagID = readPatternID;
         seenobelisk = true;
-        limelight.pipelineSwitch(teamPipeline);
+//        limelight.pipelineSwitch(teamPipeline);
 //
 //        if (tagID != 0  && !seenobelisk) {
 //            seenobelisk = true;
