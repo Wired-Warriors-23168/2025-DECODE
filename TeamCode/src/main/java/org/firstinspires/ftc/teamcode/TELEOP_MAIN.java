@@ -92,6 +92,8 @@ public class TELEOP_MAIN extends LinearOpMode {
 
     public int stage = 1;
 
+    double drivePower = 0.8;
+
     private DcMotor leftFrontDrive;
     private DcMotor leftBackDrive;
     private DcMotor rightFrontDrive;
@@ -603,6 +605,16 @@ public class TELEOP_MAIN extends LinearOpMode {
         double y;
         double rx;
 
+        if (gamepad1.left_trigger > 0.1) {
+            drivePower = 0.33;
+        }
+        else if (gamepad1.right_trigger > 0.1){
+            drivePower = 0.8;
+        }
+        else{
+            drivePower =1;
+        }
+
         x = gamepad1.left_stick_x * 1.1; // Counteract imperfect strafing
         y = -gamepad1.left_stick_y; // Remember, Y stick value is reversed
         rx = gamepad1.right_stick_x;
@@ -629,10 +641,10 @@ public class TELEOP_MAIN extends LinearOpMode {
         } else if (gamepad1.yWasReleased()){
 //            limelight.pause(); //pause the limelight so it doesn't stream data
         }else {
-            leftFrontDrive.setPower(frontLeftPower);
-            leftBackDrive.setPower(backLeftPower);
-            rightFrontDrive.setPower(frontRightPower);
-            rightBackDrive.setPower(backRightPower);
+            leftFrontDrive.setPower(frontLeftPower * drivePower);
+            leftBackDrive.setPower(backLeftPower * drivePower);
+            rightFrontDrive.setPower(frontRightPower * drivePower);
+            rightBackDrive.setPower(backRightPower * drivePower);
         }
         if (gamepad1.start) {
             poseOTOS.setPosition(new SparkFunOTOS.Pose2D(0, 0, 0));
