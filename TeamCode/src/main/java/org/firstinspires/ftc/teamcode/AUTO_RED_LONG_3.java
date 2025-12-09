@@ -847,7 +847,7 @@ public class AUTO_RED_LONG_3 extends LinearOpMode {
 
         //Set AUTO waypoints
         Vector2d obeliskVector = new Vector2d(55,12);  //pose to read the obelisk
-        double obeliskHeading = Math.toRadians(157);  //heading to read the obelisk
+        double obeliskHeading = Math.toRadians(158);  //heading to read the obelisk
         Pose2d obeliskPose = new Pose2d(55,12,obeliskHeading); //pose to read the obelisk
 
         Pose2d shootPoseLong = new Pose2d(55,12,Math.toRadians(157));    //pose to shoot the pattern

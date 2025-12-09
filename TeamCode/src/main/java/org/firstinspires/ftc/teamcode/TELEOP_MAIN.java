@@ -43,7 +43,7 @@ public class TELEOP_MAIN extends LinearOpMode {
     private double greenDownPos = 0.32;
     private double purpleDownPos = 0.02;
     private double greenHoldPos = 0.27;
-    private double purpleHoldPos = 0.07;
+    private double purpleHoldPos = 0.085;
     private double purpleTargetPos;
     private double greenTargetPos;
     private double farVelocity = 1400;
@@ -156,9 +156,9 @@ public class TELEOP_MAIN extends LinearOpMode {
         conveyorG = hardwareMap.get(CRServo.class, "servo-conveyor-green");
         conveyorP = hardwareMap.get(CRServo.class, "servo-conveyor-purple");
 
-        //Set the LED to green in INIT mode
-        teamLED.setPosition(0.5);//green
-        teamLEDGreen.setPosition(0.5);//green
+//        //Set the LED to green in INIT mode
+//        teamLED.setPosition(0.5);//green
+//        teamLEDGreen.setPosition(0.5);//green
 
         // Establishing the direction and mode for the motors
         intake.setDirection(DcMotor.Direction.REVERSE);
@@ -181,17 +181,17 @@ public class TELEOP_MAIN extends LinearOpMode {
         lastTime = deltaTimer.seconds();
 
 
-        //SET THE ALLIANCE COLOR
-        if(isAllianceBlue){
-            allianceLEDColor = 0.600; //BLUE
-            teamLED.setPosition(allianceLEDColor);
-            teamLEDGreen.setPosition(allianceLEDColor);
-        }
-        else{
-            allianceLEDColor = 0.283; //RED
-            teamLED.setPosition(allianceLEDColor);
-            teamLEDGreen.setPosition(allianceLEDColor);
-        }
+//        //SET THE ALLIANCE COLOR
+//        if(isAllianceBlue){
+//            allianceLEDColor = 0.600; //BLUE
+//            teamLED.setPosition(allianceLEDColor);
+//            teamLEDGreen.setPosition(allianceLEDColor);
+//        }
+//        else{
+//            allianceLEDColor = 0.283; //RED
+//            teamLED.setPosition(allianceLEDColor);
+//            teamLEDGreen.setPosition(allianceLEDColor);
+//        }
 
         waitForStart();
 
@@ -240,7 +240,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 //            telemetry.addLine("⚠️ PURPLE ARTIFACT IN ROBOT ⚠️");
 //            telemetry.addLine("PLEASE PURPLE SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         } else {
-            teamLED.setPosition(allianceLEDColor); //alliance color
+            teamLED.setPosition(0); //alliance color
         }
         return purpleDistanceSensor.getDistance(DistanceUnit.INCH) < 6;
 
@@ -251,7 +251,7 @@ public class TELEOP_MAIN extends LinearOpMode {
 //            telemetry.addLine("⚠️ GREEN ARTIFACT IN ROBOT ⚠️");
 //            telemetry.addLine("PLEASE GREEN SPEED I NEED THIS MY MOM IS KIND OF HOMELESS");
         } else{
-            teamLEDGreen.setPosition(allianceLEDColor); //alliance color
+            teamLEDGreen.setPosition(0); //alliance color
         }
         return greenDistanceSensor.getDistance(DistanceUnit.INCH) < 6;
 
